@@ -27,7 +27,7 @@ static func load_game(slot: int) -> Dictionary:
 	if f == null:
 		push_error("SaveManager: could not open %s for reading" % _path(slot))
 		return {}
-	var result := JSON.parse_string(f.get_as_text())
+	var result: Variant = JSON.parse_string(f.get_as_text())
 	if typeof(result) != TYPE_DICTIONARY:
 		push_error("SaveManager: corrupt save at slot %d" % slot)
 		return {}

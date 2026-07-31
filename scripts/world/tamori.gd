@@ -93,7 +93,7 @@ func _on_enemy_died(ec: EnemyController) -> void:
 
 func _sync_party_to_scene() -> void:
 	if GameState.sarro == null:
-		GameState.new_game()  # safety: bootstrap if launched directly
+		GameState.set_party(WayfarerCharacter.make_sarro(), WayfarerCharacter.make_liris())
 
 func _start_opening_dialogue() -> void:
 	_player.set_control_enabled(false)

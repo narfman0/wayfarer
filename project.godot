@@ -20,7 +20,6 @@ window/stretch/aspect="expand"
 [autoload]
 
 GameState="*res://scripts/system/game_state.gd"
-SaveManager="*res://scripts/system/save_manager.gd"
 
 [editor_plugins]
 

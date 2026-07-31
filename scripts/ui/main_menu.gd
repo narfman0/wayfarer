@@ -1,6 +1,8 @@
 class_name MainMenu
 extends Control
 
+const SaveManager = preload("res://scripts/system/save_manager.gd")
+
 @onready var _continue_btn: Button = $Layout/Continue
 @onready var _new_game_btn: Button = $Layout/NewGame
 @onready var _quit_btn:     Button = $Layout/Quit
