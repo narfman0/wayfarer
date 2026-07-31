@@ -5,10 +5,10 @@ extends RefCounted
 
 const _WC         = preload("res://scripts/characters/wayfarer_character.gd")
 const _FeatData   = preload("res://scripts/characters/feat_data.gd")
-const _ClassData  = preload("res://vendor/godot-srd-addon/addons/srd/resources/class_data.gd")
-const _WeaponData = preload("res://vendor/godot-srd-addon/addons/srd/resources/weapon_data.gd")
-const _ArmorData  = preload("res://vendor/godot-srd-addon/addons/srd/resources/armor_data.gd")
-const _SRD        = preload("res://vendor/godot-srd-addon/addons/srd/srd_enums.gd")
+const _ClassData  = preload("res://addons/srd/resources/class_data.gd")
+const _WeaponData = preload("res://addons/srd/resources/weapon_data.gd")
+const _ArmorData  = preload("res://addons/srd/resources/armor_data.gd")
+const _SRD        = preload("res://addons/srd/srd_enums.gd")
 
 static func make_sarro():
 	var c = _WC.new()
@@ -59,7 +59,8 @@ static func make_enemy_char():
 	var c = _WC.new()
 	c.display_name = "Bandit"
 	c.stats.character_name = "Bandit"
-	c.stats.level = 1; c.stats.max_hp = 11; c.stats.armor_class = 12
+	c.stats.level = 1; c.stats.max_hp = 11
+	c.equipment.equip_armor(_ArmorData.make_studded_leather())
 	c.stats.strength = 12; c.stats.dexterity = 10; c.stats.constitution = 10
 	c.stats.reset()
 	var dagger = _WeaponData.new()

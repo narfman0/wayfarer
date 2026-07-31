@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://oreg6f5rabe7"
+path="res://.godot/imported/tamori_tavern.dialogue-f37db67f218426706a2187117a89adbe.tres"
+
+[deps]
+
+source_file="res://dialogue/tamori_tavern.dialogue"
+dest_files=["res://.godot/imported/tamori_tavern.dialogue-f37db67f218426706a2187117a89adbe.tres"]
+
+[params]
+
+defaults=true

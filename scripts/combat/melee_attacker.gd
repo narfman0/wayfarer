@@ -3,9 +3,10 @@
 class_name MeleeAttacker
 extends Node
 
-const _Dice           = preload("res://vendor/godot-srd-addon/addons/srd/dice.gd")
-const _CharacterStats = preload("res://vendor/godot-srd-addon/addons/srd/resources/character_stats.gd")
-const _Combatant      = preload("res://vendor/godot-srd-addon/addons/srd/systems/combatant.gd")
+const _Dice           = preload("res://addons/srd/dice.gd")
+const _CharacterStats = preload("res://addons/srd/resources/character_stats.gd")
+const _Combatant      = preload("res://addons/srd/systems/combatant.gd")
+const _ArmorData      = preload("res://addons/srd/resources/armor_data.gd")
 
 const MELEE_RANGE  := 1.6   # metres
 const ATTACK_RATE  := 1.0   # seconds between attacks
@@ -56,10 +57,11 @@ func _do_attack() -> void:
 	var d20: int       = _Dice.roll_d20()
 	var atk_mod: int   = attacker.attack_modifier()
 	var total_atk: int = d20 + atk_mod
-	var target_ac: int = defender.stats.armor_class
+	var target_ac: int = defender.armor_class
 
 	var hit: bool  = total_atk >= target_ac
 	var crit: bool = d20 == 20
+	var target_name: String = _target.name  # capture before damage — a kill nulls _target via stop()
 
 	var dmg := 0
 	if hit:
@@ -69,7 +71,7 @@ func _do_attack() -> void:
 	var ev := {
 		"type": "attack",
 		"attacker": character.display_name,
-		"target": _target.name,
+		"target": target_name,
 		"d20": d20, "attack_mod": atk_mod, "target_ac": target_ac,
 		"hit": hit, "crit": crit, "damage": dmg,
 	}
@@ -78,9 +80,11 @@ func _do_attack() -> void:
 
 func _make_default_enemy_combatant():
 	var stats = _CharacterStats.new()
-	stats.armor_class = 12; stats.max_hp = 11; stats.current_hp = 11
+	stats.max_hp = 11; stats.current_hp = 11
 	stats.strength = 12; stats.dexterity = 10; stats.constitution = 10
-	return _Combatant.new(stats, null, null)
+	var combatant = _Combatant.new(stats, null, null)
+	combatant.equipment.equip_armor(_ArmorData.make_studded_leather())
+	return combatant
 
 func _format(ev: Dictionary) -> String:
 	if ev.get("crit"):

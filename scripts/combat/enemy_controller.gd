@@ -3,8 +3,8 @@
 class_name EnemyController
 extends CharacterBody3D
 
-const _Dice           = preload("res://vendor/godot-srd-addon/addons/srd/dice.gd")
-const _CharacterStats = preload("res://vendor/godot-srd-addon/addons/srd/resources/character_stats.gd")
+const _Dice           = preload("res://addons/srd/dice.gd")
+const _CharacterStats = preload("res://addons/srd/resources/character_stats.gd")
 
 enum State { PATROL, CHASE, ATTACK }
 
@@ -105,12 +105,11 @@ func _fire_attack() -> void:
 		target_char = GameState.sarro
 
 	var attacker = character.make_combatant()
-	var defender_stats = target_char.stats if target_char != null else _CharacterStats.new()
 
 	var d20: int       = _Dice.roll_d20()
 	var atk_mod: int   = attacker.attack_modifier()
 	var total_atk: int = d20 + atk_mod
-	var target_ac: int = defender_stats.armor_class
+	var target_ac: int = target_char.make_combatant().armor_class if target_char != null else 10
 
 	var hit: bool  = total_atk >= target_ac
 	var crit: bool = d20 == 20

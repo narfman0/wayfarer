@@ -3,11 +3,11 @@
 class_name WayfarerCharacter
 extends Resource
 
-const _CharacterStats = preload("res://vendor/godot-srd-addon/addons/srd/resources/character_stats.gd")
-const _EquipmentSlots = preload("res://vendor/godot-srd-addon/addons/srd/systems/equipment.gd")
-const _Combatant      = preload("res://vendor/godot-srd-addon/addons/srd/systems/combatant.gd")
-const _Dice           = preload("res://vendor/godot-srd-addon/addons/srd/dice.gd")
-const _SRD            = preload("res://vendor/godot-srd-addon/addons/srd/srd_enums.gd")
+const _CharacterStats = preload("res://addons/srd/resources/character_stats.gd")
+const _EquipmentSlots = preload("res://addons/srd/systems/equipment.gd")
+const _Combatant      = preload("res://addons/srd/systems/combatant.gd")
+const _Dice           = preload("res://addons/srd/dice.gd")
+const _SRD            = preload("res://addons/srd/srd_enums.gd")
 const _FeatsSystem    = preload("res://scripts/characters/feats_system.gd")
 
 @export var display_name: String = ""

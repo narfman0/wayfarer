@@ -9,8 +9,8 @@ extends Node3D
 const _WC            = preload("res://scripts/characters/wayfarer_character.gd")
 const _Factory       = preload("res://scripts/characters/character_factory.gd")
 const _MeleeAttacker = preload("res://scripts/combat/melee_attacker.gd")
-const _WeaponData    = preload("res://vendor/godot-srd-addon/addons/srd/resources/weapon_data.gd")
-const _SRD           = preload("res://vendor/godot-srd-addon/addons/srd/srd_enums.gd")
+const _WeaponData    = preload("res://addons/srd/resources/weapon_data.gd")
+const _SRD           = preload("res://addons/srd/srd_enums.gd")
 
 @onready var _player    = $Characters/Sarro     # PlayerController
 @onready var _companion = $Characters/Liris     # CompanionFollow

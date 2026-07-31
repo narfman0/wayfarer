@@ -9,8 +9,8 @@ const SPRINT_MUL := 1.8
 const GRAVITY    := 9.8
 const ARRIVE_DIST := 0.35  # metres — stop threshold for click-to-move
 
-## Collision layer for the ground plane (layer 1 by default).
-const GROUND_LAYER := 1
+## Raycast mask for click targeting: ground (layer 1) + enemies (layer 2).
+const CLICK_MASK := 3
 
 @export var camera_pivot: Node3D
 
@@ -90,7 +90,7 @@ func _handle_left_click(screen_pos: Vector2) -> void:
 	var ray_origin := cam.project_ray_origin(screen_pos)
 	var ray_end    := ray_origin + cam.project_ray_normal(screen_pos) * 200.0
 
-	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end, GROUND_LAYER)
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end, CLICK_MASK, [get_rid()])
 	var hit   := space.intersect_ray(query)
 	if hit:
 		# If we hit a node with an "enemy" group tag, target it instead

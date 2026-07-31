@@ -1,14 +1,29 @@
 ; Engine configuration file.
 ; It's best edited using the editor UI and not directly,
-; however this file is maintained in git for reproducibility.
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
 config/name="Wayfarer"
 config/version="0.1.0"
-config/features=PackedStringArray("4.3", "Forward Plus")
-config/icon="res://assets/art/icon.svg"
 run/main_scene="res://scenes/world/main.tscn"
+config/features=PackedStringArray("4.7", "Forward Plus")
+config/icon="res://assets/art/icon.svg"
+
+[autoload]
+
+DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
+GameState="*res://scripts/system/game_state.gd"
 
 [display]
 
@@ -17,14 +32,9 @@ window/size/viewport_height=1080
 window/stretch/mode="viewport"
 window/stretch/aspect="expand"
 
-[autoload]
-
-SRDBootstrap="*res://scripts/system/srd_bootstrap.gd"
-GameState="*res://scripts/system/game_state.gd"
-
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/srd/plugin.cfg")
+enabled=PackedStringArray("res://addons/srd/plugin.cfg", "res://addons/dialogue_manager/plugin.cfg")
 
 [input]
 
@@ -65,6 +75,6 @@ interact={
 ]
 }
 
-[rendering]
+[internationalization]
 
-renderer/rendering_method="forward_plus"
+locale/translations_pot_files=PackedStringArray("res://dialogue/tamori_tavern.dialogue", "res://dialogue/liris_intro.dialogue")

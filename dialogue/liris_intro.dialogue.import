@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://la4hatkmn6r4"
+path="res://.godot/imported/liris_intro.dialogue-c2e02bebb88201e6a544e2bb466e76f1.tres"
+
+[deps]
+
+source_file="res://dialogue/liris_intro.dialogue"
+dest_files=["res://.godot/imported/liris_intro.dialogue-c2e02bebb88201e6a544e2bb466e76f1.tres"]
+
+[params]
+
+defaults=true
