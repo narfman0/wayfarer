@@ -35,15 +35,12 @@ assets/
     characters/  — Sarro, Liris, NPC meshes
     props/       — set dressing
 vendor/
-  godot-srd-addon/   git submodule — SRD rules engine
-  dialogue-manager/  git submodule — Nathan Hoad dialogue
-  phantom-camera/    git submodule — cinematic camera (PhantomCamera3D)
-  beehave/           git submodule — behavior tree AI
+  godot-srd-addon/   git submodule — SRD rules engine (narfman0/godot-srd-addon)
 addons/
-  srd            -> ../vendor/godot-srd-addon/addons/srd
-  dialogue_manager -> ../vendor/dialogue-manager/addons/dialogue_manager
-  phantom_camera -> ../vendor/phantom-camera/addons/phantom_camera
-  beehave        -> ../vendor/beehave/addons/beehave
+  srd            -> ../vendor/godot-srd-addon/addons/srd  (submodule symlink)
+  dialogue_manager/  vendored directly — Nathan Hoad dialogue manager
+  phantom_camera/    vendored directly — cinematic camera (PhantomCamera3D)
+  beehave/           vendored directly — behavior tree AI
 ```
 
 ## Level / terrain approach
