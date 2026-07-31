@@ -20,11 +20,10 @@ window/stretch/aspect="expand"
 [autoload]
 
 GameState="*res://scripts/system/game_state.gd"
-DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/srd/plugin.cfg", "res://addons/dialogue_manager/plugin.cfg")
+enabled=PackedStringArray("res://addons/srd/plugin.cfg")
 
 [input]
 

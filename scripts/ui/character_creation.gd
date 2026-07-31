@@ -3,8 +3,8 @@
 class_name CharacterCreation
 extends Control
 
+const _Factory  = preload("res://scripts/characters/character_factory.gd")
 const _FeatData = preload("res://scripts/characters/feat_data.gd")
-const _WC       = preload("res://scripts/characters/wayfarer_character.gd")
 
 ## Feats available for Sarro (combat-focused Soldier)
 const SARRO_FEATS := [
@@ -46,29 +46,15 @@ func _build_feat_list(container: VBoxContainer, options: Array, on_select: Calla
 		btn.toggled.connect(func(on: bool):
 			if on:
 				on_select.call(key)
-				_check_confirm_enabled()
 		)
 		container.add_child(btn)
 
-func _check_confirm_enabled() -> void:
-	pass  # MVP: always enabled; feats are optional choices
-
 func _on_confirm() -> void:
-	var sarro = _WC.make_sarro()
-	var liris = _WC.make_liris()
-	var sf = _make_feat(_sarro_selected)
-	var lf = _make_feat(_liris_selected)
+	var sarro = _Factory.make_sarro()
+	var liris = _Factory.make_liris()
+	var sf = _Factory.make_feat(_FeatData, _sarro_selected)
+	var lf = _Factory.make_feat(_FeatData, _liris_selected)
 	if sf != null: sarro.feats.append(sf)
 	if lf != null: liris.feats.append(lf)
 	GameState.set_party(sarro, liris)
 	get_tree().change_scene_to_file("res://scenes/world/tamori.tscn")
-
-func _make_feat(key: String):
-	match key:
-		"gwm":        return _FeatData.make_gwm()
-		"alert":      return _FeatData.make_alert()
-		"sentinel":   return _FeatData.make_sentinel()
-		"mobile":     return _FeatData.make_mobile()
-		"war_caster": return _FeatData.make_war_caster()
-		"lucky":      return _FeatData.make_lucky()
-	return null

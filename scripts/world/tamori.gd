@@ -7,6 +7,7 @@ extends Node3D
 @export var skip_opening_dialogue: bool = false
 
 const _WC            = preload("res://scripts/characters/wayfarer_character.gd")
+const _Factory       = preload("res://scripts/characters/character_factory.gd")
 const _MeleeAttacker = preload("res://scripts/combat/melee_attacker.gd")
 const _WeaponData    = preload("res://vendor/godot-srd-addon/addons/srd/resources/weapon_data.gd")
 const _SRD           = preload("res://vendor/godot-srd-addon/addons/srd/srd_enums.gd")
@@ -44,7 +45,7 @@ func _setup_hud() -> void:
 func _setup_combat() -> void:
 	_attacker = _MeleeAttacker.new()
 	_attacker.owner_body = _player
-	_attacker.character  = GameState.sarro if GameState.sarro != null else _WC.make_sarro()
+	_attacker.character  = GameState.sarro if GameState.sarro != null else _Factory.make_sarro()
 	add_child(_attacker)
 
 func _setup_enemies() -> void:
@@ -57,20 +58,7 @@ func _setup_enemies() -> void:
 		ec.died.connect(_on_enemy_died.bind(ec))
 
 func _make_enemy_char():
-	var c = _WC.new()
-	c.display_name = "Bandit"
-	c.stats.character_name = "Bandit"
-	c.stats.level = 1; c.stats.max_hp = 11; c.stats.armor_class = 12
-	c.stats.strength = 12; c.stats.dexterity = 10; c.stats.constitution = 10
-	c.stats.reset()
-	var dagger = _WeaponData.new()
-	dagger.weapon_name = "Dagger"
-	dagger.weapon_type = _SRD.WeaponType.SIMPLE
-	dagger.damage_type = _SRD.DamageType.PIERCING
-	dagger.die_count = 1; dagger.die_sides = 4
-	c.equipment.equip_main_hand(dagger)
-	c.setup()
-	return c
+	return _Factory.make_enemy_char()
 
 func _check_player_targeting() -> void:
 	var tgt = _player.target_enemy
@@ -98,7 +86,7 @@ func _on_enemy_died(ec) -> void:  # EnemyController
 
 func _sync_party_to_scene() -> void:
 	if GameState.sarro == null:
-		GameState.set_party(_WC.make_sarro(), _WC.make_liris())
+		GameState.set_party(_Factory.make_sarro(), _Factory.make_liris())
 
 func _start_opening_dialogue() -> void:
 	_player.set_control_enabled(false)

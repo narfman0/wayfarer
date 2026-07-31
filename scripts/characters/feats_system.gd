@@ -1,16 +1,23 @@
 class_name FeatsSystem
 extends RefCounted
 
-static func apply_stat_mods(stats: CharacterStats, feat: FeatData) -> void:
+static func apply_stat_mods(stats, feat) -> void:
 	if feat == null:
 		return
 	stats.speed += feat.speed_mod
 
 static func has_feat(feats: Array, feat_name: String) -> bool:
 	for f in feats:
-		if f is FeatData and f.feat_name == feat_name:
+		if f != null and f.get("feat_name") == feat_name:
 			return true
 	return false
+
+static func initiative_bonus(feats: Array) -> int:
+	var bonus := 0
+	for f in feats:
+		if f != null:
+			bonus += f.get("initiative_mod", 0)
+	return bonus
 
 class LuckyTracker:
 	var points: int = 3

@@ -3,96 +3,48 @@
 class_name WayfarerCharacter
 extends Resource
 
+const _CharacterStats = preload("res://vendor/godot-srd-addon/addons/srd/resources/character_stats.gd")
+const _EquipmentSlots = preload("res://vendor/godot-srd-addon/addons/srd/systems/equipment.gd")
+const _Combatant      = preload("res://vendor/godot-srd-addon/addons/srd/systems/combatant.gd")
+const _Dice           = preload("res://vendor/godot-srd-addon/addons/srd/dice.gd")
+const _SRD            = preload("res://vendor/godot-srd-addon/addons/srd/srd_enums.gd")
+const _FeatsSystem    = preload("res://scripts/characters/feats_system.gd")
+
 @export var display_name: String = ""
 @export var portrait: Texture2D
 
-## Core SRD data — drive all rules through these
-@export var stats: CharacterStats
-@export var class_data: ClassData
-@export var equipment: EquipmentSlots
-@export var feats: Array[FeatData] = []
+@export var stats = null       # CharacterStats
+@export var class_data = null  # ClassData
+@export var equipment = null   # EquipmentSlots
+@export var feats: Array = []  # Array of FeatData
 
-## Optional — only companions with class features need this
-var feature_tracker: ClassFeatureTracker = null
-var energy_slots: EnergySlots = null
-var lucky_tracker: FeatsSystem.LuckyTracker = null
+var feature_tracker = null
+var energy_slots = null
+var lucky_tracker = null
 
 func _init() -> void:
-	stats = CharacterStats.new()
-	equipment = EquipmentSlots.new()
+	stats    = _CharacterStats.new()
+	equipment = _EquipmentSlots.new()
 
 ## Call after setting class_data and stats.level to finish setup.
 func setup() -> void:
 	if class_data != null:
-		feature_tracker = ClassFeatureTracker.new(class_data)
-		energy_slots = class_data.make_slots(stats.level)
-	for feat: FeatData in feats:
-		FeatsSystem.apply_stat_mods(stats, feat)
-	if FeatsSystem.has_feat(feats, "Lucky"):
-		lucky_tracker = FeatsSystem.LuckyTracker.new()
+		if class_data.has_method("make_slots"):
+			energy_slots = class_data.make_slots(stats.level)
+	for feat in feats:
+		_FeatsSystem.apply_stat_mods(stats, feat)
+	if _FeatsSystem.has_feat(feats, "Lucky"):
+		lucky_tracker = _FeatsSystem.LuckyTracker.new()
 
 ## Build the Combatant the SRD battle system uses this turn.
-func make_combatant(weapon: WeaponData = null) -> Combatant:
-	var c := Combatant.new(stats, weapon if weapon != null else _equipped_weapon(), equipment)
-	return c
-
-## Passive Perception — used for hidden enemies, traps, Veil anomalies.
-func passive_perception() -> int:
-	return SRDRules.passive_check(stats, SRD.Skill.PERCEPTION)
+func make_combatant():
+	return _Combatant.new(stats, _equipped_weapon(), equipment)
 
 ## Total initiative roll with feat bonuses (Alert: +5).
 func roll_initiative() -> int:
-	var d20 := Dice.roll_d20()
-	var mod := stats.ability_modifier(SRD.Ability.DEXTERITY)
-	return d20 + mod + FeatsSystem.initiative_bonus(feats)
+	var d20: int = _Dice.roll_d20()
+	var mod: int = stats.ability_modifier(_SRD.Ability.DEXTERITY)
+	return d20 + mod + _FeatsSystem.initiative_bonus(feats)
 
-func _equipped_weapon() -> WeaponData:
+func _equipped_weapon():
 	return equipment.main_hand if equipment != null else null
-
-
-## ── Built-in companion factories ──────────────────────────────────────────────
-
-static func make_sarro() -> WayfarerCharacter:
-	var c := WayfarerCharacter.new()
-	c.display_name = "Sarro"
-	c.stats.character_name = "Sarro"
-	c.stats.level = 1; c.stats.hit_die = 10
-	c.stats.strength = 16; c.stats.dexterity = 14; c.stats.constitution = 14
-	c.stats.intelligence = 10; c.stats.wisdom = 12; c.stats.charisma = 10
-	c.stats.max_hp = 12; c.stats.speed = 30; c.stats.reset()
-	c.stats.set_save_proficiency(SRD.Ability.STRENGTH, true)
-	c.stats.set_save_proficiency(SRD.Ability.CONSTITUTION, true)
-	c.class_data = ClassData.make_soldier()
-	var longsword := WeaponData.new()
-	longsword.weapon_name = "Longsword"
-	longsword.weapon_type = SRD.WeaponType.MARTIAL
-	longsword.damage_type = SRD.DamageType.SLASHING
-	longsword.die_count = 1; longsword.die_sides = 8
-	longsword.properties = SRD.WeaponProperty.VERSATILE
-	longsword.versatile_die_count = 1; longsword.versatile_die_sides = 10
-	c.equipment.equip_main_hand(longsword)
-	c.equipment.equip_armor(ArmorData.make_chain_mail())
-	c.setup()
-	return c
-
-static func make_liris() -> WayfarerCharacter:
-	var c := WayfarerCharacter.new()
-	c.display_name = "Liris"
-	c.stats.character_name = "Liris"
-	c.stats.level = 1; c.stats.hit_die = 8
-	c.stats.strength = 10; c.stats.dexterity = 14; c.stats.constitution = 12
-	c.stats.intelligence = 14; c.stats.wisdom = 16; c.stats.charisma = 12
-	c.stats.max_hp = 9; c.stats.speed = 30; c.stats.reset()
-	c.stats.set_save_proficiency(SRD.Ability.WISDOM, true)
-	c.stats.set_save_proficiency(SRD.Ability.CHARISMA, true)
-	c.class_data = ClassData.make_warden()
-	var mace := WeaponData.new()
-	mace.weapon_name = "Mace"
-	mace.weapon_type = SRD.WeaponType.SIMPLE
-	mace.damage_type = SRD.DamageType.BLUDGEONING
-	mace.die_count = 1; mace.die_sides = 6
-	c.equipment.equip_main_hand(mace)
-	c.equipment.equip_armor(ArmorData.make_scale_mail())
-	c.equipment.equip_shield(ArmorData.make_shield())
-	c.setup()
-	return c
