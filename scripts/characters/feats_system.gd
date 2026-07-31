@@ -16,7 +16,7 @@ static func initiative_bonus(feats: Array) -> int:
 	var bonus := 0
 	for f in feats:
 		if f != null:
-			bonus += f.get("initiative_mod", 0)
+			bonus += f.initiative_mod
 	return bonus
 
 class LuckyTracker:

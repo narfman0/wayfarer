@@ -8,35 +8,38 @@ anchor_bottom = 1.0
 script = ExtResource("1_cc")
 
 [node name="Layout" type="VBoxContainer" parent="."]
-anchor_left = 0.1
-anchor_right = 0.9
+anchor_left = 0.15
+anchor_right = 0.85
 anchor_top = 0.05
 anchor_bottom = 0.95
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Layout"]
-text = "Choose Starting Feats"
+text = "Create Your Wayfarer"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+
+[node name="StepLabel" type="Label" parent="Layout"]
+text = "Step 1 of 5 — Class"
 horizontal_alignment = 1
 
-[node name="Companions" type="HBoxContainer" parent="Layout"]
+[node name="Content" type="ScrollContainer" parent="Layout"]
 size_flags_vertical = 3
 
-[node name="SarroPanel" type="VBoxContainer" parent="Layout/Companions"]
+[node name="StepBody" type="VBoxContainer" parent="Layout/Content"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="Nav" type="HBoxContainer" parent="Layout"]
+
+[node name="Back" type="Button" parent="Layout/Nav"]
+text = "Back"
+
+[node name="NavSpacer" type="Control" parent="Layout/Nav"]
 size_flags_horizontal = 3
 
-[node name="SarroLabel" type="Label" parent="Layout/Companions/SarroPanel"]
-text = "Sarro — Soldier"
-
-[node name="Feats" type="VBoxContainer" parent="Layout/Companions/SarroPanel"]
-
-[node name="LirisPanel" type="VBoxContainer" parent="Layout/Companions"]
-size_flags_horizontal = 3
-
-[node name="LirisLabel" type="Label" parent="Layout/Companions/LirisPanel"]
-text = "Liris — Warden"
-
-[node name="Feats" type="VBoxContainer" parent="Layout/Companions/LirisPanel"]
-
-[node name="Confirm" type="Button" parent="Layout"]
-text = "Begin"
+[node name="Next" type="Button" parent="Layout/Nav"]
+text = "Next"

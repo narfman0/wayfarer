@@ -9,51 +9,73 @@ const _ClassData  = preload("res://addons/srd/resources/class_data.gd")
 const _WeaponData = preload("res://addons/srd/resources/weapon_data.gd")
 const _ArmorData  = preload("res://addons/srd/resources/armor_data.gd")
 const _SRD        = preload("res://addons/srd/srd_enums.gd")
+const _LevelUp    = preload("res://addons/srd/systems/level_up.gd")
 
-static func make_sarro():
+const CLASS_KEYS := ["soldier", "ghost", "psion", "warden"]
+
+static func make_class_data(class_key: String):
+	match class_key:
+		"soldier": return _ClassData.make_soldier()
+		"ghost":   return _ClassData.make_ghost()
+		"psion":   return _ClassData.make_psion()
+		"warden":  return _ClassData.make_warden()
+	return null
+
+## Build a level-1 character from SRD creation choices.
+## scores: 6-element Array[int] indexed by SRD.Ability.
+## skill_picks: Array of SRD.Skill ints (validated against class skill_options).
+static func make_custom(display_name: String, class_key: String,
+		scores: Array, skill_picks: Array, feat_key: String = ""):
 	var c = _WC.new()
-	c.display_name = "Sarro"
-	c.stats.character_name = "Sarro"
-	c.stats.level = 1; c.stats.hit_die = 10
-	c.stats.strength = 16; c.stats.dexterity = 14; c.stats.constitution = 14
-	c.stats.intelligence = 10; c.stats.wisdom = 12; c.stats.charisma = 10
-	c.stats.max_hp = 12; c.stats.speed = 30; c.stats.reset()
-	c.stats.set_save_proficiency(_SRD.Ability.STRENGTH, true)
-	c.stats.set_save_proficiency(_SRD.Ability.CONSTITUTION, true)
-	c.class_data = _ClassData.make_soldier()
-	var longsword = _WeaponData.new()
-	longsword.weapon_name = "Longsword"
-	longsword.weapon_type = _SRD.WeaponType.MARTIAL
-	longsword.damage_type = _SRD.DamageType.SLASHING
-	longsword.die_count = 1; longsword.die_sides = 8
-	longsword.properties = _SRD.WeaponProperty.VERSATILE
-	longsword.versatile_die_count = 1; longsword.versatile_die_sides = 10
-	c.equipment.equip_main_hand(longsword)
-	c.equipment.equip_armor(_ArmorData.make_chain_mail())
+	var cd = make_class_data(class_key)
+	assert(cd != null, "Unknown class key: " + class_key)
+	c.display_name = display_name
+	c.stats.character_name = display_name
+	c.stats.level = 1
+	c.stats.hit_die = cd.hit_die
+	c.stats.speed = 30
+	for i in 6:
+		c.stats.set_ability(i as _SRD.Ability, scores[i])
+	c.class_data = cd
+	_LevelUp.apply_class_proficiencies(c.stats, cd)
+	for skill in skill_picks:
+		if int(skill) in cd.skill_options:
+			c.stats.set_skill_proficiency(skill as _SRD.Skill, true)
+	_equip_class_kit(c, class_key)
+	c.stats.max_hp = cd.starting_hp(c.stats.ability_modifier(_SRD.Ability.CONSTITUTION))
+	c.stats.reset()
+	var feat = make_feat(_FeatData, feat_key)
+	if feat != null:
+		c.feats.append(feat)
 	c.setup()
 	return c
+
+## SRD-style starting equipment per class.
+static func _equip_class_kit(c, class_key: String) -> void:
+	match class_key:
+		"soldier":
+			c.equipment.equip_main_hand(_WeaponData.make_longsword())
+			c.equipment.equip_armor(_ArmorData.make_chain_mail())
+		"ghost":
+			c.equipment.equip_main_hand(_WeaponData.make_rapier())
+			c.equipment.equip_armor(_ArmorData.make_leather())
+		"psion":
+			c.equipment.equip_main_hand(_WeaponData.make_quarterstaff())
+		"warden":
+			c.equipment.equip_main_hand(_WeaponData.make_mace())
+			c.equipment.equip_armor(_ArmorData.make_scale_mail())
+			c.equipment.equip_shield(_ArmorData.make_shield())
+
+## Default Sarro — Soldier with the standard array on a STR build.
+static func make_sarro():
+	return make_custom("Sarro", "soldier",
+		[16, 14, 14, 10, 12, 10],
+		[int(_SRD.Skill.ATHLETICS), int(_SRD.Skill.PERCEPTION)])
 
 static func make_liris():
-	var c = _WC.new()
-	c.display_name = "Liris"
-	c.stats.character_name = "Liris"
-	c.stats.level = 1; c.stats.hit_die = 8
-	c.stats.strength = 10; c.stats.dexterity = 14; c.stats.constitution = 12
-	c.stats.intelligence = 14; c.stats.wisdom = 16; c.stats.charisma = 12
-	c.stats.max_hp = 9; c.stats.speed = 30; c.stats.reset()
-	c.stats.set_save_proficiency(_SRD.Ability.WISDOM, true)
-	c.stats.set_save_proficiency(_SRD.Ability.CHARISMA, true)
-	c.class_data = _ClassData.make_warden()
-	var mace = _WeaponData.new()
-	mace.weapon_name = "Mace"
-	mace.weapon_type = _SRD.WeaponType.SIMPLE
-	mace.damage_type = _SRD.DamageType.BLUDGEONING
-	mace.die_count = 1; mace.die_sides = 6
-	c.equipment.equip_main_hand(mace)
-	c.equipment.equip_armor(_ArmorData.make_scale_mail())
-	c.equipment.equip_shield(_ArmorData.make_shield())
-	c.setup()
-	return c
+	return make_custom("Liris", "warden",
+		[10, 14, 12, 14, 16, 12],
+		[int(_SRD.Skill.INSIGHT), int(_SRD.Skill.MEDICINE)])
 
 static func make_enemy_char():
 	var c = _WC.new()
@@ -63,12 +85,7 @@ static func make_enemy_char():
 	c.equipment.equip_armor(_ArmorData.make_studded_leather())
 	c.stats.strength = 12; c.stats.dexterity = 10; c.stats.constitution = 10
 	c.stats.reset()
-	var dagger = _WeaponData.new()
-	dagger.weapon_name = "Dagger"
-	dagger.weapon_type = _SRD.WeaponType.SIMPLE
-	dagger.damage_type = _SRD.DamageType.PIERCING
-	dagger.die_count = 1; dagger.die_sides = 4
-	c.equipment.equip_main_hand(dagger)
+	c.equipment.equip_main_hand(_WeaponData.make_dagger())
 	c.setup()
 	return c
 
