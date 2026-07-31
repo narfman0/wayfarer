@@ -9,7 +9,7 @@ Cosmic fantasy ARPG. Two companions (Sarro + Liris) trace damage left by well-me
 - **Combat**: real-time with optional pause (Space). Click-to-move + click-to-attack. Abilities on 1–4 / D-pad. SRD attack rolls + AC + saving throws run silently underneath.
 - **World**: hand-crafted levels and enemy placement. No spawn randomization in shipped acts. Replayability comes from feat/build choices, not RNG. Random dungeons are a future optional add-on.
 - **Levels**: acts composed of hand-crafted scenes connected by portals. Portal triggers are narrative, boss-gated, or exploration-based.
-- **Enemy aggro**: proximity cylinder + optional LOS check → Patrol → Chase → Attack (Beehave BT).
+- **Enemy aggro**: proximity cylinder + optional LOS check → Patrol → Chase → Attack (plain state machine in EnemyController).
 - **Progression**: no XP levels. Story milestone feats + equipment drops + Liris conviction arc.
 
 Design docs: `docs/design/gameplay.md`, `docs/design/levels.md`, `docs/design/bosses.md`
