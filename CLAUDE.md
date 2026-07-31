@@ -20,25 +20,26 @@ vendor/
   dialogue-manager/  git submodule — Nathan Hoad dialogue
   phantom-camera/    git submodule — cinematic camera (PhantomCamera3D)
   beehave/           git submodule — behavior tree AI
-  terrain3d/         git submodule — GDExtension terrain (requires compiled binaries)
 addons/
   srd            -> ../vendor/godot-srd-addon/addons/srd
   dialogue_manager -> ../vendor/dialogue-manager/addons/dialogue_manager
   phantom_camera -> ../vendor/phantom-camera/addons/phantom_camera
   beehave        -> ../vendor/beehave/addons/beehave
-  terrain_3d     -> ../vendor/terrain3d/project/addons/terrain_3d
+assets/
+  meshes/
+    environment/ — ground planes, architecture (Synty modular kits)
+    characters/  — Sarro, Liris, NPC meshes
+    props/       — set dressing (furniture, barrels, lanterns, etc.)
 ```
 
-## Terrain3D
+## Level / Terrain approach
 
-GDExtension — pure GDScript won't work. Before opening the project you must place compiled
-`.gdextension` binaries in `addons/terrain_3d/bin/`. Download from:
-https://github.com/TokisanGames/Terrain3D/releases
+Static Synty mesh assets — no GDExtension dependency, no build step. Each plane scene has:
+- `Level/Ground` — MeshInstance3D; swap in a Synty ground tile or tile grid
+- `Level/Props` — Node3D; child MeshInstance3D nodes for set dressing
 
-Or build from source:
-```bash
-cd vendor/terrain3d && scons platform=linuxbsd target=template_debug
-```
+Drop Synty `.glb` files into `assets/meshes/` and instantiate in the scene.
+Terrain3D can be revisited later if procedural terrain becomes necessary.
 
 ## SRD addon
 
