@@ -3,6 +3,9 @@
 class_name EnemyController
 extends CharacterBody3D
 
+const _Dice           = preload("res://vendor/godot-srd-addon/addons/srd/dice.gd")
+const _CharacterStats = preload("res://vendor/godot-srd-addon/addons/srd/resources/character_stats.gd")
+
 enum State { PATROL, CHASE, ATTACK }
 
 const SPEED      := 3.0
@@ -102,9 +105,9 @@ func _fire_attack() -> void:
 		target_char = GameState.sarro
 
 	var attacker = character.make_combatant()
-	var defender_stats = target_char.stats if target_char != null else CharacterStats.new()
+	var defender_stats = target_char.stats if target_char != null else _CharacterStats.new()
 
-	var d20: int       = Dice.roll_d20()
+	var d20: int       = _Dice.roll_d20()
 	var atk_mod: int   = attacker.attack_modifier()
 	var total_atk: int = d20 + atk_mod
 	var target_ac: int = defender_stats.armor_class

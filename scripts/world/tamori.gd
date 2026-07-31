@@ -6,7 +6,10 @@ extends Node3D
 ## Set true in the editor to skip opening dialogue for movement/combat testing.
 @export var skip_opening_dialogue: bool = false
 
-const _WC = preload("res://scripts/characters/wayfarer_character.gd")
+const _WC            = preload("res://scripts/characters/wayfarer_character.gd")
+const _MeleeAttacker = preload("res://scripts/combat/melee_attacker.gd")
+const _WeaponData    = preload("res://vendor/godot-srd-addon/addons/srd/resources/weapon_data.gd")
+const _SRD           = preload("res://vendor/godot-srd-addon/addons/srd/srd_enums.gd")
 
 @onready var _player    = $Characters/Sarro     # PlayerController
 @onready var _companion = $Characters/Liris     # CompanionFollow
@@ -35,11 +38,11 @@ func _process(_delta: float) -> void:
 func _setup_hud() -> void:
 	var hud_scene := load("res://scenes/ui/hud.tscn")
 	if hud_scene:
-		_hud = hud_scene.instantiate() as HUD
+		_hud = hud_scene.instantiate()
 		_hud_root.add_child(_hud)
 
 func _setup_combat() -> void:
-	_attacker = MeleeAttacker.new()
+	_attacker = _MeleeAttacker.new()
 	_attacker.owner_body = _player
 	_attacker.character  = GameState.sarro if GameState.sarro != null else _WC.make_sarro()
 	add_child(_attacker)
@@ -60,17 +63,17 @@ func _make_enemy_char():
 	c.stats.level = 1; c.stats.max_hp = 11; c.stats.armor_class = 12
 	c.stats.strength = 12; c.stats.dexterity = 10; c.stats.constitution = 10
 	c.stats.reset()
-	var dagger := WeaponData.new()
+	var dagger = _WeaponData.new()
 	dagger.weapon_name = "Dagger"
-	dagger.weapon_type = SRD.WeaponType.SIMPLE
-	dagger.damage_type = SRD.DamageType.PIERCING
+	dagger.weapon_type = _SRD.WeaponType.SIMPLE
+	dagger.damage_type = _SRD.DamageType.PIERCING
 	dagger.die_count = 1; dagger.die_sides = 4
 	c.equipment.equip_main_hand(dagger)
 	c.setup()
 	return c
 
 func _check_player_targeting() -> void:
-	var tgt := _player.target_enemy
+	var tgt = _player.target_enemy
 	if tgt == null:
 		return
 	var ec = tgt if tgt != null and tgt.has_method("receive_damage") else null
@@ -79,7 +82,7 @@ func _check_player_targeting() -> void:
 	if _hud != null:
 		_hud.track_enemy(ec)
 	# Within melee range → start/continue attacking
-	var dist := _player.global_position.distance_to(ec.global_position)
+	var dist: float = _player.global_position.distance_to(ec.global_position)
 	if dist <= 1.6:
 		if not _attacker.is_attacking(ec):
 			_attacker.start(ec)

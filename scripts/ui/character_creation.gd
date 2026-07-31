@@ -3,6 +3,9 @@
 class_name CharacterCreation
 extends Control
 
+const _FeatData = preload("res://scripts/characters/feat_data.gd")
+const _WC       = preload("res://scripts/characters/wayfarer_character.gd")
+
 ## Feats available for Sarro (combat-focused Soldier)
 const SARRO_FEATS := [
 	{"label": "Great Weapon Master — +10 dmg on -5 hit trade",  "feat": "gwm"},
@@ -51,21 +54,21 @@ func _check_confirm_enabled() -> void:
 	pass  # MVP: always enabled; feats are optional choices
 
 func _on_confirm() -> void:
-	var sarro := WayfarerCharacter.make_sarro()
-	var liris := WayfarerCharacter.make_liris()
-	var sf := _make_feat(_sarro_selected)
-	var lf := _make_feat(_liris_selected)
+	var sarro = _WC.make_sarro()
+	var liris = _WC.make_liris()
+	var sf = _make_feat(_sarro_selected)
+	var lf = _make_feat(_liris_selected)
 	if sf != null: sarro.feats.append(sf)
 	if lf != null: liris.feats.append(lf)
 	GameState.set_party(sarro, liris)
 	get_tree().change_scene_to_file("res://scenes/world/tamori.tscn")
 
-func _make_feat(key: String) -> FeatData:
+func _make_feat(key: String):
 	match key:
-		"gwm":        return FeatData.make_gwm()
-		"alert":      return FeatData.make_alert()
-		"sentinel":   return FeatData.make_sentinel()
-		"mobile":     return FeatData.make_mobile()
-		"war_caster": return FeatData.make_war_caster()
-		"lucky":      return FeatData.make_lucky()
+		"gwm":        return _FeatData.make_gwm()
+		"alert":      return _FeatData.make_alert()
+		"sentinel":   return _FeatData.make_sentinel()
+		"mobile":     return _FeatData.make_mobile()
+		"war_caster": return _FeatData.make_war_caster()
+		"lucky":      return _FeatData.make_lucky()
 	return null
