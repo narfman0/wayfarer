@@ -107,7 +107,21 @@ Two resolutions: if Liris's conviction is high enough, the final phase becomes a
 
 The intervention stops. The tears don't close overnight. But they stop multiplying.
 
-**The ending**: Two people in a quiet place. Sarro still hasn't found his sister. He's less frantic about it. That might be enough.
+**The ending**: Cael sits down somewhere. They leave him there. The Veil starts to settle. Not fixed — beginning.
+
+Then: a portal opens nearby. Not dramatic. Not urgent. Just there, the way portals are when you've been traveling long enough.
+
+Sarro looks at it. Looks at Liris. Says something like: *"Shall we continue?"*
+
+Three options — player's final choice:
+
+- **Go together.** They walk through. Screen goes to the Veil. Credits. The journey didn't end; they chose to keep going.
+- **Go alone.** She stays. He goes. The screen goes to the Veil. A different kind of ending — she's arrived, he's still moving, and that's honest too.
+- **Don't go.** They watch the portal close. Stay. Credits. The world doesn't need them right now. That's also enough.
+
+The line doesn't change. The portal doesn't explain itself. The choice is entirely theirs.
+
+*She was pulled into this. Now she's choosing.*
 
 ---
 
@@ -118,9 +132,9 @@ The intervention stops. The tears don't close overnight. But they stop multiplyi
 | The Extractor Deal | The Reach | Speed vs. watching harm continue; Fence's arc if you deal |
 | The Warden's Ritual | Tamori | Let Idris sacrifice something, stop her, or do nothing |
 | The Mender You Understand | Act 2 mid | Force / redirect / let the intervention complete |
-| Sarro's Portal | Verath | He goes (finds something or nothing, comes back changed) or stays (gate closes, something shifts) |
-| Liris Stays or Goes | Ashan | She chooses whether to continue; her choice, not the player's framing |
+| Sarro's Portal | Verath | He goes (finds something or nothing, comes back changed) or stays (gate closes, something shifts between them) |
 | Cael's Resolution | The Convergence | Dialogue ending gated on conviction score; otherwise combat to conclusion |
+| The Final Portal | After the Convergence | Go together / go alone / don't go — Sarro asks, the choice is theirs |
 
 ---
 
