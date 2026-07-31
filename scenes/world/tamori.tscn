@@ -1,8 +1,26 @@
-[gd_scene load_steps=4 format=3 uid="uid://tamori"]
+[gd_scene load_steps=10 format=3 uid="uid://tamori"]
 
 [ext_resource type="Script" path="res://scripts/world/tamori.gd" id="1_tamori"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
+[ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sarro"]
+height = 1.8
+radius = 0.35
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_liris"]
+height = 1.8
+radius = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(40, 0.2, 40)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_enemy"]
+height = 1.8
+radius = 0.35
 
 [node name="Tamori" type="Node3D"]
 script = ExtResource("1_tamori")
@@ -16,25 +34,52 @@ shadow_enabled = true
 
 [node name="Level" type="Node3D" parent="."]
 
-[node name="Ground" type="MeshInstance3D" parent="Level"]
+[node name="Ground" type="StaticBody3D" parent="Level"]
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Level/Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+mesh = SubResource("BoxMesh_ground")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="Level/Ground"]
+shape = SubResource("WorldBoundaryShape3D_1")
 
 [node name="Props" type="Node3D" parent="Level"]
 
 [node name="Characters" type="Node3D" parent="."]
 
 [node name="Sarro" type="CharacterBody3D" parent="Characters"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 2)
 script = ExtResource("2_player")
+collision_layer = 1
+groups = ["players"]
+
+[node name="SarroCollision" type="CollisionShape3D" parent="Characters/Sarro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_sarro")
 
 [node name="Liris" type="CharacterBody3D" parent="Characters"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.9, 2)
 script = ExtResource("3_companion")
 
+[node name="LirisCollision" type="CollisionShape3D" parent="Characters/Liris"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_liris")
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="BanditGuard" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.9, 2)
+script = ExtResource("4_enemy")
+collision_layer = 2
+
+[node name="EnemyCollision" type="CollisionShape3D" parent="Enemies/BanditGuard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_enemy")
+
 [node name="CameraPivot" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 6)
 
 [node name="Camera3D" type="Camera3D" parent="CameraPivot"]
-transform = Transform3D(1, 0, 0, 0, 0.906, -0.423, 0, 0.423, 0.906, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 0.574, -0.819, 0, 0.819, 0.574, 0, 14, 12)
 current = true
 
 [node name="HUD" type="Control" parent="."]
