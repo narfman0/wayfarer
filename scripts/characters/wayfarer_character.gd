@@ -60,7 +60,18 @@ static func make_sarro() -> WayfarerCharacter:
 	c.stats.strength = 16; c.stats.dexterity = 14; c.stats.constitution = 14
 	c.stats.intelligence = 10; c.stats.wisdom = 12; c.stats.charisma = 10
 	c.stats.max_hp = 12; c.stats.speed = 30; c.stats.reset()
+	c.stats.set_save_proficiency(SRD.Ability.STRENGTH, true)
+	c.stats.set_save_proficiency(SRD.Ability.CONSTITUTION, true)
 	c.class_data = ClassData.make_soldier()
+	var longsword := WeaponData.new()
+	longsword.weapon_name = "Longsword"
+	longsword.weapon_type = SRD.WeaponType.MARTIAL
+	longsword.damage_type = SRD.DamageType.SLASHING
+	longsword.die_count = 1; longsword.die_sides = 8
+	longsword.properties = SRD.WeaponProperty.VERSATILE
+	longsword.versatile_die_count = 1; longsword.versatile_die_sides = 10
+	c.equipment.equip_main_hand(longsword)
+	c.equipment.equip_armor(ArmorData.make_chain_mail())
 	c.setup()
 	return c
 
@@ -72,6 +83,16 @@ static func make_liris() -> WayfarerCharacter:
 	c.stats.strength = 10; c.stats.dexterity = 14; c.stats.constitution = 12
 	c.stats.intelligence = 14; c.stats.wisdom = 16; c.stats.charisma = 12
 	c.stats.max_hp = 9; c.stats.speed = 30; c.stats.reset()
+	c.stats.set_save_proficiency(SRD.Ability.WISDOM, true)
+	c.stats.set_save_proficiency(SRD.Ability.CHARISMA, true)
 	c.class_data = ClassData.make_warden()
+	var mace := WeaponData.new()
+	mace.weapon_name = "Mace"
+	mace.weapon_type = SRD.WeaponType.SIMPLE
+	mace.damage_type = SRD.DamageType.BLUDGEONING
+	mace.die_count = 1; mace.die_sides = 6
+	c.equipment.equip_main_hand(mace)
+	c.equipment.equip_armor(ArmorData.make_scale_mail())
+	c.equipment.equip_shield(ArmorData.make_shield())
 	c.setup()
 	return c

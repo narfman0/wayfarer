@@ -1,0 +1,51 @@
+[gd_scene load_steps=2 format=3 uid="uid://combat_lab"]
+
+[ext_resource type="Script" path="res://scripts/tests/combat_lab.gd" id="1_lab"]
+
+[node name="CombatLab" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_lab")
+
+[node name="Layout" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+
+[node name="Title" type="Label" parent="Layout"]
+text = "Combat Lab"
+theme_override_font_sizes/font_size = 24
+
+[node name="Controls" type="HBoxContainer" parent="Layout"]
+
+[node name="ScenarioPicker" type="OptionButton" parent="Layout/Controls"]
+custom_minimum_size = Vector2(220, 0)
+
+[node name="ModePicker" type="OptionButton" parent="Layout/Controls"]
+custom_minimum_size = Vector2(240, 0)
+
+[node name="TrialsLabel" type="Label" parent="Layout/Controls"]
+text = "Trials:"
+
+[node name="Trials" type="SpinBox" parent="Layout/Controls"]
+min_value = 1.0
+max_value = 500.0
+value = 1.0
+custom_minimum_size = Vector2(80, 0)
+
+[node name="RunButton" type="Button" parent="Layout/Controls"]
+text = "Run"
+
+[node name="Summary" type="Label" parent="Layout"]
+text = "Pick a scenario and press Run."
+
+[node name="LogScroll" type="ScrollContainer" parent="Layout"]
+size_flags_vertical = 3
+
+[node name="Log" type="RichTextLabel" parent="Layout/LogScroll"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
