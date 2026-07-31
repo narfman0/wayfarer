@@ -6,10 +6,6 @@ extends Node
 const MELEE_RANGE  := 1.6   # metres
 const ATTACK_RATE  := 1.0   # seconds between attacks
 
-const _Dice          = preload("res://addons/srd/dice.gd")
-const _CharacterStats = preload("res://vendor/godot-srd-addon/addons/srd/resources/character_stats.gd")
-const _Combatant      = preload("res://vendor/godot-srd-addon/addons/srd/systems/combatant.gd")
-
 var owner_body: CharacterBody3D = null
 var character = null   # WayfarerCharacter
 
@@ -53,7 +49,7 @@ func _do_attack() -> void:
 	var attacker = character.make_combatant()
 	var defender = _target.character.make_combatant() if _target.character != null else _make_default_enemy_combatant()
 
-	var d20: int       = _Dice.roll_d20()
+	var d20: int       = Dice.roll_d20()
 	var atk_mod: int   = attacker.attack_modifier()
 	var total_atk: int = d20 + atk_mod
 	var target_ac: int = defender.stats.armor_class
@@ -77,10 +73,10 @@ func _do_attack() -> void:
 	print("[Combat] ", _format(ev))
 
 func _make_default_enemy_combatant():
-	var stats = _CharacterStats.new()
+	var stats = CharacterStats.new()
 	stats.armor_class = 12; stats.max_hp = 11; stats.current_hp = 11
 	stats.strength = 12; stats.dexterity = 10; stats.constitution = 10
-	return _Combatant.new(stats, null, null)
+	return Combatant.new(stats, null, null)
 
 func _format(ev: Dictionary) -> String:
 	if ev.get("crit"):

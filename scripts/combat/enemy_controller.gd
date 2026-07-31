@@ -13,9 +13,6 @@ const CHASE_DIST := 12.0  # metres — give up chase beyond this
 @export var patrol_points: Array[NodePath] = []
 @export var aggro_radius: float = 6.0
 
-const _Dice = preload("res://addons/srd/dice.gd")
-const _CharacterStats = preload("res://vendor/godot-srd-addon/addons/srd/resources/character_stats.gd")
-
 ## Filled by WayfarerCharacter factory in task 8. Nil = use defaults.
 var character = null  # WayfarerCharacter
 
@@ -105,9 +102,9 @@ func _fire_attack() -> void:
 		target_char = GameState.sarro
 
 	var attacker = character.make_combatant()
-	var defender_stats = target_char.stats if target_char != null else _CharacterStats.new()
+	var defender_stats = target_char.stats if target_char != null else CharacterStats.new()
 
-	var d20: int       = _Dice.roll_d20()
+	var d20: int       = Dice.roll_d20()
 	var atk_mod: int   = attacker.attack_modifier()
 	var total_atk: int = d20 + atk_mod
 	var target_ac: int = defender_stats.armor_class
