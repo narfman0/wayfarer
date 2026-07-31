@@ -30,7 +30,7 @@ func _ready() -> void:
 	_build_feat_list(_sarro_group, SARRO_FEATS, func(key): _sarro_selected = key)
 	_build_feat_list(_liris_group, LIRIS_FEATS, func(key): _liris_selected = key)
 	_confirm_btn.pressed.connect(_on_confirm)
-	_confirm_btn.disabled = true
+	_confirm_btn.disabled = false  # MVP: feats are optional
 
 func _build_feat_list(container: VBoxContainer, options: Array, on_select: Callable) -> void:
 	var group := ButtonGroup.new()
@@ -48,7 +48,7 @@ func _build_feat_list(container: VBoxContainer, options: Array, on_select: Calla
 		container.add_child(btn)
 
 func _check_confirm_enabled() -> void:
-	_confirm_btn.disabled = (_sarro_selected == "" or _liris_selected == "")
+	pass  # MVP: always enabled; feats are optional choices
 
 func _on_confirm() -> void:
 	var sarro := WayfarerCharacter.make_sarro()

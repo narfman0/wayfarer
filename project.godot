@@ -19,9 +19,6 @@ window/stretch/aspect="expand"
 
 [autoload]
 
-SRD="*res://addons/srd/srd_enums.gd"
-SRDRules="*res://addons/srd/rules_engine.gd"
-Dice="*res://addons/srd/dice.gd"
 GameState="*res://scripts/system/game_state.gd"
 DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 
