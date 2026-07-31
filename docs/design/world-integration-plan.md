@@ -75,16 +75,24 @@ Wire the act-1.md script into the levels via Dialogue Manager:
   without UI.
 - MVP for the cold open: text-over-black cards. Real cinematic later.
 
-## Phase 4 — Synty art pass (user supplies packs)
+## Phase 4 — Synty art pass (asset server on srv)
 
-Blocked on: which Synty packs are owned. Likely fits: POLYGON Samurai /
-feudal-Japan-adjacent for Tamori, plus a character pack for
-Sarro/Liris/bandits.
+UNBLOCKED: narfman0 runs an asset server at
+`http://srv.blastedstudios.com:49200` (`~/data/other/asset-server` on srv)
+— nginx serves cooked GLBs at `/assets/`, index at `/index.json`; a
+Blender-based cooker container converts raw Synty FBX → GLB. Fetch into
+the project with `./fetch_assets.sh` (assets/meshes/ is gitignored; the
+server is the source of truth).
 
-- **Import pipeline** — Synty source FBX → glTF (.glb) via Blender batch
-  script (most reliable path into Godot 4); files land in
-  `assets/meshes/{environment,characters,props}/<pack>/`. One-time import
-  presets: material dedup, collision generation off (we author collisions).
+Packs relevant to Wayfarer (cooked as of 2026-07-31): Fantasy Kingdom v5
+(1852 GLB env/props), Fantasy Characters v3 (rigged characters — verified
+importing into Godot with skeleton intact), ANIMATION Base Locomotion v3,
+Nature Biomes Meadow Forest v2. Also owned: Dungeons Realms, Viking Realm,
+Goblin War Camp, Swamp/Jungle biomes, Prototype, and others.
+
+**Look decision needed**: there is no Samurai/feudal-Japan pack. Either
+re-flavor Tamori's visuals to fantasy-kingdom-village (keeps narrative,
+changes art direction) or buy POLYGON Samurai and drop it in raw/.
 - **Environment kit smoke-test scene** — one scene that instances every
   imported tile/prop for visual QA before level dressing.
 - **Dress the four levels** — swap `Ground` meshes, prop the spaces,
@@ -109,14 +117,26 @@ Sarro/Liris/bandits.
 
 ## Dependencies / decisions needed from narfman0
 
-1. **Which Synty packs do you own** (or plan to buy)? Determines Tamori's
-   look and the character rig approach.
-2. **Export format preference**: Blender-batch to .glb (recommended) vs
-   direct FBX import.
-3. **Opening reconciliation**: tavern-brawl-then-farm (proposed) or cut
+1. ~~Which Synty packs~~ — RESOLVED: asset server on srv (see Phase 4).
+2. ~~Export format~~ — RESOLVED: server cooks FBX → GLB; Godot imports GLB
+   natively.
+3. **Tamori's look**: fantasy-kingdom village (packs on hand) or buy
+   POLYGON Samurai for the designed feudal-Japan aesthetic?
+4. **Opening reconciliation**: tavern-brawl-then-farm (proposed) or cut
    the tavern to narration?
-4. OK to rename `tamori.tscn` → `levels/tamori/docks.tscn` as part of the
+5. OK to rename `tamori.tscn` → `levels/tamori/docks.tscn` as part of the
    template refactor?
+
+## Asset-server maintenance notes (srv)
+
+Found while integrating (2026-07-31): the cooker's whole-tree Blender
+batch segfaulted in May (Blender 5.1.1, on Fantasy Kingdom's
+`SM_Bld_Castle_Drawbridge_01_Chains_01.fbx`), which is why most packs
+were never cooked; the inotify watcher also misses touches (likely watch
+exhaustion — kenney_aio alone is 85k files). Worked around by exec'ing
+the converter per-pack inside the container. Worth fixing in the
+asset-server repo eventually: per-pack batch fallback + inotify watch
+limit bump.
 
 ## Suggested sequencing
 

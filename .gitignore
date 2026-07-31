@@ -1,2 +1,5 @@
 # Godot 4 generated cache — regenerate with: godot --headless --import
 .godot/
+
+# Fetched from the asset server (srv) — see fetch_assets.sh
+assets/meshes/
