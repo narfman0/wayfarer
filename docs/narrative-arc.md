@@ -124,21 +124,27 @@ When Liris reaches her destination, she has the option to stay. She didn't promi
 
 **The portal moment:** When a gate opens toward what he lost, he has to decide what the search actually means to him. If he goes: he finds something, or nothing, or a version of what he lost that's changed beyond recognition. Either way, the question shifts. It's no longer *where is it* but *what was it really*. If he stays: he watches the gate close. He doesn't explain. Something between them changes.
 
-**Ends:** The search doesn't end. But his relationship to it does. The wandering stops feeling like exile and starts feeling like a life. That might be enough.
+**Ends:** He's been searching outward for years — looking for something lost, plane after plane. The ending is him realizing he's been accumulating things *forward* without noticing. When Liris takes his hand, he doesn't pull away. He's been looking for something lost. He didn't expect to find himself holding onto something instead.
 
 ---
 
 ### Liris
 
-**Starts:** Certain. She knows where she's going and why. She didn't plan to be traveling with a nephilim warrior who burned her barn, but she's pragmatic about it. She's not impressed by him. She's not afraid of much.
+**Starts:** Angry. She knows exactly who is responsible for where she is, and he's walking beside her.
 
-**Her destination:** Her mother disappeared through a Veil-tear years ago — assumed dead, no body, no closure. Liris has found evidence she survived and ended up in a specific plane. This is the thing she's been moving toward. It's also personal to the Veil crisis in a way she doesn't fully know yet.
+When Sarro stumbled out of that tavern brawl, he didn't just burn her barn — his collision with the Veil (divine blood, chaotic transit energy, or just terrible luck) opened a portal near her home. Someone she loves went through it. Liris followed. And now she can't get back. The threshold is gone. You can't re-cross your origin point once you've left — the Veil doesn't allow it.
 
-**The tension:** Watching what the Menders do — people with absolute certainty about how to help, causing catastrophe — starts to complicate her own certainty. She knows what she wants. She's not sure what she'll do with it once she has it.
+He owes her not just a barn. He owes her her whole life.
 
-**The destination:** Her mother is there. She's been there long enough to have changed — integrated into a plane that isn't where she started, built a life in it. Not suffering. Just somewhere else. The reunion is real and not what Liris expected and both those things are true at the same time.
+**The tension:** She's furious but not irrational. He's useful and the debt is real. Watching what the Menders do — people absolutely certain they're helping, causing catastrophe — starts to complicate her own righteous anger. Her certainty isn't their certainty, but the resemblance is uncomfortable.
 
-**Ends:** She chooses whether to stay. If she comes back, it's not because the goal failed — it's because she decided the traveling isn't finished. That's her own decision, made with full information.
+**Her destination:** Wherever the person she loves ended up. She has a trail. She follows it.
+
+**The reunion:** They find the person. Real and quiet and not cinematic. But then they look at the path back — and it isn't there. The person she came for can't go back either. Neither can she.
+
+**Ends:** After a quiet moment — not even a long one — Liris reaches over and takes Sarro's hand. Not because she forgives him. Because forward is enough. She has the person she came for, and she has this strange nephilim who owes her everything, and that turns out to be something.
+
+She doesn't explain this. She doesn't need to.
 
 ---
 
@@ -236,11 +242,11 @@ The parallel is intentional: Cael and Liris are both searching for someone lost 
 
 **The wound here:** There isn't one. The Menders haven't come here. This plane is quiet. That's the point.
 
-**What happens:** They find her mother. She's alive, integrated, not suffering. She built a life here. She couldn't get back and eventually stopped trying. The reunion is real, complicated, and not cinematic. Both of them are different people now.
+**What happens:** They find the person Liris has been following. Alive. The reunion is real and quiet. Then all three of them look at the path home — and it isn't there. The person Liris came for can't go back either. You can't re-cross an origin threshold once you've left.
 
-**Liris's choice:** Stay, or come back with Sarro. Her mother doesn't pressure her either way.
+There is a long moment. Then Liris reaches over and takes Sarro's hand. Forward is enough. She has who she came for. She has him. That's something.
 
-**Tone beats:** This is the most domestic sequence in the game. Eating dinner. Sleeping in a real bed. Hearing about a life led somewhere else. Sarro is very much a guest and knows it.
+**Tone beats:** The most domestic sequence in the game. Eating dinner. Sleeping in a real bed. Sarro is very much a guest and knows it. He doesn't say anything about the hand. Neither does she.
 
 ---
 
