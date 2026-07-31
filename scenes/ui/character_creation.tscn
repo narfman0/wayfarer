@@ -12,8 +12,8 @@ anchor_left = 0.1
 anchor_right = 0.9
 anchor_top = 0.05
 anchor_bottom = 0.95
-grow_horizontal = 3
-grow_vertical = 3
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Title" type="Label" parent="Layout"]
 text = "Choose Starting Feats"

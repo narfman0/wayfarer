@@ -19,8 +19,8 @@ const LIRIS_FEATS := [
 	{"label": "Mobile — +10 speed, no OA after attacking",                 "feat": "mobile"},
 ]
 
-@onready var _sarro_group: VBoxContainer = $Layout/SarroPanel/Feats
-@onready var _liris_group: VBoxContainer = $Layout/LirisPanel/Feats
+@onready var _sarro_group: VBoxContainer = $Layout/Companions/SarroPanel/Feats
+@onready var _liris_group: VBoxContainer = $Layout/Companions/LirisPanel/Feats
 @onready var _confirm_btn: Button = $Layout/Confirm
 
 var _sarro_selected: String = ""
@@ -51,15 +51,13 @@ func _check_confirm_enabled() -> void:
 	_confirm_btn.disabled = (_sarro_selected == "" or _liris_selected == "")
 
 func _on_confirm() -> void:
-	var sarro_feat := _make_feat(_sarro_selected)
-	var liris_feat := _make_feat(_liris_selected)
-
-	var sf: Array[FeatData] = []
-	var lf: Array[FeatData] = []
-	if sarro_feat != null: sf.append(sarro_feat)
-	if liris_feat != null: lf.append(liris_feat)
-
-	GameState.new_game(sf, lf)
+	var sarro := WayfarerCharacter.make_sarro()
+	var liris := WayfarerCharacter.make_liris()
+	var sf := _make_feat(_sarro_selected)
+	var lf := _make_feat(_liris_selected)
+	if sf != null: sarro.feats.append(sf)
+	if lf != null: liris.feats.append(lf)
+	GameState.set_party(sarro, liris)
 	get_tree().change_scene_to_file("res://scenes/world/tamori.tscn")
 
 func _make_feat(key: String) -> FeatData:
