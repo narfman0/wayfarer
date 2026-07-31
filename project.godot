@@ -19,6 +19,7 @@ window/stretch/aspect="expand"
 
 [autoload]
 
+SRDBootstrap="*res://scripts/system/srd_bootstrap.gd"
 GameState="*res://scripts/system/game_state.gd"
 
 [editor_plugins]
