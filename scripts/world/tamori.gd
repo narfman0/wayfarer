@@ -1,13 +1,13 @@
 ## Tamori — feudal Japanese-inspired plane. First area Sarro visits.
 ## Scene boots into the opening tavern cutscene.
 class_name TamoriScene
-extends Node2D
+extends Node3D
 
 @export var start_dialogue: String = "tamori_tavern"
 
-@onready var _player_node: Node2D = $Characters/Sarro
-@onready var _liris_node: Node2D  = $Characters/Liris
-@onready var _hud: Control        = $HUD
+@onready var _player_node: CharacterBody3D = $Characters/Sarro
+@onready var _liris_node: CharacterBody3D  = $Characters/Liris
+@onready var _hud: Control                 = $HUD
 
 var _dialogue_started: bool = false
 

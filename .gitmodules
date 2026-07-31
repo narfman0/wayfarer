@@ -4,3 +4,12 @@
 [submodule "vendor/dialogue-manager"]
 	path = vendor/dialogue-manager
 	url = https://github.com/nathanhoad/godot_dialogue_manager
+[submodule "vendor/phantom-camera"]
+	path = vendor/phantom-camera
+	url = https://github.com/ramokz/phantom-camera
+[submodule "vendor/beehave"]
+	path = vendor/beehave
+	url = https://github.com/bitbrain/beehave
+[submodule "vendor/terrain3d"]
+	path = vendor/terrain3d
+	url = https://github.com/TokisanGames/Terrain3D

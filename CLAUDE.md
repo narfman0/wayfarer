@@ -6,9 +6,9 @@ Cosmic fantasy RPG. Two companions (Sarro + Liris) follow damage left by well-me
 
 ```
 scenes/
-  world/       main world/exploration scenes
-  combat/      real-time-with-pause combat scenes
-  ui/          HUD, menus, dialogue
+  world/       main world/exploration scenes (3D)
+  combat/      real-time-with-pause combat scenes (3D)
+  ui/          HUD, menus, dialogue (Control nodes)
 scripts/
   characters/  WayfarerCharacter resource + companion factories
   combat/      CombatManager, player input handler
@@ -17,8 +17,27 @@ scripts/
 assets/
 vendor/
   godot-srd-addon/   git submodule — the SRD rules engine
+  dialogue-manager/  git submodule — Nathan Hoad dialogue
+  phantom-camera/    git submodule — cinematic camera (PhantomCamera3D)
+  beehave/           git submodule — behavior tree AI
+  terrain3d/         git submodule — GDExtension terrain (requires compiled binaries)
 addons/
-  srd -> ../vendor/godot-srd-addon/addons/srd  (symlink)
+  srd            -> ../vendor/godot-srd-addon/addons/srd
+  dialogue_manager -> ../vendor/dialogue-manager/addons/dialogue_manager
+  phantom_camera -> ../vendor/phantom-camera/addons/phantom_camera
+  beehave        -> ../vendor/beehave/addons/beehave
+  terrain_3d     -> ../vendor/terrain3d/project/addons/terrain_3d
+```
+
+## Terrain3D
+
+GDExtension — pure GDScript won't work. Before opening the project you must place compiled
+`.gdextension` binaries in `addons/terrain_3d/bin/`. Download from:
+https://github.com/TokisanGames/Terrain3D/releases
+
+Or build from source:
+```bash
+cd vendor/terrain3d && scons platform=linuxbsd target=template_debug
 ```
 
 ## SRD addon

@@ -2,16 +2,27 @@
 
 [ext_resource type="Script" path="res://scripts/world/tamori.gd" id="1_tamori"]
 
-[node name="Tamori" type="Node2D"]
+[node name="Tamori" type="Node3D"]
 script = ExtResource("1_tamori")
 
-[node name="Characters" type="Node2D" parent="."]
+[node name="Environment" type="WorldEnvironment" parent="."]
 
-[node name="Sarro" type="Node2D" parent="Characters"]
-position = Vector2(200, 400)
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 10, 0)
+light_energy = 1.2
+shadow_enabled = true
 
-[node name="Liris" type="Node2D" parent="Characters"]
-position = Vector2(260, 400)
+[node name="Terrain" type="Node3D" parent="."]
+
+[node name="Characters" type="Node3D" parent="."]
+
+[node name="Sarro" type="CharacterBody3D" parent="Characters"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+
+[node name="Liris" type="CharacterBody3D" parent="Characters"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 2)
+
+[node name="PhantomCamera3D" type="Node3D" parent="."]
 
 [node name="HUD" type="Control" parent="."]
 anchor_right = 1.0
