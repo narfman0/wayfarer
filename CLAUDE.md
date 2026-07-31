@@ -12,7 +12,8 @@ Cosmic fantasy ARPG. Two companions (Sarro + Liris) trace damage left by well-me
 - **Enemy aggro**: proximity cylinder + optional LOS check → Patrol → Chase → Attack (Beehave BT).
 - **Progression**: no XP levels. Story milestone feats + equipment drops + Liris conviction arc.
 
-Full design docs: `docs/design/gameplay.md`, `docs/design/levels.md`, `docs/design/bosses.md`
+Design docs: `docs/design/gameplay.md`, `docs/design/levels.md`, `docs/design/bosses.md`
+Narrative docs: `docs/narrative/overview.md` (start here), `docs/narrative/arc-detailed.md`, `docs/narrative/act-1.md`, `docs/narrative/act-2.md`, `docs/narrative/act-3.md`, `docs/narrative/setting.md`
 
 ## Project structure
 
