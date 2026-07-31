@@ -6,11 +6,8 @@ extends Node3D
 ## Set true in the editor to skip opening dialogue for movement/combat testing.
 @export var skip_opening_dialogue: bool = false
 
-const _WC            = preload("res://scripts/characters/wayfarer_character.gd")
 const _Factory       = preload("res://scripts/characters/character_factory.gd")
 const _MeleeAttacker = preload("res://scripts/combat/melee_attacker.gd")
-const _WeaponData    = preload("res://addons/srd/resources/weapon_data.gd")
-const _SRD           = preload("res://addons/srd/srd_enums.gd")
 
 @onready var _player    = $Characters/Sarro     # PlayerController
 @onready var _companion = $Characters/Liris     # CompanionFollow
@@ -100,7 +97,7 @@ func _start_opening_dialogue() -> void:
 	_on_opening_finished()
 
 func _on_opening_finished() -> void:
-	GameState.save_game(0)
+	pass  # future: quest/flag updates after the opening scene
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):

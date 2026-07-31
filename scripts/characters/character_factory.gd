@@ -4,28 +4,27 @@
 extends RefCounted
 
 const _WC         = preload("res://scripts/characters/wayfarer_character.gd")
-const _FeatData   = preload("res://scripts/characters/feat_data.gd")
 const _ClassData  = preload("res://addons/srd/resources/class_data.gd")
 const _WeaponData = preload("res://addons/srd/resources/weapon_data.gd")
 const _ArmorData  = preload("res://addons/srd/resources/armor_data.gd")
 const _SRD        = preload("res://addons/srd/srd_enums.gd")
 const _LevelUp    = preload("res://addons/srd/systems/level_up.gd")
 
-const CLASS_KEYS := ["soldier", "ghost", "psion", "warden"]
+## Playable classes. Psion/Warden exist in the SRD addon but stay out of the
+## game until spellcasting is wired into combat.
+const CLASS_KEYS := ["soldier", "ghost"]
 
 static func make_class_data(class_key: String):
 	match class_key:
 		"soldier": return _ClassData.make_soldier()
 		"ghost":   return _ClassData.make_ghost()
-		"psion":   return _ClassData.make_psion()
-		"warden":  return _ClassData.make_warden()
 	return null
 
 ## Build a level-1 character from SRD creation choices.
 ## scores: 6-element Array[int] indexed by SRD.Ability.
 ## skill_picks: Array of SRD.Skill ints (validated against class skill_options).
 static func make_custom(display_name: String, class_key: String,
-		scores: Array, skill_picks: Array, feat_key: String = ""):
+		scores: Array, skill_picks: Array):
 	var c = _WC.new()
 	var cd = make_class_data(class_key)
 	assert(cd != null, "Unknown class key: " + class_key)
@@ -44,9 +43,6 @@ static func make_custom(display_name: String, class_key: String,
 	_equip_class_kit(c, class_key)
 	c.stats.max_hp = cd.starting_hp(c.stats.ability_modifier(_SRD.Ability.CONSTITUTION))
 	c.stats.reset()
-	var feat = make_feat(_FeatData, feat_key)
-	if feat != null:
-		c.feats.append(feat)
 	c.setup()
 	return c
 
@@ -59,12 +55,6 @@ static func _equip_class_kit(c, class_key: String) -> void:
 		"ghost":
 			c.equipment.equip_main_hand(_WeaponData.make_rapier())
 			c.equipment.equip_armor(_ArmorData.make_leather())
-		"psion":
-			c.equipment.equip_main_hand(_WeaponData.make_quarterstaff())
-		"warden":
-			c.equipment.equip_main_hand(_WeaponData.make_mace())
-			c.equipment.equip_armor(_ArmorData.make_scale_mail())
-			c.equipment.equip_shield(_ArmorData.make_shield())
 
 ## Default Sarro — Soldier with the standard array on a STR build.
 static func make_sarro():
@@ -72,10 +62,11 @@ static func make_sarro():
 		[16, 14, 14, 10, 12, 10],
 		[int(_SRD.Skill.ATHLETICS), int(_SRD.Skill.PERCEPTION)])
 
+## Liris fights as a Soldier kit until Warden spellcasting exists in-game.
 static func make_liris():
-	return make_custom("Liris", "warden",
+	return make_custom("Liris", "soldier",
 		[10, 14, 12, 14, 16, 12],
-		[int(_SRD.Skill.INSIGHT), int(_SRD.Skill.MEDICINE)])
+		[int(_SRD.Skill.INSIGHT), int(_SRD.Skill.PERCEPTION)])
 
 static func make_enemy_char():
 	var c = _WC.new()
@@ -88,15 +79,3 @@ static func make_enemy_char():
 	c.equipment.equip_main_hand(_WeaponData.make_dagger())
 	c.setup()
 	return c
-
-static func make_feat(feat_data_script, key: String):
-	var f = feat_data_script.new()
-	match key:
-		"gwm":        f.feat_name = "Great Weapon Master"
-		"alert":      f.feat_name = "Alert";      f.initiative_mod = 5
-		"sentinel":   f.feat_name = "Sentinel"
-		"mobile":     f.feat_name = "Mobile";     f.speed_mod = 10
-		"war_caster": f.feat_name = "War Caster"
-		"lucky":      f.feat_name = "Lucky"
-		_:            return null
-	return f

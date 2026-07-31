@@ -1,28 +1,18 @@
-## SRD character creation wizard: Class → Abilities → Skills → Feat → Review.
+## SRD character creation wizard: Class → Abilities → Skills → Review.
 ## Builds the player character (Sarro) from real SRD rules; Liris joins as a
-## fixed Warden companion.
+## fixed companion.
 class_name CharacterCreation
 extends Control
 
 const _Factory       = preload("res://scripts/characters/character_factory.gd")
-const _FeatData      = preload("res://scripts/characters/feat_data.gd")
 const _SRD           = preload("res://addons/srd/srd_enums.gd")
 const _AbilityScores = preload("res://addons/srd/systems/ability_scores.gd")
 const _Skills        = preload("res://addons/srd/systems/skills_system.gd")
 
-enum Step { CLASS, ABILITIES, SKILLS, FEAT, REVIEW }
+enum Step { CLASS, ABILITIES, SKILLS, REVIEW }
 enum Method { POINT_BUY, STANDARD_ARRAY, ROLL }
 
-const STEP_TITLES := ["Class", "Ability Scores", "Skills", "Feat", "Review"]
-
-const FEAT_OPTIONS := [
-	{"label": "Great Weapon Master — +10 dmg on -5 hit trade", "feat": "gwm"},
-	{"label": "Alert — +5 initiative, can't be surprised",      "feat": "alert"},
-	{"label": "Sentinel — lock down adjacent foes",             "feat": "sentinel"},
-	{"label": "Mobile — +10 speed, no OA after attacking",      "feat": "mobile"},
-	{"label": "War Caster — concentration advantage",           "feat": "war_caster"},
-	{"label": "Lucky — 3 luck points per day",                  "feat": "lucky"},
-]
+const STEP_TITLES := ["Class", "Ability Scores", "Skills", "Review"]
 
 @onready var _step_label: Label = $Layout/StepLabel
 @onready var _body: VBoxContainer = $Layout/Content/StepBody
@@ -36,7 +26,6 @@ var _pb_scores: Array[int] = [8, 8, 8, 8, 8, 8]      # point buy, by SRD.Ability
 var _assign: Array[int] = [-1, -1, -1, -1, -1, -1]   # ability → pool index
 var _pool: Array[int] = []                            # array/roll values
 var _skill_picks: Array[int] = []
-var _feat_key: String = ""
 var _char_name: String = "Sarro"
 
 func _ready() -> void:
@@ -62,7 +51,7 @@ func _on_next() -> void:
 	_rebuild()
 
 func _confirm() -> void:
-	var sarro = _Factory.make_custom(_char_name, _class_key, _scores(), _skill_picks, _feat_key)
+	var sarro = _Factory.make_custom(_char_name, _class_key, _scores(), _skill_picks)
 	GameState.set_party(sarro, _Factory.make_liris())
 	get_tree().change_scene_to_file("res://scenes/world/tamori.tscn")
 
@@ -85,7 +74,6 @@ func _rebuild() -> void:
 		Step.CLASS:     _build_class_step()
 		Step.ABILITIES: _build_abilities_step()
 		Step.SKILLS:    _build_skills_step()
-		Step.FEAT:      _build_feat_step()
 		Step.REVIEW:    _build_review_step()
 	_validate()
 
@@ -274,30 +262,7 @@ func _build_skills_step() -> void:
 			_rebuild())
 		_body.add_child(btn)
 
-# ── Step 4: Feat ─────────────────────────────────────────────────────────────
-
-func _build_feat_step() -> void:
-	_add_header("Choose a starting feat (optional).")
-	var group := ButtonGroup.new()
-	var none := CheckBox.new()
-	none.button_group = group
-	none.text = "None"
-	none.button_pressed = _feat_key == ""
-	none.toggled.connect(func(on: bool):
-		if on: _feat_key = "")
-	_body.add_child(none)
-	for opt in FEAT_OPTIONS:
-		var btn := CheckBox.new()
-		btn.button_group = group
-		btn.toggle_mode = true
-		btn.text = opt["label"]
-		btn.button_pressed = _feat_key == opt["feat"]
-		var key: String = opt["feat"]
-		btn.toggled.connect(func(on: bool):
-			if on: _feat_key = key)
-		_body.add_child(btn)
-
-# ── Step 5: Review ───────────────────────────────────────────────────────────
+# ── Step 4: Review ───────────────────────────────────────────────────────────
 
 func _build_review_step() -> void:
 	var name_row := HBoxContainer.new()
@@ -313,7 +278,7 @@ func _build_review_step() -> void:
 
 	var preview = _Factory.make_custom(
 		_char_name if not _char_name.strip_edges().is_empty() else "Sarro",
-		_class_key, _scores(), _skill_picks, _feat_key)
+		_class_key, _scores(), _skill_picks)
 	var combatant = preview.make_combatant()
 	var cd = preview.class_data
 	var scores := _scores()
@@ -338,10 +303,8 @@ func _build_review_step() -> void:
 	if weapon != null:
 		lines.append("Attack: %s %+d to hit, %dd%d damage" % [
 			weapon.weapon_name, combatant.attack_modifier(), weapon.die_count, weapon.die_sides])
-	if preview.feats.size() > 0:
-		lines.append("Feat: " + preview.feats[0].feat_name)
 	lines.append("")
-	lines.append("Liris the Warden joins you.")
+	lines.append("Liris joins you.")
 
 	var summary := Label.new()
 	summary.text = "\n".join(lines)
