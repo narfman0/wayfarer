@@ -6,16 +6,20 @@ extends Node
 const MELEE_RANGE  := 1.6   # metres
 const ATTACK_RATE  := 1.0   # seconds between attacks
 
+const _Dice          = preload("res://addons/srd/dice.gd")
+const _CharacterStats = preload("res://vendor/godot-srd-addon/addons/srd/resources/character_stats.gd")
+const _Combatant      = preload("res://vendor/godot-srd-addon/addons/srd/systems/combatant.gd")
+
 var owner_body: CharacterBody3D = null
-var character:  WayfarerCharacter = null
+var character = null   # WayfarerCharacter
 
 var _timer: float = 0.0
 var _active: bool = false
-var _target: EnemyController = null
+var _target = null  # EnemyController
 
 signal attack_result(event: Dictionary)
 
-func start(target: EnemyController) -> void:
+func start(target) -> void:  # target: EnemyController
 	_target = target
 	_active = true
 	_timer  = 0.0  # fire immediately on first tick
@@ -24,7 +28,7 @@ func stop() -> void:
 	_active = false
 	_target = null
 
-func is_attacking(enemy: EnemyController) -> bool:
+func is_attacking(enemy) -> bool:  # enemy: EnemyController
 	return _active and _target == enemy
 
 func _process(delta: float) -> void:
@@ -46,17 +50,16 @@ func _do_attack() -> void:
 	if character == null or _target == null:
 		return
 
-	var attacker := character.make_combatant()
-	var defender := _target.character.make_combatant() if _target.character != null else _make_default_enemy_combatant()
+	var attacker = character.make_combatant()
+	var defender = _target.character.make_combatant() if _target.character != null else _make_default_enemy_combatant()
 
-	# SRD attack roll
-	var d20       := Dice.roll_d20()
-	var atk_mod   := attacker.attack_modifier()
-	var total_atk := d20 + atk_mod
-	var target_ac := defender.stats.armor_class
+	var d20: int       = _Dice.roll_d20()
+	var atk_mod: int   = attacker.attack_modifier()
+	var total_atk: int = d20 + atk_mod
+	var target_ac: int = defender.stats.armor_class
 
-	var hit  := total_atk >= target_ac
-	var crit := d20 == 20
+	var hit: bool  = total_atk >= target_ac
+	var crit: bool = d20 == 20
 
 	var dmg := 0
 	if hit:
@@ -73,11 +76,11 @@ func _do_attack() -> void:
 	attack_result.emit(ev)
 	print("[Combat] ", _format(ev))
 
-func _make_default_enemy_combatant() -> Combatant:
-	var stats := CharacterStats.new()
+func _make_default_enemy_combatant():
+	var stats = _CharacterStats.new()
 	stats.armor_class = 12; stats.max_hp = 11; stats.current_hp = 11
 	stats.strength = 12; stats.dexterity = 10; stats.constitution = 10
-	return Combatant.new(stats, null, null)
+	return _Combatant.new(stats, null, null)
 
 func _format(ev: Dictionary) -> String:
 	if ev.get("crit"):

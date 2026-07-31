@@ -6,13 +6,15 @@ extends Node3D
 ## Set true in the editor to skip opening dialogue for movement/combat testing.
 @export var skip_opening_dialogue: bool = false
 
-@onready var _player:    PlayerController = $Characters/Sarro
-@onready var _companion: CompanionFollow  = $Characters/Liris
-@onready var _cam_pivot: Node3D           = $CameraPivot
-@onready var _hud_root:  Control          = $HUD
+const _WC = preload("res://scripts/characters/wayfarer_character.gd")
 
-var _hud:      HUD = null
-var _attacker: MeleeAttacker = null
+@onready var _player    = $Characters/Sarro     # PlayerController
+@onready var _companion = $Characters/Liris     # CompanionFollow
+@onready var _cam_pivot: Node3D = $CameraPivot
+@onready var _hud_root:  Control = $HUD
+
+var _hud = null       # HUD
+var _attacker = null  # MeleeAttacker
 
 func _ready() -> void:
 	_player.camera_pivot = _cam_pivot
@@ -39,20 +41,20 @@ func _setup_hud() -> void:
 func _setup_combat() -> void:
 	_attacker = MeleeAttacker.new()
 	_attacker.owner_body = _player
-	_attacker.character  = GameState.sarro if GameState.sarro != null else WayfarerCharacter.make_sarro()
+	_attacker.character  = GameState.sarro if GameState.sarro != null else _WC.make_sarro()
 	add_child(_attacker)
 
 func _setup_enemies() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
-		var ec := enemy as EnemyController
+		var ec = enemy if enemy.get_script() != null and enemy.has_method("receive_damage") else null
 		if ec == null:
 			continue
 		# Give each enemy a default character for stat purposes
 		ec.character = _make_enemy_char()
 		ec.died.connect(_on_enemy_died.bind(ec))
 
-func _make_enemy_char() -> WayfarerCharacter:
-	var c := WayfarerCharacter.new()
+func _make_enemy_char():
+	var c = _WC.new()
 	c.display_name = "Bandit"
 	c.stats.character_name = "Bandit"
 	c.stats.level = 1; c.stats.max_hp = 11; c.stats.armor_class = 12
@@ -71,7 +73,7 @@ func _check_player_targeting() -> void:
 	var tgt := _player.target_enemy
 	if tgt == null:
 		return
-	var ec := tgt as EnemyController
+	var ec = tgt if tgt != null and tgt.has_method("receive_damage") else null
 	if ec == null:
 		return
 	if _hud != null:
@@ -83,7 +85,7 @@ func _check_player_targeting() -> void:
 			_attacker.start(ec)
 	# If player re-clicks elsewhere, attacker.stop() handled by PlayerController clearing target_enemy
 
-func _on_enemy_died(ec: EnemyController) -> void:
+func _on_enemy_died(ec) -> void:  # EnemyController
 	if _attacker != null:
 		_attacker.stop()
 	_player.target_enemy = null
@@ -93,7 +95,7 @@ func _on_enemy_died(ec: EnemyController) -> void:
 
 func _sync_party_to_scene() -> void:
 	if GameState.sarro == null:
-		GameState.set_party(WayfarerCharacter.make_sarro(), WayfarerCharacter.make_liris())
+		GameState.set_party(_WC.make_sarro(), _WC.make_liris())
 
 func _start_opening_dialogue() -> void:
 	_player.set_control_enabled(false)

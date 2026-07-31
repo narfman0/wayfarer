@@ -13,8 +13,11 @@ const CHASE_DIST := 12.0  # metres — give up chase beyond this
 @export var patrol_points: Array[NodePath] = []
 @export var aggro_radius: float = 6.0
 
+const _Dice = preload("res://addons/srd/dice.gd")
+const _CharacterStats = preload("res://vendor/godot-srd-addon/addons/srd/resources/character_stats.gd")
+
 ## Filled by WayfarerCharacter factory in task 8. Nil = use defaults.
-var character: WayfarerCharacter = null
+var character = null  # WayfarerCharacter
 
 var _state: State = State.PATROL
 var _patrol_idx: int = 0
@@ -58,12 +61,12 @@ func _do_patrol(delta: float) -> void:
 	var wp_node := get_node_or_null(patrol_points[_patrol_idx])
 	if wp_node == null:
 		return
-	var to_wp := wp_node.global_position - global_position
+	var to_wp: Vector3 = (wp_node as Node3D).global_position - global_position
 	to_wp.y   = 0.0
 	if to_wp.length() < 0.5:
 		_patrol_idx = (_patrol_idx + 1) % patrol_points.size()
 		return
-	var dir    := to_wp.normalized()
+	var dir: Vector3 = to_wp.normalized()
 	velocity.x = dir.x * SPEED * 0.6
 	velocity.z = dir.z * SPEED * 0.6
 	rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 8.0 * delta)
@@ -97,20 +100,20 @@ func _do_attack(delta: float) -> void:
 func _fire_attack() -> void:
 	if character == null or _target == null:
 		return
-	var target_char: WayfarerCharacter = null
+	var target_char = null
 	if _target.has_method("get") and GameState.sarro != null:
 		target_char = GameState.sarro
 
-	var attacker := character.make_combatant()
-	var defender_stats := target_char.stats if target_char != null else CharacterStats.new()
+	var attacker = character.make_combatant()
+	var defender_stats = target_char.stats if target_char != null else _CharacterStats.new()
 
-	var d20       := Dice.roll_d20()
-	var atk_mod   := attacker.attack_modifier()
-	var total_atk := d20 + atk_mod
-	var target_ac := defender_stats.armor_class
+	var d20: int       = _Dice.roll_d20()
+	var atk_mod: int   = attacker.attack_modifier()
+	var total_atk: int = d20 + atk_mod
+	var target_ac: int = defender_stats.armor_class
 
-	var hit  := total_atk >= target_ac
-	var crit := d20 == 20
+	var hit: bool  = total_atk >= target_ac
+	var crit: bool = d20 == 20
 	var dmg  := 0
 
 	if hit and target_char != null:
