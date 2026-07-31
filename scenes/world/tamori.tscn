@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://tamori"]
+[gd_scene load_steps=4 format=3 uid="uid://tamori"]
 
 [ext_resource type="Script" path="res://scripts/world/tamori.gd" id="1_tamori"]
+[ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
 
 [node name="Tamori" type="Node3D"]
 script = ExtResource("1_tamori")
@@ -22,11 +24,18 @@ shadow_enabled = true
 
 [node name="Sarro" type="CharacterBody3D" parent="Characters"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+script = ExtResource("2_player")
 
 [node name="Liris" type="CharacterBody3D" parent="Characters"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 2)
+script = ExtResource("3_companion")
 
-[node name="PhantomCamera3D" type="Node3D" parent="."]
+[node name="CameraPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 6)
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.906, -0.423, 0, 0.423, 0.906, 0, 0, 0)
+current = true
 
 [node name="HUD" type="Control" parent="."]
 anchor_right = 1.0
