@@ -111,3 +111,160 @@ When Liris reaches her destination, she has the option to stay. She didn't promi
 - Finding a Mender's camp after they've left — the care they took, the notes they left, the wrong they meant to right
 - The gods' silence when Sarro asks the question he most needs answered
 - Reaching Liris's destination and it just being a place
+
+---
+
+## Character Arcs
+
+### Sarro
+
+**Starts:** Drifting. The search for what he lost is genuine but it's also an excuse — a reason to keep moving and never arrive anywhere. He fights effortlessly because he's had years to practice not caring about outcomes. He's not unhappy. He's hollow.
+
+**The tension:** Liris knows exactly where she's going. Her certainty is the thing he doesn't have and won't ask for. Watching her — her competence, her patience, her groundedness in small things — is quietly disorienting for him.
+
+**The portal moment:** When a gate opens toward what he lost, he has to decide what the search actually means to him. If he goes: he finds something, or nothing, or a version of what he lost that's changed beyond recognition. Either way, the question shifts. It's no longer *where is it* but *what was it really*. If he stays: he watches the gate close. He doesn't explain. Something between them changes.
+
+**Ends:** The search doesn't end. But his relationship to it does. The wandering stops feeling like exile and starts feeling like a life. That might be enough.
+
+---
+
+### Liris
+
+**Starts:** Certain. She knows where she's going and why. She didn't plan to be traveling with a nephilim warrior who burned her barn, but she's pragmatic about it. She's not impressed by him. She's not afraid of much.
+
+**Her destination:** Her mother disappeared through a Veil-tear years ago — assumed dead, no body, no closure. Liris has found evidence she survived and ended up in a specific plane. This is the thing she's been moving toward. It's also personal to the Veil crisis in a way she doesn't fully know yet.
+
+**The tension:** Watching what the Menders do — people with absolute certainty about how to help, causing catastrophe — starts to complicate her own certainty. She knows what she wants. She's not sure what she'll do with it once she has it.
+
+**The destination:** Her mother is there. She's been there long enough to have changed — integrated into a plane that isn't where she started, built a life in it. Not suffering. Just somewhere else. The reunion is real and not what Liris expected and both those things are true at the same time.
+
+**Ends:** She chooses whether to stay. If she comes back, it's not because the goal failed — it's because she decided the traveling isn't finished. That's her own decision, made with full information.
+
+---
+
+## The Lead Mender — Cael *(working name)*
+
+A middle-aged scholar. Quiet, careful, brilliant, exhausted. Has been at this for years. Lost someone to a Veil-tear early in the crisis — not dead, but unreachable, somewhere in the between-places. Has convinced himself that if he can stabilize the Veil, that person might find their way back.
+
+His technique — Veil-stitching — genuinely closes tears. What he hasn't seen (because he moves on before the evidence accumulates) is that the stitching leaves scar tissue that weakens the surrounding Veil. He's closing wounds and creating fragility. He knows something is wrong. He tells himself he just needs to refine the technique.
+
+**What he needs to hear:** Not "stop, you're wrong." He already suspects he might be wrong. He needs: *"The Veil doesn't need you to save it. It just needs you to let it go."* And then something that makes him believe that's true — not an argument, but evidence. Possibly Sarro himself (a nephilim who transits freely, proof that the Veil has its own logic and doesn't need correction). Possibly the Mender defector, who can speak to what it looks like from inside.
+
+The parallel is intentional: Cael and Liris are both searching for someone lost in a Veil-tear. Cael acts on it compulsively. Liris walks toward it steadily. They are the same grief handled differently.
+
+---
+
+## Plane-by-Plane Story Beats
+
+### Tamori (Act 1)
+*Feudal Japanese farming village. Cherry blossoms, mist, wooden shrines.*
+
+**The wound:** A tear swallowed the eastern rice fields three weeks ago. Spirits are disturbed. The village is convinced they caused this through some transgression.
+
+**What the companions do:** Help restore order — which means talking to people, finding the tear, understanding what bled through from another plane, closing or containing it. The "combat" here is minimal and strange (displaced creatures from the wrong world, more confused than hostile).
+
+**Who they meet:** Idris the Warden. She's been watching Tamori's tear for weeks, trying to understand why it's behaving differently than every tear she's seen in fifty years. She doesn't like asking for help. She asks anyway.
+
+**The choice:** Idris wants to perform an old stabilization ritual. It will work, imperfectly. It will also cost her something — years off her life, or a memory, or something she holds dear. The companions can let her, stop her, or find another way.
+
+**Tone beats:** Liris helps with the harvest before anything is resolved. The village elder makes Sarro tea and talks at him about the spirits for an hour. He doesn't understand half of it and doesn't say so.
+
+**Trail out:** A Mender was here two weeks before the tear opened. The technique they used is what caused it. Idris knows this. She tells them on the way out.
+
+---
+
+### The Reach (Act 2a)
+*Midwestern pastoral. Cattle, wide sky, wooden fences, grain silos.*
+
+**The wound:** Cattle are walking into tears and not coming back. The tears are clustered on the western fields. Ranchers are armed and frightened and arguing about whether this is the government's fault.
+
+**What the companions do:** Track the tears. Find that an Extractor operation is actively harvesting Veil energy from the cluster — this is what's keeping the tears open and expanding them. The Extractors are not hiding; they have permits, or claim to.
+
+**Who they meet:** The Extractor Fence — sets up shop near the operation, buying artifacts that come through the tears. Personable. Clearly not ashamed. Offers the deal.
+
+**The choice:** The Fence knows where Cael is headed next. They'll trade the information for the companions agreeing to leave this operation alone for two more weeks. The harvest will be done by then. So will the Veil damage.
+
+**Tone beats:** The walk across open land with nothing pressing. Liris talks about her mother — obliquely at first, then directly. Sarro doesn't pry. He listens. They find an abandoned Mender camp at dusk. The notes are meticulous and sad.
+
+---
+
+### Old Kaveth (Act 2b)
+*Ancient ruined city. Overgrown, stone, moss, enormous structures that suggest a civilization that understood the Veil.*
+
+**The wound:** The Menders took a Veil anchor stone from the ruins — a relic that was passively stabilizing a very old tear sealed deep in the city. The tear is waking up. The ruins are slowly becoming somewhere else.
+
+**What the companions do:** Navigate the ruins, find the lore (Kaveth was built *around* the Veil, not despite it — its people understood that you work with tears, not against them), locate the defector.
+
+**Who they meet:** The Mender Defector — hiding in the ruins because they knew the anchor stone was here and followed, too late to stop it. They have Mender documents. They have guilt. They're useful and not entirely trustworthy yet.
+
+**The choice:** Trust the defector enough to bring them along, or use their information and leave them. They're wanted by the Extractors (stole something on the way out). Taking them is a risk.
+
+**Tone beats:** The ruins are beautiful at night. The companions sleep there. Nothing attacks them. Sarro finds a carving of a nephilim figure — clearly old, clearly representing someone like him — and spends a long time looking at it. Liris doesn't ask.
+
+---
+
+### The Sea Plane — *Verath* (Act 2c, working name)
+*Mediterranean coastal trading city. Salt, ships, competing factions, a permanent haze from nearby tears.*
+
+**The wound:** The Veil tears have disrupted trade routes. Two factions in the city are blaming each other. One of them is secretly working with the Menders; the other has figured this out and is furious.
+
+**What the companions do:** Navigate the politics, find what the Menders are actually doing here, get close enough to Cael to see him for the first time.
+
+**Who they meet:** Cael. Briefly. He's at the docks, watching a tear that opened over the water. He sees them too. He doesn't run. He looks at them the way someone looks at a problem they've been expecting. Then he leaves.
+
+**The choice:** Sarro's portal. A gate opens — briefly, unstably — somewhere over the water. It feels right in a way he hasn't felt before. He has minutes.
+
+**Tone beats:** The haze over the city. Ships that stopped running their old routes. The defector recognizes someone here from their old life and freezes. Liris notices.
+
+---
+
+### The Between (Act 2/3 threshold)
+*The Veil itself. Strange geometry, impossible sky, brief and dangerous to linger.*
+
+**Not a plane — a transit.** But something goes wrong during the crossing and they're in it longer than they should be.
+
+**What they see:** The Veil from the inside. In places, it's healing — slowly, quietly, without anyone's help. In places, there are the Menders' "repairs": scar tissue, rigid and brittle where it should be flexible. The evidence is visible here in a way it isn't anywhere else.
+
+**Who they see:** A fragment — an impression — of a god. Sarro's divine ancestor, or something like one. Cryptic. Doesn't answer the question he'd most want answered. Gives him something else instead.
+
+**What they understand:** The Veil doesn't need saving. It just needs to be left alone. This is not a revelation; it's a confirmation of what they've been piecing together. But seeing it from inside makes it real.
+
+---
+
+### Liris's Destination — *Ashan* (Act 3a, working name)
+*The plane Liris's mother ended up in. Warm, settled, not dramatic. A place where someone could live.*
+
+**The wound here:** There isn't one. The Menders haven't come here. This plane is quiet. That's the point.
+
+**What happens:** They find her mother. She's alive, integrated, not suffering. She built a life here. She couldn't get back and eventually stopped trying. The reunion is real, complicated, and not cinematic. Both of them are different people now.
+
+**Liris's choice:** Stay, or come back with Sarro. Her mother doesn't pressure her either way.
+
+**Tone beats:** This is the most domestic sequence in the game. Eating dinner. Sleeping in a real bed. Hearing about a life led somewhere else. Sarro is very much a guest and knows it.
+
+---
+
+### The Convergence — *Cael's Base* (Act 3b)
+*Wherever Cael has been building toward — his largest intervention, years in the making.*
+
+**The wound here:** Massive. A controlled Veil-stitching on an enormous scale. If it completes, the scar tissue will cascade. The Veil will be rigid and inflexible across dozens of planes. Tears will multiply in the gaps.
+
+**What the companions do:** Reach Cael. Have the conversation. The Mender defector is here as witness and argument. The Extractor Fence may have followed — their own operation depends on an unstable Veil; they have complicated feelings about this.
+
+**The conversation with Cael:** He's tired. He already knows something is wrong with the technique. He can't stop because stopping means admitting that years of work made things worse. He needs to be shown that stopping is not surrender — it's the thing that might actually work. That the person he lost might find their way back if the Veil stops being forced.
+
+The parallel to Liris lands here: her mother found her way through. She survived a tear and arrived somewhere. That's the Veil doing what it does. Not repaired. Just left alone to function.
+
+**The ending:** The intervention stops. Cael sits down somewhere and doesn't say anything. The companions leave him there — not as victors, just done. The Veil starts to settle. The tears don't close overnight. But they stop multiplying.
+
+Sarro and Liris in a quiet place. The question of what comes next left open.
+
+---
+
+## What Still Needs Answering
+
+- What specifically did Liris's mother leave behind / why did she stop trying to return?
+- What does the Mender defector's name/backstory look like?
+- Does the Extractor Fence appear in the ending? (I think yes — they come to Cael's plane out of self-interest and end up as a strange witness to the resolution)
+- Does Cael ever find his way back to what he lost?
+- What does Sarro find (or not find) if he goes through his portal?

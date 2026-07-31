@@ -1,3 +1,6 @@
 [submodule "vendor/godot-srd-addon"]
 	path = vendor/godot-srd-addon
 	url = ../godot-srd-addon
+[submodule "vendor/dialogue-manager"]
+	path = vendor/dialogue-manager
+	url = https://github.com/nathanhoad/godot_dialogue_manager
