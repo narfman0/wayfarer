@@ -93,6 +93,17 @@ This keeps the game focused on encounter design rather than grinding.
 - New Game+ (future): enemies scale, loot pool expands.
 - Random dungeons (future): optional side areas off-portal with procedural layouts.
 
+## Boss fights
+
+Bosses are a different contract than regular enemies. See `docs/design/bosses.md` for full design.
+
+Short version:
+- **Telegraphed AoE**: ground indicators (circle/cone/line/donut) appear 1–2s before attack fires. Player must move out.
+- **Phases**: HP thresholds (e.g. 60%, 30%) trigger transitions — brief invuln window, new or modified ability set, environment reacts.
+- **Unique mechanic per boss**: interrupt a channel, soak zones, clear adds, conviction check (Liris). One or two per fight, not all of them.
+- **No enrage timer**. If it's too easy, tune HP/damage directly.
+- Boss arenas are separate sub-scenes loaded at act end. One-way entry; `cleared` flag stored in `GameState`.
+
 ## Difficulty
 
 One named difficulty. Enemy stats tuned for the feat/equipment loadout of a fresh character. No easy/hard toggle — balance the one experience well.
