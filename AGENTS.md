@@ -39,8 +39,6 @@ vendor/
 addons/
   srd            -> ../vendor/godot-srd-addon/addons/srd  (submodule symlink)
   dialogue_manager/  vendored directly — Nathan Hoad dialogue manager
-  phantom_camera/    vendored directly — cinematic camera (PhantomCamera3D)
-  beehave/           vendored directly — behavior tree AI
 ```
 
 ## Level / terrain approach
