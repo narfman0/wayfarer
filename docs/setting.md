@@ -50,11 +50,29 @@ They do not immediately like each other. That's the point.
 
 ## The Antagonist(s)
 
-Not villains. People solving their own problem, badly.
+**Core truth:** The Veil is a living wound trying to heal itself. Every intervention — however well-intentioned — tears it open again. The antagonists are not villains. They are people trying hard to fix something, and that effort is exactly what's breaking it.
 
-Their actions are disturbing the Veil — perhaps they're harvesting portal energy, or attempting to open a specific gate, or trying to prevent *a different* catastrophe they can see coming. The cascade of unstable tears is a side effect they either don't know about or have decided is acceptable.
+The resolution of the game is not a fight. It's convincing them to *stop*. To trust that the Veil can heal if left alone. That is harder than any battle.
 
-The companions arrive after. They meet the people whose barn was flattened, whose crops were swallowed, whose village lost three people to a tear that opened in the market square. They fix what they can. They glimpse the antagonist occasionally — close enough to start to understand, not close enough to stop them. Sometimes they briefly work alongside each other when their goals align.
+### The Menders *(working faction name)*
+
+A loose network of scholars, engineers, and true believers who have diagnosed the Veil crisis and are actively attempting to repair it using forbidden techniques — devices that force tears open, methods that map Veil structure from the inside, rituals meant to reinforce weak points. Each intervention leaves the area worse. They don't see it because they move on before the consequences fully manifest. The companions arrive into the aftermath.
+
+The Menders are earnest and sympathetic. Some are brilliant. Some are exhausted and scared. They are not acting from greed — they genuinely believe the Veil will collapse entirely if no one acts.
+
+### The Extractors *(second faction — to develop later)*
+
+Where the Menders want to fix the Veil, a second faction wants to *use* it. A more mercantile, capitalist interest — harvesting Veil energy for power, profit, or leverage. Their damage is collateral and they largely don't care. Less sympathetic than the Menders, but not cartoonishly evil — they've convinced themselves the extraction is sustainable.
+
+These two factions may not know about each other, may be in conflict, or may have an uneasy arrangement. To be developed.
+
+---
+
+**The ripple loop (gameplay):**
+
+An antagonist transits through a plane, or performs a Veil intervention there → bleedthrough event occurs (wrong creature appears, local water becomes something alien, people start dreaming in another language, a building briefly becomes somewhere else) → companions arrive to find the mess → solve the immediate problem → find the trail → move on.
+
+The companions glimpse the antagonists occasionally — close enough to start to understand, not close enough to stop them. Sometimes their goals briefly align.
 
 The antagonist is not the final boss. The question of *whether to stop them* is more interesting than the fight.
 
@@ -98,9 +116,9 @@ No crafting. No inventory management as a minigame. Combat is meaningful but not
 
 ## Open Questions
 
-- What specifically did Sarro lose?
 - What is Liris passionate about / trying to reach?
-- What is the antagonist trying to accomplish?
 - What are the rules of the New Pantheon? Who are the gods?
 - How does Liris eventually cross portals — does she develop conviction, or does Sarro carry her?
 - Is there a third companion?
+- How do the Menders and Extractors relate to each other?
+- Does Sarro's divine nature make him part of the problem? (His free transit — does it also stress the Veil?)
