@@ -33,6 +33,9 @@ horizontal_alignment = 1
 [node name="Resume" type="Button" parent="Panel/VBox"]
 text = "Resume"
 
+[node name="Save" type="Button" parent="Panel/VBox"]
+text = "Save"
+
 [node name="MainMenu" type="Button" parent="Panel/VBox"]
 text = "Main Menu"
 

@@ -56,6 +56,30 @@ static func _equip_class_kit(c, class_key: String) -> void:
 			c.equipment.equip_main_hand(_WeaponData.make_rapier())
 			c.equipment.equip_armor(_ArmorData.make_leather())
 
+## Serialize a character to a JSON-safe dict. Only creation choices and
+## mutable state are stored; everything derived is rebuilt on load.
+static func to_save_dict(c) -> Dictionary:
+	var scores: Array[int] = []
+	for i in 6:
+		scores.append(c.stats.get_ability(i as _SRD.Ability))
+	return {
+		"name": c.display_name,
+		"class_key": c.class_data.class_name_str.to_lower(),
+		"scores": scores,
+		"skill_mask": c.stats.skill_proficiency_mask,
+		"current_hp": c.stats.current_hp,
+	}
+
+## Rebuild a character from a to_save_dict() dict (JSON round-trip safe).
+static func make_from_save(d: Dictionary):
+	var scores: Array[int] = []
+	for v in d.get("scores", [10, 10, 10, 10, 10, 10]):
+		scores.append(int(v))
+	var c = make_custom(str(d.get("name", "Sarro")), str(d.get("class_key", "soldier")), scores, [])
+	c.stats.skill_proficiency_mask = int(d.get("skill_mask", 0))
+	c.stats.current_hp = clampi(int(d.get("current_hp", c.stats.max_hp)), 0, c.stats.max_hp)
+	return c
+
 ## Default Sarro — Soldier with the standard array on a STR build.
 static func make_sarro():
 	return make_custom("Sarro", "soldier",

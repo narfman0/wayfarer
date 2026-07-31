@@ -21,13 +21,21 @@ func _ready() -> void:
 	_player.camera_pivot = _cam_pivot
 	_companion.follow_target = _player
 	_setup_hud()
+	_sync_party_to_scene()
 	_setup_combat()
 	_setup_enemies()
-	_sync_party_to_scene()
+	_apply_loaded_state()
+	GameState.save_game()  # autosave on plane entry
 	if skip_opening_dialogue:
 		_player.set_control_enabled(true)
 	else:
 		_start_opening_dialogue()
+
+## Apply world state staged by GameState.load_game().
+func _apply_loaded_state() -> void:
+	if GameState.pending_player_pos != null:
+		_player.global_position = GameState.pending_player_pos
+		GameState.pending_player_pos = null
 
 func _process(_delta: float) -> void:
 	_cam_pivot.global_position = _player.global_position
@@ -42,7 +50,7 @@ func _setup_hud() -> void:
 func _setup_combat() -> void:
 	_attacker = _MeleeAttacker.new()
 	_attacker.owner_body = _player
-	_attacker.character  = GameState.sarro if GameState.sarro != null else _Factory.make_sarro()
+	_attacker.character  = GameState.sarro  # party is synced before combat setup
 	add_child(_attacker)
 
 func _setup_enemies() -> void:

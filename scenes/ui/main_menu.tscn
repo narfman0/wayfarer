@@ -19,6 +19,9 @@ grow_vertical = 2
 text = "WAYFARER"
 horizontal_alignment = 1
 
+[node name="Continue" type="Button" parent="Layout"]
+text = "Continue"
+
 [node name="NewGame" type="Button" parent="Layout"]
 text = "New Game"
 
