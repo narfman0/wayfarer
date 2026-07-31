@@ -1,0 +1,51 @@
+~ tamori_tavern
+
+## Opening scene: The Gilded Oni tavern, Tamori's Gate District.
+## Sarro is at the bar. A ronin shoves past, spilling sake over a farmer's table.
+## The farmer stands. The tavern goes quiet.
+
+narrator: The air smells of cedar smoke and fermented rice wine.
+narrator: Across the room, three men in roughspun argue over a debt. One reaches for a blade.
+
+Sarro: [thinking] Same story. Different world.
+
+=> brawl_starts
+
+~ brawl_starts
+
+narrator: The blade comes free. The farmer's son throws the first punch.
+narrator: Sarro is already moving.
+
+Sarro: [to the room] Nobody needs to bleed tonight.
+
+Ronin: Stay out of it, outsider. You smell wrong for this plane.
+
+Sarro: I get that a lot.
+
+=> fight_or_talk
+
+~ fight_or_talk
+
+Sarro: [to ronin] Walk away. I'll buy you a drink. First one's not free.
+
+=> ronin_accepts
+
+~ ronin_accepts
+
+Ronin: ...
+narrator: He sheathes the blade. The tension breaks. The farmer's family sits back down.
+narrator: The tavern exhales.
+
+Bartender: [to Sarro] You've got a steady head, stranger. Not many pass through the Gate without looking rattled.
+
+Sarro: I've passed through worse gates.
+
+Bartender: There's a woman outside asking for someone who "doesn't flinch at what's behind the Veil." Said she'd know them by the way they carry nothing.
+
+narrator: Sarro glances at their empty hands.
+
+Sarro: How long has she been waiting?
+
+Bartender: Long enough to finish her tea twice.
+
+=> END

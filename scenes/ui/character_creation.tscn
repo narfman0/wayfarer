@@ -1,0 +1,42 @@
+[gd_scene load_steps=2 format=3 uid="uid://char_creation"]
+
+[ext_resource type="Script" path="res://scripts/ui/character_creation.gd" id="1_cc"]
+
+[node name="CharacterCreation" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_cc")
+
+[node name="Layout" type="VBoxContainer" parent="."]
+anchor_left = 0.1
+anchor_right = 0.9
+anchor_top = 0.05
+anchor_bottom = 0.95
+grow_horizontal = 3
+grow_vertical = 3
+
+[node name="Title" type="Label" parent="Layout"]
+text = "Choose Starting Feats"
+horizontal_alignment = 1
+
+[node name="Companions" type="HBoxContainer" parent="Layout"]
+size_flags_vertical = 3
+
+[node name="SarroPanel" type="VBoxContainer" parent="Layout/Companions"]
+size_flags_horizontal = 3
+
+[node name="SarroLabel" type="Label" parent="Layout/Companions/SarroPanel"]
+text = "Sarro — Soldier"
+
+[node name="Feats" type="VBoxContainer" parent="Layout/Companions/SarroPanel"]
+
+[node name="LirisPanel" type="VBoxContainer" parent="Layout/Companions"]
+size_flags_horizontal = 3
+
+[node name="LirisLabel" type="Label" parent="Layout/Companions/LirisPanel"]
+text = "Liris — Warden"
+
+[node name="Feats" type="VBoxContainer" parent="Layout/Companions/LirisPanel"]
+
+[node name="Confirm" type="Button" parent="Layout"]
+text = "Begin"

@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3 uid="uid://tamori"]
+
+[ext_resource type="Script" path="res://scripts/world/tamori.gd" id="1_tamori"]
+
+[node name="Tamori" type="Node2D"]
+script = ExtResource("1_tamori")
+
+[node name="Characters" type="Node2D" parent="."]
+
+[node name="Sarro" type="Node2D" parent="Characters"]
+position = Vector2(200, 400)
+
+[node name="Liris" type="Node2D" parent="Characters"]
+position = Vector2(260, 400)
+
+[node name="HUD" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
