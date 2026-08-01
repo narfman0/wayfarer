@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=3 uid="uid://tamori"]
+[gd_scene load_steps=46 format=3 uid="uid://tamori"]
 
 [ext_resource type="Script" path="res://scripts/world/tamori.gd" id="1_tamori"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
@@ -38,6 +38,7 @@
 [ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_02.glb" id="c_npc_f"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Sorcerer.glb" id="c_npc_m2"]
+[ext_resource type="Environment" path="res://resources/env_village.tres" id="env_shared"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -56,21 +57,6 @@ size = Vector3(40, 0.2, 40)
 height = 1.8
 radius = 0.35
 
-[sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
-sky_top_color = Color(0.35, 0.46, 0.71, 1)
-sky_horizon_color = Color(0.65, 0.66, 0.67, 1)
-ground_bottom_color = Color(0.2, 0.17, 0.13, 1)
-ground_horizon_color = Color(0.65, 0.66, 0.67, 1)
-
-[sub_resource type="Sky" id="Sky_1"]
-sky_material = SubResource("SkyMat_1")
-
-[sub_resource type="Environment" id="Environment_1"]
-background_mode = 2
-sky = SubResource("Sky_1")
-ambient_light_source = 3
-tonemap_mode = 2
-
 [sub_resource type="StandardMaterial3D" id="Mat_ground"]
 albedo_color = Color(0.34, 0.47, 0.26, 1)
 
@@ -79,7 +65,7 @@ script = ExtResource("1_tamori")
 skip_opening_dialogue = true
 
 [node name="Environment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_1")
+environment = ExtResource("env_shared")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 10, 0)

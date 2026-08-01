@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://tamori_fields"]
+[gd_scene load_steps=20 format=3 uid="uid://tamori_fields"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
@@ -14,6 +14,7 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Thin_03.glb" id="e_thin"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Rock_04.glb" id="e_rock"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Ground_Logs_01.glb" id="e_log"]
+[ext_resource type="Environment" path="res://resources/env_fields.tres" id="env_shared"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -24,21 +25,6 @@ radius = 0.35
 [sub_resource type="BoxMesh" id="BoxMesh_ground"]
 size = Vector3(44, 0.2, 44)
 
-[sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
-sky_top_color = Color(0.42, 0.4, 0.55, 1)
-sky_horizon_color = Color(0.62, 0.58, 0.55, 1)
-ground_bottom_color = Color(0.2, 0.17, 0.13, 1)
-ground_horizon_color = Color(0.62, 0.58, 0.55, 1)
-
-[sub_resource type="Sky" id="Sky_1"]
-sky_material = SubResource("SkyMat_1")
-
-[sub_resource type="Environment" id="Environment_1"]
-background_mode = 2
-sky = SubResource("Sky_1")
-ambient_light_source = 3
-tonemap_mode = 2
-
 [sub_resource type="StandardMaterial3D" id="Mat_ground"]
 albedo_color = Color(0.36, 0.4, 0.24, 1)
 
@@ -47,7 +33,7 @@ script = ExtResource("1_level")
 plane_id = "tamori_fields"
 
 [node name="Environment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_1")
+environment = ExtResource("env_shared")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 10, 0)

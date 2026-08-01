@@ -17,7 +17,27 @@ const BONE_MAP := {
 	"UpperLeg_R": "Thigh_R", "LowerLeg_R": "calf_r", "Ankle_R": "Foot_R", "Ball_R": "ball_r", "Toes_R": "toes_r",
 }
 
+## True T-pose rest rotations of the classic rig, from the animation pack's
+## reference character. The clip GLBs' own skeleton rests are baked to the
+## animation stance (Blender export), so they can't serve as the reference.
+const REF_CHARACTER := "res://assets/meshes/ANIMATION_Base_Locomotion_SourceFiles_v3/SourceFiles/Character/PolygonSyntyCharacter.glb"
+
 static var _clip_cache: Dictionary = {}
+static var _ref_rests: Dictionary = {}
+
+static func _reference_rests() -> Dictionary:
+	if not _ref_rests.is_empty():
+		return _ref_rests
+	var inst = load(REF_CHARACTER).instantiate()
+	var skels: Array = inst.find_children("*", "Skeleton3D", true, false)
+	if skels.is_empty():
+		inst.free()
+		return _ref_rests
+	var skel: Skeleton3D = skels[0]
+	for i in skel.get_bone_count():
+		_ref_rests[skel.get_bone_name(i)] = skel.get_bone_rest(i).basis.get_rotation_quaternion()
+	inst.free()
+	return _ref_rests
 
 ## Build a retargeted Animation for `target_skeleton` (path used for tracks
 ## must be the path from the future AnimationPlayer root to that skeleton).
@@ -55,7 +75,10 @@ static func load_clip(glb_path: String, skeleton_path: String, target_skeleton: 
 		var dst_idx := target_skeleton.find_bone(BONE_MAP[bone])
 		if src_idx < 0 or dst_idx < 0:
 			continue
-		var src_rest: Quaternion = src_skel.get_bone_rest(src_idx).basis.get_rotation_quaternion()
+		var rests := _reference_rests()
+		if not rests.has(bone):
+			continue
+		var src_rest: Quaternion = rests[bone]
 		var dst_rest: Quaternion = target_skeleton.get_bone_rest(dst_idx).basis.get_rotation_quaternion()
 		var delta_fix := dst_rest * src_rest.inverse()
 		var idx := out.get_track_count()
