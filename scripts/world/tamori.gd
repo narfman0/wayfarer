@@ -10,8 +10,6 @@ const _Factory       = preload("res://scripts/characters/character_factory.gd")
 const _MeleeAttacker = preload("res://scripts/combat/melee_attacker.gd")
 const _SyntySkin     = preload("res://scripts/world/synty_skin.gd")
 
-const _TEX_KINGDOM = "res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/Textures/PolygonFantasyKingdom_Texture_01_A.png"
-const _TEX_CHARS   = "res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Textures/Polygon_Fantasy_Characters_Texture_01_A.png"
 
 @onready var _player    = $Characters/Sarro     # PlayerController
 @onready var _companion = $Characters/Liris     # CompanionFollow
@@ -38,14 +36,13 @@ func _ready() -> void:
 
 ## Colorize cooked Synty meshes with their pack atlases.
 func _apply_synty_textures() -> void:
-	for prop in $Level/Props.get_children():
-		_SyntySkin.apply(prop, _TEX_KINGDOM)
+	_SyntySkin.apply_auto_children($Level/Props)
 	var bodies: Array = [$Characters/Sarro, $Characters/Liris]
 	bodies.append_array(get_tree().get_nodes_in_group("enemies"))
 	for body in bodies:
 		var skin = body.get_node_or_null("Skin")
 		if skin != null:
-			_SyntySkin.apply(skin, _TEX_CHARS)
+			_SyntySkin.apply_auto(skin)
 
 ## Apply world state staged by GameState.load_game().
 func _apply_loaded_state() -> void:

@@ -6,7 +6,7 @@ extends Node
 const SaveManager = preload("res://scripts/system/save_manager.gd")
 const _Factory    = preload("res://scripts/characters/character_factory.gd")
 
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 
 signal party_updated
 signal plane_changed(plane_id: String)
@@ -17,6 +17,10 @@ var liris = null  # WayfarerCharacter — set by scenes
 
 var current_plane: String = ""
 var play_time_seconds: float = 0.0
+
+## Story flags — written by dialogue mutations (`do GameState.set_flag("x")`)
+## and triggers; read by dialogue conditions and portal gates. Persisted.
+var flags: Dictionary = {}
 
 ## Staged by load_game(); the world scene applies and clears it on entry.
 var pending_player_pos = null  # Vector3 or null
@@ -43,6 +47,17 @@ func party() -> Array:
 	if liris != null: p.append(liris)
 	return p
 
+# ── Story flags ──────────────────────────────────────────────────────────────
+
+func set_flag(flag_name: String, value: Variant = true) -> void:
+	flags[flag_name] = value
+
+func get_flag(flag_name: String, default: Variant = null) -> Variant:
+	return flags.get(flag_name, default)
+
+func has_flag(flag_name: String) -> bool:
+	return bool(flags.get(flag_name, false))
+
 # ── Save / load ──────────────────────────────────────────────────────────────
 
 func has_save(slot: int = 0) -> bool:
@@ -56,6 +71,7 @@ func save_game(slot: int = 0) -> bool:
 		"version": SAVE_VERSION,
 		"current_plane": current_plane,
 		"play_time": play_time_seconds,
+		"flags": flags,
 		"sarro": _Factory.to_save_dict(sarro),
 		"liris": _Factory.to_save_dict(liris),
 	}
@@ -76,6 +92,7 @@ func load_game(slot: int = 0) -> bool:
 	liris = _Factory.make_from_save(data["liris"]) if data.has("liris") else _Factory.make_liris()
 	current_plane = str(data.get("current_plane", "tamori"))
 	play_time_seconds = float(data.get("play_time", 0.0))
+	flags = data.get("flags", {})
 	var pp = data.get("player_pos")
 	if pp is Array and pp.size() == 3:
 		pending_player_pos = Vector3(pp[0], pp[1], pp[2])

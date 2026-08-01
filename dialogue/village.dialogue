@@ -1,0 +1,25 @@
+~ well_keeper
+
+if GameState.has_flag("met_odo")
+	Odo: Back again. The well's still sweet, the fields are still wrong.
+	if GameState.has_flag("heard_about_fields")
+		Odo: You said you'd look at the eastern fields. Words are wind, wayfarer.
+	else
+		- Ask about the fields
+			Odo: Three weeks now. The water in the east paddies went bad overnight — crops black by morning.
+			Odo: Something came through that tear. Nobody's been out there since.
+			do GameState.set_flag("heard_about_fields")
+		- Just passing through
+			Odo: Mm. Keep your sword loose all the same.
+else
+	Odo: New face. We don't get many since the eastern fields went bad.
+	Odo: I'm Odo. I keep the well. Only honest work left around here.
+	do GameState.set_flag("met_odo")
+	- Who's the armed man by the road?
+		Odo: Trouble. Been eyeing the hay cart all morning. Were I you, I'd deal with him before he deals with you.
+	- What happened to the fields?
+		Odo: Three weeks now. The water in the east paddies went bad overnight — crops black by morning.
+		Odo: Something came through that tear. Nobody's been out there since.
+		do GameState.set_flag("heard_about_fields")
+
+=> END
