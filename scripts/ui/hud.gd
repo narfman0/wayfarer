@@ -10,6 +10,7 @@ extends Control
 
 var _tracked_enemy: EnemyController = null
 var _toast: Label
+var _ability_label: Label
 
 func _ready() -> void:
 	_enemy_row.visible = false
@@ -21,6 +22,11 @@ func _ready() -> void:
 	add_child(_toast)
 	GameState.xp_gained.connect(_on_xp_gained)
 	GameState.leveled_up.connect(_on_leveled_up)
+	_ability_label = Label.new()
+	_ability_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_ability_label.position.y = -46
+	_ability_label.add_theme_font_size_override("font_size", 16)
+	add_child(_ability_label)
 
 func _on_xp_gained(amount: int) -> void:
 	_show_toast("+%d XP  (Level %d — %d XP)" % [amount, GameState.sarro.stats.level, GameState.sarro.stats.xp])
@@ -37,6 +43,9 @@ func _show_toast(text: String) -> void:
 
 func _process(_delta: float) -> void:
 	_refresh_party()
+	if GameState.sarro != null and _ability_label != null:
+		_ability_label.text = "[1] Second Wind — %s" % ("Ready" if not GameState.sarro.second_wind_used else "Spent (rest to recover)")
+		_ability_label.modulate = Color(0.6, 1.0, 0.7) if not GameState.sarro.second_wind_used else Color(0.6, 0.6, 0.65)
 
 func track_enemy(enemy: EnemyController) -> void:
 	if _tracked_enemy != null:

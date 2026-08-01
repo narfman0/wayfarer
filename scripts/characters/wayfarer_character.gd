@@ -18,6 +18,9 @@ const _SRD            = preload("res://addons/srd/srd_enums.gd")
 
 var energy_slots = null
 
+## Ability state (session-scoped; refreshed at rest points).
+var second_wind_used: bool = false
+
 func _init() -> void:
 	stats    = _CharacterStats.new()
 	equipment = _EquipmentSlots.new()

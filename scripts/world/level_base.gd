@@ -8,6 +8,8 @@ extends Node3D
 const _Factory       = preload("res://scripts/characters/character_factory.gd")
 const _MeleeAttacker = preload("res://scripts/combat/melee_attacker.gd")
 const _Animator      = preload("res://scripts/world/character_animator.gd")
+const _DamageNumber  = preload("res://scripts/world/damage_number.gd")
+const _Dice          = preload("res://addons/srd/dice.gd")
 
 ## Key into SceneManager.LEVELS — also stored as GameState.current_plane.
 @export var plane_id: String = "tamori"
@@ -140,6 +142,21 @@ func _sync_party_to_scene() -> void:
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_open_pause_menu()
+	elif event.is_action_pressed("ability_1"):
+		_use_second_wind()
+
+## Second Wind (hotbar slot 1): heal 1d10 + level, once per rest.
+func _use_second_wind() -> void:
+	var c = GameState.sarro
+	if c == null or c.second_wind_used or _defeated:
+		return
+	if c.stats.current_hp >= c.stats.max_hp or c.stats.current_hp <= 0:
+		return
+	c.second_wind_used = true
+	var heal: int = _Dice.roll(10) + c.stats.level
+	c.stats.current_hp = mini(c.stats.max_hp, c.stats.current_hp + heal)
+	_DamageNumber.spawn(self, _player.global_position, "+%d" % heal, Color(0.4, 1.0, 0.5))
+	print("[Combat] Second Wind: +%d HP" % heal)
 
 func _open_pause_menu() -> void:
 	get_tree().paused = true
