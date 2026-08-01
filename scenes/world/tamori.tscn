@@ -237,7 +237,7 @@ blocked_hint = "Sarro: I should ask around the village before wandering east."
 [node name="Villager1" type="Node3D" parent="Level"]
 transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, -10.2, 0, -6.8)
 script = ExtResource("5_npc")
-npc_display_name = "Mira"
+npc_display_name = "Sena"
 feminine = true
 bark_lines = Array[String](["Another dry week. The east paddies used to feed half the plane.", "Mind the road after dark, stranger.", "You look like you have somewhere to be."])
 
