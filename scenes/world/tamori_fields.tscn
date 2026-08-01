@@ -112,10 +112,10 @@ transform = Transform3D(0.939, 0, 0.343, 0, 1, 0, -0.343, 0, 0.939, -9, 0, 3)
 [node name="WestPortal" type="Node3D" parent="Level"]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -18, 0, 0)
 script = ExtResource("6_portal")
-display_name = "Back to the Village"
+display_name = "Back to the East Road"
 spawn_id = "fields_west"
-target_plane = "tamori"
-target_spawn_id = "east_gate"
+target_plane = "tamori_road"
+target_spawn_id = "road_east"
 
 [node name="EastPortal" type="Node3D" parent="Level"]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 18, 0, 0)

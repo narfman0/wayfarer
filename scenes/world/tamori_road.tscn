@@ -1,0 +1,211 @@
+[gd_scene load_steps=18 format=3 uid="uid://tamori_road"]
+
+[ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
+[ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
+[ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
+[ext_resource type="Script" path="res://scripts/world/rest_point.gd" id="7_rest"]
+[ext_resource type="Environment" path="res://resources/env_village.tres" id="env_shared"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Rouge_01.gltf" id="c_sarro"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_01.gltf" id="c_liris"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Baird.gltf" id="c_bandit"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Fence_01.gltf" id="e_fence"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Round_02.gltf" id="e_tree"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Thin_03.gltf" id="e_thin"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Rock_04.gltf" id="e_rock"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_char"]
+height = 1.8
+radius = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(56, 0.2, 26)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.35, 0.45, 0.26, 1)
+
+[node name="TamoriRoad" type="Node3D"]
+script = ExtResource("1_level")
+plane_id = "tamori_road"
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = ExtResource("env_shared")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 10, 0)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="Level" type="Node3D" parent="."]
+
+[node name="Ground" type="StaticBody3D" parent="Level"]
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Level/Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+mesh = SubResource("BoxMesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="Level/Ground"]
+shape = SubResource("WorldBoundaryShape3D_1")
+
+[node name="Props" type="Node3D" parent="Level"]
+
+[node name="Fence1" parent="Level/Props" instance=ExtResource("e_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, -4)
+
+[node name="Fence2" parent="Level/Props" instance=ExtResource("e_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0, -4)
+
+[node name="Fence3" parent="Level/Props" instance=ExtResource("e_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -4)
+
+[node name="Fence4" parent="Level/Props" instance=ExtResource("e_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 4)
+
+[node name="Fence5" parent="Level/Props" instance=ExtResource("e_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 4)
+
+[node name="Fence6" parent="Level/Props" instance=ExtResource("e_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 4)
+
+[node name="Tree1" parent="Level/Props" instance=ExtResource("e_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, -9)
+
+[node name="Tree2" parent="Level/Props" instance=ExtResource("e_tree")]
+transform = Transform3D(0.766, 0, -0.643, 0, 1, 0, 0.643, 0, 0.766, -2, 0, 8)
+
+[node name="Tree3" parent="Level/Props" instance=ExtResource("e_thin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, -8)
+
+[node name="Tree4" parent="Level/Props" instance=ExtResource("e_thin")]
+transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, 22, 0, 7)
+
+[node name="Rock1" parent="Level/Props" instance=ExtResource("e_rock")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -9)
+
+[node name="Rock2" parent="Level/Props" instance=ExtResource("e_rock")]
+transform = Transform3D(0.49, 0, 0.49, 0, 0.7, 0, -0.49, 0, 0.49, 18, 0, 9)
+
+[node name="Waypoints" type="Node3D" parent="Level"]
+
+[node name="WP1" type="Node3D" parent="Level/Waypoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -2)
+
+[node name="WP2" type="Node3D" parent="Level/Waypoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 1)
+
+[node name="WestPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -25, 0, 0)
+script = ExtResource("6_portal")
+display_name = "Back to the Village"
+spawn_id = "road_west"
+target_plane = "tamori"
+target_spawn_id = "east_gate"
+
+[node name="EastPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 25, 0, 0)
+script = ExtResource("6_portal")
+display_name = "Eastern Fields"
+spawn_id = "road_east"
+target_plane = "tamori_fields"
+target_spawn_id = "fields_west"
+
+[node name="RoadRest" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
+script = ExtResource("7_rest")
+display_name = "Waymarker Tear"
+
+[node name="Characters" type="Node3D" parent="."]
+
+[node name="Sarro" type="CharacterBody3D" parent="Characters" groups=["players"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23, 0.9, 0)
+script = ExtResource("2_player")
+collision_layer = 1
+collision_mask = 7
+
+[node name="SarroCollision" type="CollisionShape3D" parent="Characters/Sarro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Sarro" instance=ExtResource("c_sarro")]
+
+[node name="Liris" type="CharacterBody3D" parent="Characters" groups=["companions"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.5, 0.9, 1.5)
+script = ExtResource("3_companion")
+collision_layer = 4
+collision_mask = 3
+
+[node name="LirisCollision" type="CollisionShape3D" parent="Characters/Liris"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Liris" instance=ExtResource("c_liris")]
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="RoadBandit1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.9, 2)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "bandit"
+xp_value = 100
+
+[node name="RoadBandit1Collision" type="CollisionShape3D" parent="Enemies/RoadBandit1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/RoadBandit1" instance=ExtResource("c_bandit")]
+
+[node name="RoadPatroller" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.9, -2)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "bandit"
+xp_value = 100
+patrol_points = Array[NodePath]([NodePath("../../Level/Waypoints/WP1"), NodePath("../../Level/Waypoints/WP2")])
+
+[node name="RoadPatrollerCollision" type="CollisionShape3D" parent="Enemies/RoadPatroller"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/RoadPatroller" instance=ExtResource("c_bandit")]
+
+[node name="RoadBandit2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.9, -3)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "bandit"
+xp_value = 100
+
+[node name="RoadBandit2Collision" type="CollisionShape3D" parent="Enemies/RoadBandit2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/RoadBandit2" instance=ExtResource("c_bandit")]
+
+[node name="AmbushBrute" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0.9, 5)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "brute"
+xp_value = 250
+aggro_radius = 4.0
+
+[node name="AmbushBruteCollision" type="CollisionShape3D" parent="Enemies/AmbushBrute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/AmbushBrute" instance=ExtResource("c_bandit")]
+
+[node name="CameraPivot" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.651, 0.759, 0, -0.759, 0.651, 0, 14, 12)
+current = true
+
+[node name="HUD" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0

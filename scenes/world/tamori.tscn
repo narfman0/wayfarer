@@ -228,10 +228,10 @@ dialogue_title = "well_keeper"
 [node name="EastPortal" type="Node3D" parent="Level"]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 19, 0, 2)
 script = ExtResource("6_portal")
-display_name = "Eastern Fields"
+display_name = "East Road"
 spawn_id = "east_gate"
-target_plane = "tamori_fields"
-target_spawn_id = "fields_west"
+target_plane = "tamori_road"
+target_spawn_id = "road_west"
 required_flag = "heard_about_fields"
 blocked_hint = "Sarro: I should ask around the village before wandering east."
 
