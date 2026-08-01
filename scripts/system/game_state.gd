@@ -29,6 +29,10 @@ var flags: Dictionary = {}
 ## Staged by load_game(); the world scene applies and clears it on entry.
 var pending_player_pos = null  # Vector3 or null
 
+## Set by WayfarerLevel when it spawns a fallback debug party (scene run in
+## isolation) — all saving is suppressed so tests never touch the real slot.
+var debug_session := false
+
 func _process(delta: float) -> void:
 	if current_plane != "":
 		play_time_seconds += delta
@@ -89,7 +93,7 @@ func has_save(slot: int = 0) -> bool:
 
 ## Persist the party and world state. Returns false if there is nothing to save.
 func save_game(slot: int = 0) -> bool:
-	if sarro == null or liris == null:
+	if sarro == null or liris == null or debug_session:
 		return false
 	var data := {
 		"version": SAVE_VERSION,

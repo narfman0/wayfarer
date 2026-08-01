@@ -1,0 +1,262 @@
+[gd_scene load_steps=25 format=3 uid="uid://verath"]
+
+[ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
+[ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
+[ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
+[ext_resource type="Script" path="res://scripts/world/rest_point.gd" id="7_rest"]
+[ext_resource type="Script" path="res://scripts/world/story_event.gd" id="8_event"]
+[ext_resource type="Environment" path="res://resources/env_verath.tres" id="env_shared"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Rouge_01.gltf" id="c_sarro"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_01.gltf" id="c_liris"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Baird.gltf" id="c_blade"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Pillar_Stone_01.gltf" id="p_pillar"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Archway_Small_01.gltf" id="p_arch"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Banner_01.gltf" id="p_banner1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Banner_02.gltf" id="p_banner2"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Barrel_Stack_01.gltf" id="p_barrels"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Bridge_01.gltf" id="p_bridge"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_char"]
+height = 1.8
+radius = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(46, 0.2, 46)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.38, 0.38, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_water"]
+size = Vector3(60, 0.2, 24)
+
+[sub_resource type="StandardMaterial3D" id="Mat_water"]
+albedo_color = Color(0.1, 0.2, 0.32, 1)
+metallic = 0.3
+roughness = 0.2
+
+[sub_resource type="BoxShape3D" id="BoxShape_dock"]
+size = Vector3(3, 0.4, 10)
+
+[node name="Verath" type="Node3D"]
+script = ExtResource("1_level")
+plane_id = "verath"
+debug_party_level = 11
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = ExtResource("env_shared")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 10, 0)
+light_energy = 1.0
+shadow_enabled = true
+
+[node name="Level" type="Node3D" parent="."]
+
+[node name="Ground" type="StaticBody3D" parent="Level"]
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Level/Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+mesh = SubResource("BoxMesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="Level/Ground"]
+shape = SubResource("WorldBoundaryShape3D_1")
+
+[node name="Water" type="MeshInstance3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.55, 33)
+mesh = SubResource("BoxMesh_water")
+surface_material_override/0 = SubResource("Mat_water")
+
+[node name="Props" type="Node3D" parent="Level"]
+
+[node name="Arch1" parent="Level/Props" instance=ExtResource("p_arch")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -2)
+
+[node name="Arch2" parent="Level/Props" instance=ExtResource("p_arch")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -2)
+
+[node name="Pillar1" parent="Level/Props" instance=ExtResource("p_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, 6)
+
+[node name="Pillar2" parent="Level/Props" instance=ExtResource("p_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -10)
+
+[node name="Pillar3" parent="Level/Props" instance=ExtResource("p_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 6)
+
+[node name="Pillar4" parent="Level/Props" instance=ExtResource("p_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -10)
+
+[node name="BannerIdealists" parent="Level/Props" instance=ExtResource("p_banner1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -4)
+
+[node name="BannerMerchants" parent="Level/Props" instance=ExtResource("p_banner2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -4)
+
+[node name="Barrels1" parent="Level/Props" instance=ExtResource("p_barrels")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 16)
+
+[node name="Barrels2" parent="Level/Props" instance=ExtResource("p_barrels")]
+transform = Transform3D(0.707, 0, -0.707, 0, 1, 0, 0.707, 0, 0.707, 10, 0, 19)
+
+[node name="DockBridge" parent="Level/Props" instance=ExtResource("p_bridge")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 6, 0, 26)
+
+[node name="DockWalk" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 27)
+
+[node name="DockWalkCollision" type="CollisionShape3D" parent="Level/DockWalk"]
+shape = SubResource("BoxShape_dock")
+
+[node name="FactionAccord" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
+script = ExtResource("8_event")
+display_name = "The Faction Accord"
+flag_name = "verath_resolved"
+xp_amount = 5000
+resolve_text = "Neither side was wrong about everything.
+The docks reopen by evening."
+
+[node name="GlimpseOfCael" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 29)
+script = ExtResource("8_event")
+display_name = "A Figure at the Docks"
+flag_name = "saw_cael"
+xp_amount = 5000
+resolve_text = "He sees you. He doesn't run. He leaves.
+He has a face now: tired."
+
+[node name="WestPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -19, 0, 10)
+script = ExtResource("6_portal")
+display_name = "Back to Old Kaveth"
+spawn_id = "verath_west"
+target_plane = "kaveth"
+target_spawn_id = "kaveth_east"
+
+[node name="NorthPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 19, 0, -14)
+script = ExtResource("6_portal")
+display_name = "The Between Crossing"
+spawn_id = "verath_north"
+target_plane = "between"
+target_spawn_id = "between_south"
+required_flag = "saw_cael"
+blocked_hint = "The Between takes only the certain."
+
+[node name="RestPoint" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, 14)
+script = ExtResource("7_rest")
+display_name = "Harbor Shrine"
+
+[node name="Characters" type="Node3D" parent="."]
+
+[node name="Sarro" type="CharacterBody3D" parent="Characters" groups=["players"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 0.9, 10)
+script = ExtResource("2_player")
+collision_layer = 1
+collision_mask = 7
+
+[node name="SarroCollision" type="CollisionShape3D" parent="Characters/Sarro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Sarro" instance=ExtResource("c_sarro")]
+
+[node name="Liris" type="CharacterBody3D" parent="Characters" groups=["companions"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 0.9, 11.5)
+script = ExtResource("3_companion")
+collision_layer = 4
+collision_mask = 3
+
+[node name="LirisCollision" type="CollisionShape3D" parent="Characters/Liris"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Liris" instance=ExtResource("c_liris")]
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Blade1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.9, 8)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "dock_blade"
+xp_value = 5000
+aggro_radius = 7.0
+
+[node name="Blade1Collision" type="CollisionShape3D" parent="Enemies/Blade1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Blade1" instance=ExtResource("c_blade")]
+
+[node name="Blade2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.9, 12)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "dock_blade"
+xp_value = 5000
+aggro_radius = 7.0
+
+[node name="Blade2Collision" type="CollisionShape3D" parent="Enemies/Blade2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Blade2" instance=ExtResource("c_blade")]
+
+[node name="Blade3" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.9, 16)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "dock_blade"
+xp_value = 5000
+aggro_radius = 7.0
+
+[node name="Blade3Collision" type="CollisionShape3D" parent="Enemies/Blade3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Blade3" instance=ExtResource("c_blade")]
+
+[node name="Blade4" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.9, -12)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "dock_blade"
+xp_value = 5000
+aggro_radius = 7.0
+
+[node name="Blade4Collision" type="CollisionShape3D" parent="Enemies/Blade4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Blade4" instance=ExtResource("c_blade")]
+
+[node name="Blade5" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.9, -8)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "dock_blade"
+xp_value = 5000
+aggro_radius = 7.0
+
+[node name="Blade5Collision" type="CollisionShape3D" parent="Enemies/Blade5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Blade5" instance=ExtResource("c_blade")]
+
+[node name="CameraPivot" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.651, 0.759, 0, -0.759, 0.651, 0, 14, 12)
+current = true
+
+[node name="HUD" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0

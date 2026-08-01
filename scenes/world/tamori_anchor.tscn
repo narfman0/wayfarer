@@ -95,6 +95,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, 10)
 script = ExtResource("7_rest")
 display_name = "Last Stable Tear"
 
+[node name="EastPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 15, 0, 8)
+script = ExtResource("6_portal")
+display_name = "Through the Between — The Reach"
+spawn_id = "anchor_east"
+target_plane = "reach"
+target_spawn_id = "reach_west"
+required_flag = "act1_done"
+blocked_hint = "The tear still churns. Still it first."
+
 [node name="Characters" type="Node3D" parent="."]
 
 [node name="Sarro" type="CharacterBody3D" parent="Characters" groups=["players"]]

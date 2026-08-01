@@ -114,6 +114,59 @@ static func make_enemy(enemy_type: String = "bandit"):
 			c.stats.strength = 18; c.stats.dexterity = 10; c.stats.constitution = 16
 			c.equipment.equip_armor(_ArmorData.make_chain_mail())
 			c.equipment.equip_main_hand(_WeaponData.make_greatsword())
+		# --- Act 2a: The Reach ---
+		"extractor_guard":
+			c.display_name = "Extractor Guard"
+			c.stats.level = 6; c.stats.max_hp = 45
+			c.stats.strength = 14; c.stats.dexterity = 14; c.stats.constitution = 14
+			c.equipment.equip_armor(_ArmorData.make_scale_mail())
+			c.equipment.equip_main_hand(_WeaponData.make_shortsword())
+		"extractor_enforcer":
+			c.display_name = "Extractor Enforcer"
+			c.stats.level = 7; c.stats.max_hp = 60
+			c.stats.strength = 18; c.stats.dexterity = 10; c.stats.constitution = 16
+			c.equipment.equip_armor(_ArmorData.make_chain_mail())
+			c.equipment.equip_main_hand(_WeaponData.make_greatsword())
+		# --- Act 2b: Old Kaveth ---
+		"stitched_husk":
+			c.display_name = "Stitched Husk"
+			c.stats.level = 9; c.stats.max_hp = 75
+			c.stats.strength = 16; c.stats.dexterity = 12; c.stats.constitution = 16
+			c.equipment.equip_armor(_ArmorData.make_scale_mail())
+			c.equipment.equip_main_hand(_WeaponData.make_mace())
+		"kaveth_shade":
+			c.display_name = "Kaveth Shade"
+			c.stats.level = 10; c.stats.max_hp = 90
+			c.stats.strength = 18; c.stats.dexterity = 14; c.stats.constitution = 16
+			c.equipment.equip_armor(_ArmorData.make_studded_leather())
+			c.equipment.equip_main_hand(_WeaponData.make_greatsword())
+		# --- Act 2c: Verath ---
+		"dock_blade":
+			c.display_name = "Dockside Blade"
+			c.stats.level = 12; c.stats.max_hp = 100
+			c.stats.strength = 12; c.stats.dexterity = 18; c.stats.constitution = 14
+			c.equipment.equip_armor(_ArmorData.make_studded_leather())
+			c.equipment.equip_main_hand(_WeaponData.make_rapier())
+		# --- Act 2d: The Between ---
+		"veil_fragment":
+			c.display_name = "Veil Fragment"
+			c.stats.level = 14; c.stats.max_hp = 120
+			c.stats.strength = 18; c.stats.dexterity = 16; c.stats.constitution = 18
+			c.equipment.equip_armor(_ArmorData.make_scale_mail())
+			c.equipment.equip_main_hand(_WeaponData.make_mace())
+		# --- Act 3b: The Convergence ---
+		"mender_zealot":
+			c.display_name = "Mender Zealot"
+			c.stats.level = 17; c.stats.max_hp = 140
+			c.stats.strength = 16; c.stats.dexterity = 14; c.stats.constitution = 16
+			c.equipment.equip_armor(_ArmorData.make_chain_mail())
+			c.equipment.equip_main_hand(_WeaponData.make_longsword())
+		"cael":
+			c.display_name = "Cael"
+			c.stats.level = 20; c.stats.max_hp = 250
+			c.stats.strength = 20; c.stats.dexterity = 14; c.stats.constitution = 20
+			c.equipment.equip_armor(_ArmorData.make_chain_mail())
+			c.equipment.equip_main_hand(_WeaponData.make_greatsword())
 		_:  # "bandit"
 			c.display_name = "Bandit"
 			c.stats.level = 1; c.stats.max_hp = 11

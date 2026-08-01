@@ -1,0 +1,217 @@
+[gd_scene load_steps=21 format=3 uid="uid://between"]
+
+[ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
+[ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
+[ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
+[ext_resource type="Script" path="res://scripts/world/rest_point.gd" id="7_rest"]
+[ext_resource type="Script" path="res://scripts/world/story_event.gd" id="8_event"]
+[ext_resource type="Environment" path="res://resources/env_between.tres" id="env_shared"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Rouge_01.gltf" id="c_sarro"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_01.gltf" id="c_liris"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Sorcerer.gltf" id="c_fragment"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_NatureBiomes_MeadowForest_SourceFiles_v2/Meadow_Source_Files/FBX/Env_CloudRing_Larger_01_Smooth_03.gltf" id="p_cloudring"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_NatureBiomes_MeadowForest_SourceFiles_v2/Meadow_Source_Files/FBX/SM_Env_Cloud_Ring_01.gltf" id="p_cloud"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Item_Crystal_01.gltf" id="p_crystal1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Item_Crystal_03.gltf" id="p_crystal3"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Rock_Chunk_01.gltf" id="p_chunk"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_char"]
+height = 1.8
+radius = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(46, 0.2, 46)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.16, 0.1, 0.24, 1)
+metallic = 0.2
+roughness = 0.6
+
+[node name="Between" type="Node3D"]
+script = ExtResource("1_level")
+plane_id = "between"
+debug_party_level = 13
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = ExtResource("env_shared")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 10, 0)
+light_energy = 0.35
+light_color = Color(0.75, 0.6, 1.0, 1)
+shadow_enabled = true
+
+[node name="Level" type="Node3D" parent="."]
+
+[node name="Ground" type="StaticBody3D" parent="Level"]
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Level/Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+mesh = SubResource("BoxMesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="Level/Ground"]
+shape = SubResource("WorldBoundaryShape3D_1")
+
+[node name="Props" type="Node3D" parent="Level"]
+
+[node name="CloudRing1" parent="Level/Props" instance=ExtResource("p_cloudring")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -10)
+
+[node name="CloudRing2" parent="Level/Props" instance=ExtResource("p_cloud")]
+transform = Transform3D(0.707, 0, -0.707, 0, 1, 0, 0.707, 0, 0.707, -12, 9, 6)
+
+[node name="CloudRing3" parent="Level/Props" instance=ExtResource("p_cloud")]
+transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, 14, 12, 2)
+
+[node name="Crystal1" parent="Level/Props" instance=ExtResource("p_crystal1")]
+transform = Transform3D(2.2, 0, 0, 0, 2.2, 0, 0, 0, 2.2, -8, 0, -6)
+
+[node name="Crystal2" parent="Level/Props" instance=ExtResource("p_crystal3")]
+transform = Transform3D(1.8, 0, 0.6, 0, 1.9, 0, -0.6, 0, 1.8, 6, 0, 4)
+
+[node name="Crystal3" parent="Level/Props" instance=ExtResource("p_crystal1")]
+transform = Transform3D(1.4, 0, -0.5, 0, 1.5, 0, 0.5, 0, 1.4, 10, 0, -14)
+
+[node name="FloatRock1" parent="Level/Props" instance=ExtResource("p_chunk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 3.5, -14)
+
+[node name="FloatRock2" parent="Level/Props" instance=ExtResource("p_chunk")]
+transform = Transform3D(0.766, 0, -0.643, 0, 1, 0, 0.643, 0, 0.766, 12, 5, 10)
+
+[node name="FloatRock3" parent="Level/Props" instance=ExtResource("p_chunk")]
+transform = Transform3D(0.6, 0, 0.8, 0, 1, 0, -0.8, 0, 0.6, -16, 2.2, 2)
+
+[node name="AncestorFragment" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -14)
+script = ExtResource("8_event")
+display_name = "The Ancestor's Fragment"
+flag_name = "act2_done"
+xp_amount = 25000
+resolve_text = "Scar tissue where they stitched. Quiet healing where they didn't.
+Something of his blood passes him a gift — not the answer he wanted."
+
+[node name="SouthPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -19, 0, 12)
+script = ExtResource("6_portal")
+display_name = "Back to Verath"
+spawn_id = "between_south"
+target_plane = "verath"
+target_spawn_id = "verath_north"
+
+[node name="NorthPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 19, 0, -14)
+script = ExtResource("6_portal")
+display_name = "To Ashan"
+spawn_id = "between_north"
+target_plane = "ashan"
+target_spawn_id = "ashan_south"
+required_flag = "act2_done"
+blocked_hint = "Not yet. Look first."
+
+[node name="RestPoint" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, 14)
+script = ExtResource("7_rest")
+display_name = "Quiet Region"
+
+[node name="Characters" type="Node3D" parent="."]
+
+[node name="Sarro" type="CharacterBody3D" parent="Characters" groups=["players"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 0.9, 12)
+script = ExtResource("2_player")
+collision_layer = 1
+collision_mask = 7
+
+[node name="SarroCollision" type="CollisionShape3D" parent="Characters/Sarro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Sarro" instance=ExtResource("c_sarro")]
+
+[node name="Liris" type="CharacterBody3D" parent="Characters" groups=["companions"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 0.9, 13.5)
+script = ExtResource("3_companion")
+collision_layer = 4
+collision_mask = 3
+
+[node name="LirisCollision" type="CollisionShape3D" parent="Characters/Liris"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Liris" instance=ExtResource("c_liris")]
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Fragment1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.9, 0)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "veil_fragment"
+xp_value = 5000
+aggro_radius = 8.0
+
+[node name="Fragment1Collision" type="CollisionShape3D" parent="Enemies/Fragment1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Fragment1" instance=ExtResource("c_fragment")]
+transform = Transform3D(1.15, 0, 0, 0, 1.15, 0, 0, 0, 1.15, 0, 0, 0)
+
+[node name="Fragment2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.9, -6)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "veil_fragment"
+xp_value = 5000
+aggro_radius = 8.0
+
+[node name="Fragment2Collision" type="CollisionShape3D" parent="Enemies/Fragment2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Fragment2" instance=ExtResource("c_fragment")]
+transform = Transform3D(1.15, 0, 0, 0, 1.15, 0, 0, 0, 1.15, 0, 0, 0)
+
+[node name="Fragment3" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.9, 6)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "veil_fragment"
+xp_value = 5000
+aggro_radius = 8.0
+
+[node name="Fragment3Collision" type="CollisionShape3D" parent="Enemies/Fragment3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Fragment3" instance=ExtResource("c_fragment")]
+transform = Transform3D(1.15, 0, 0, 0, 1.15, 0, 0, 0, 1.15, 0, 0, 0)
+
+[node name="Fragment4" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.9, -16)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "veil_fragment"
+xp_value = 5000
+aggro_radius = 8.0
+
+[node name="Fragment4Collision" type="CollisionShape3D" parent="Enemies/Fragment4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Fragment4" instance=ExtResource("c_fragment")]
+transform = Transform3D(1.15, 0, 0, 0, 1.15, 0, 0, 0, 1.15, 0, 0, 0)
+
+[node name="CameraPivot" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.651, 0.759, 0, -0.759, 0.651, 0, 14, 12)
+current = true
+
+[node name="HUD" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0

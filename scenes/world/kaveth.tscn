@@ -1,0 +1,333 @@
+[gd_scene load_steps=26 format=3 uid="uid://kaveth"]
+
+[ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
+[ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
+[ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
+[ext_resource type="Script" path="res://scripts/world/rest_point.gd" id="7_rest"]
+[ext_resource type="Script" path="res://scripts/world/story_event.gd" id="8_event"]
+[ext_resource type="Environment" path="res://resources/env_kaveth.tres" id="env_shared"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Rouge_01.gltf" id="c_sarro"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_01.gltf" id="c_liris"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Sorcerer.gltf" id="c_husk"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Witch.gltf" id="c_shade"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_DestroyedWall_Bottom_02.gltf" id="p_wall1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_DestroyedWall_Middle_01.gltf" id="p_wall2"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_DestroyedWall_RubblePile_01.gltf" id="p_rubble"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Archway_Small_01.gltf" id="p_arch"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Pillar_Stone_01.gltf" id="p_pillar"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Dead_04.gltf" id="p_dead"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Ground_Crater_03.gltf" id="p_crater"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_char"]
+height = 1.8
+radius = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(46, 0.2, 46)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.32, 0.3, 0.33, 1)
+
+[sub_resource type="TorusMesh" id="TearMesh"]
+inner_radius = 0.85
+outer_radius = 1.05
+
+[sub_resource type="StandardMaterial3D" id="Mat_tear"]
+albedo_color = Color(0.5, 0.25, 0.9, 1)
+emission_enabled = true
+emission = Color(0.6, 0.3, 1.0, 1)
+emission_energy_multiplier = 3.0
+
+[node name="Kaveth" type="Node3D"]
+script = ExtResource("1_level")
+plane_id = "kaveth"
+debug_party_level = 8
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = ExtResource("env_shared")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 10, 0)
+light_energy = 0.6
+shadow_enabled = true
+
+[node name="Level" type="Node3D" parent="."]
+
+[node name="Ground" type="StaticBody3D" parent="Level"]
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Level/Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+mesh = SubResource("BoxMesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="Level/Ground"]
+shape = SubResource("WorldBoundaryShape3D_1")
+
+[node name="Props" type="Node3D" parent="Level"]
+
+[node name="Wall1" parent="Level/Props" instance=ExtResource("p_wall1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -4)
+
+[node name="Wall2" parent="Level/Props" instance=ExtResource("p_wall2")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -6, 0, -10)
+
+[node name="Wall3" parent="Level/Props" instance=ExtResource("p_wall1")]
+transform = Transform3D(0.707, 0, 0.707, 0, 1, 0, -0.707, 0, 0.707, 8, 0, 6)
+
+[node name="Wall4" parent="Level/Props" instance=ExtResource("p_wall2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, -2)
+
+[node name="Rubble1" parent="Level/Props" instance=ExtResource("p_rubble")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 2)
+
+[node name="Rubble2" parent="Level/Props" instance=ExtResource("p_rubble")]
+transform = Transform3D(0.5, 0, -0.866, 0, 1, 0, 0.866, 0, 0.5, 6, 0, -12)
+
+[node name="Archway" parent="Level/Props" instance=ExtResource("p_arch")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, -6)
+
+[node name="Pillar1" parent="Level/Props" instance=ExtResource("p_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 8)
+
+[node name="Pillar2" parent="Level/Props" instance=ExtResource("p_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 10)
+
+[node name="Pillar3" parent="Level/Props" instance=ExtResource("p_pillar")]
+transform = Transform3D(0.94, 0, 0.34, 0, 1, 0, -0.34, 0, 0.94, 12, 0, 12)
+
+[node name="DeadTree1" parent="Level/Props" instance=ExtResource("p_dead")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, 2)
+
+[node name="DeadTree2" parent="Level/Props" instance=ExtResource("p_dead")]
+transform = Transform3D(0.766, 0, -0.643, 0, 1, 0, 0.643, 0, 0.766, -12, 0, -14)
+
+[node name="Crater" parent="Level/Props" instance=ExtResource("p_crater")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -16)
+
+[node name="WakingTearRing" type="MeshInstance3D" parent="Level/Props"]
+transform = Transform3D(2.8, 0, 0, 0, 0, -2.8, 0, 2.8, 0, 10, 3.0, -17)
+mesh = SubResource("TearMesh")
+surface_material_override/0 = SubResource("Mat_tear")
+
+[node name="DefectorRecords" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -7)
+script = ExtResource("8_event")
+display_name = "The Defector's Records"
+flag_name = "kaveth_records"
+xp_amount = 5000
+resolve_text = "Forty-one closed tears. None healed — stitched.
+Serane's hand shakes on the last page."
+
+[node name="WakingTear" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -15)
+script = ExtResource("8_event")
+display_name = "The Waking Tear"
+flag_name = "kaveth_done"
+xp_amount = 6000
+resolve_text = "The anchor stone didn't hold it shut.
+It marked it. It was healing on its own — for centuries."
+
+[node name="WestPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -19, 0, 10)
+script = ExtResource("6_portal")
+display_name = "Back to the Reach"
+spawn_id = "kaveth_west"
+target_plane = "reach"
+target_spawn_id = "reach_east"
+
+[node name="EastPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 19, 0, -8)
+script = ExtResource("6_portal")
+display_name = "To Verath"
+spawn_id = "kaveth_east"
+target_plane = "verath"
+target_spawn_id = "verath_west"
+required_flag = "kaveth_done"
+blocked_hint = "The ruins still shift. See what woke."
+
+[node name="RestPoint" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, 14)
+script = ExtResource("7_rest")
+display_name = "Anchor Stone Socket"
+
+[node name="Characters" type="Node3D" parent="."]
+
+[node name="Sarro" type="CharacterBody3D" parent="Characters" groups=["players"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 0.9, 10)
+script = ExtResource("2_player")
+collision_layer = 1
+collision_mask = 7
+
+[node name="SarroCollision" type="CollisionShape3D" parent="Characters/Sarro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Sarro" instance=ExtResource("c_sarro")]
+
+[node name="Liris" type="CharacterBody3D" parent="Characters" groups=["companions"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 0.9, 11.5)
+script = ExtResource("3_companion")
+collision_layer = 4
+collision_mask = 3
+
+[node name="LirisCollision" type="CollisionShape3D" parent="Characters/Liris"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Liris" instance=ExtResource("c_liris")]
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Husk1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.9, 0)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3500
+aggro_radius = 7.0
+
+[node name="Husk1Collision" type="CollisionShape3D" parent="Enemies/Husk1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk1" instance=ExtResource("c_husk")]
+
+[node name="Husk2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.9, -4)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3500
+aggro_radius = 7.0
+
+[node name="Husk2Collision" type="CollisionShape3D" parent="Enemies/Husk2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk2" instance=ExtResource("c_husk")]
+
+[node name="Husk3" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.9, 4)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3500
+aggro_radius = 7.0
+
+[node name="Husk3Collision" type="CollisionShape3D" parent="Enemies/Husk3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk3" instance=ExtResource("c_husk")]
+
+[node name="Husk4" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.9, 0)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3500
+aggro_radius = 7.0
+
+[node name="Husk4Collision" type="CollisionShape3D" parent="Enemies/Husk4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk4" instance=ExtResource("c_husk")]
+
+[node name="Husk5" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.9, 4)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3500
+aggro_radius = 7.0
+
+[node name="Husk5Collision" type="CollisionShape3D" parent="Enemies/Husk5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk5" instance=ExtResource("c_husk")]
+
+[node name="Husk6" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.9, -6)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3500
+aggro_radius = 7.0
+
+[node name="Husk6Collision" type="CollisionShape3D" parent="Enemies/Husk6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk6" instance=ExtResource("c_husk")]
+
+[node name="Husk7" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -12)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3500
+aggro_radius = 7.0
+
+[node name="Husk7Collision" type="CollisionShape3D" parent="Enemies/Husk7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk7" instance=ExtResource("c_husk")]
+
+[node name="Husk8" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.9, -16)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3500
+aggro_radius = 7.0
+
+[node name="Husk8Collision" type="CollisionShape3D" parent="Enemies/Husk8"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk8" instance=ExtResource("c_husk")]
+
+[node name="Shade1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.9, -14)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "kaveth_shade"
+xp_value = 6000
+aggro_radius = 8.0
+
+[node name="Shade1Collision" type="CollisionShape3D" parent="Enemies/Shade1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Shade1" instance=ExtResource("c_shade")]
+
+[node name="Shade2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.9, -17)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "kaveth_shade"
+xp_value = 6000
+aggro_radius = 8.0
+
+[node name="Shade2Collision" type="CollisionShape3D" parent="Enemies/Shade2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Shade2" instance=ExtResource("c_shade")]
+
+[node name="CameraPivot" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.651, 0.759, 0, -0.759, 0.651, 0, 14, 12)
+current = true
+
+[node name="HUD" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0

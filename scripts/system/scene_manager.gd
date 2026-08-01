@@ -7,6 +7,12 @@ const LEVELS := {
 	"tamori_road": "res://scenes/world/tamori_road.tscn",
 	"tamori_fields": "res://scenes/world/tamori_fields.tscn",
 	"tamori_anchor": "res://scenes/world/tamori_anchor.tscn",
+	"reach": "res://scenes/world/reach.tscn",
+	"kaveth": "res://scenes/world/kaveth.tscn",
+	"verath": "res://scenes/world/verath.tscn",
+	"between": "res://scenes/world/between.tscn",
+	"ashan": "res://scenes/world/ashan.tscn",
+	"convergence": "res://scenes/world/convergence.tscn",
 }
 
 ## Set before a transition; the arriving level places the player at the

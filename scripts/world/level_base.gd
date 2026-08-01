@@ -10,9 +10,19 @@ const _MeleeAttacker = preload("res://scripts/combat/melee_attacker.gd")
 const _Animator      = preload("res://scripts/world/character_animator.gd")
 const _DamageNumber  = preload("res://scripts/world/damage_number.gd")
 const _Dice          = preload("res://addons/srd/dice.gd")
+const _Experience    = preload("res://addons/srd/systems/experience.gd")
 
 ## Key into SceneManager.LEVELS — also stored as GameState.current_plane.
 @export var plane_id: String = "tamori"
+
+## When this scene is run in isolation (no party in GameState — e.g. "Run
+## Current Scene" in the editor), the fallback debug party is boosted to this
+## level so late-game planes are actually testable. Ignored in normal play.
+@export_range(1, 20) var debug_party_level: int = 1
+
+## True when this run spawned its own debug party — autosave is skipped so an
+## isolated test never overwrites the real save slot.
+var _debug_party := false
 
 @onready var _player    = $Characters/Sarro     # PlayerController
 @onready var _companion = $Characters/Liris     # CompanionFollow
@@ -32,7 +42,8 @@ func _ready() -> void:
 	_setup_enemies()
 	_setup_animators()
 	_apply_loaded_state()
-	GameState.save_game()  # autosave on plane entry
+	if not _debug_party:
+		GameState.save_game()  # autosave on plane entry
 	_on_level_ready()
 	SceneManager.fade_in()
 
@@ -137,7 +148,11 @@ func _on_enemy_died(ec) -> void:  # EnemyController
 
 func _sync_party_to_scene() -> void:
 	if GameState.sarro == null:
+		_debug_party = true
+		GameState.debug_session = true
 		GameState.set_party(_Factory.make_sarro(), _Factory.make_liris())
+		if debug_party_level > 1:
+			GameState.grant_xp(_Experience.xp_for_level(debug_party_level))
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
