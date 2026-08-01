@@ -5,6 +5,7 @@ extends CanvasLayer
 const LEVELS := {
 	"tamori": "res://scenes/world/tamori.tscn",
 	"tamori_fields": "res://scenes/world/tamori_fields.tscn",
+	"tamori_anchor": "res://scenes/world/tamori_anchor.tscn",
 }
 
 ## Set before a transition; the arriving level places the player at the

@@ -1,4 +1,4 @@
-[gd_scene load_steps=46 format=3 uid="uid://tamori"]
+[gd_scene load_steps=47 format=3 uid="uid://tamori"]
 
 [ext_resource type="Script" path="res://scripts/world/tamori.gd" id="1_tamori"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
@@ -35,6 +35,7 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Dead_04.gltf" id="e_dead"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Peasant_01.gltf" id="c_npc"]
 [ext_resource type="Script" path="res://scripts/world/npc.gd" id="5_npc"]
+[ext_resource type="Script" path="res://scripts/world/rest_point.gd" id="7_rest"]
 [ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_02.gltf" id="c_npc_f"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Sorcerer.gltf" id="c_npc_m2"]
@@ -250,6 +251,11 @@ bark_lines = Array[String](["They always close. Fifty years I have seen tears co
 [node name="Skin" parent="Level/Villager1" instance=ExtResource("c_npc_f")]
 
 [node name="Skin" parent="Level/Villager2" instance=ExtResource("c_npc_m2")]
+
+[node name="VillageRest" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6, 0, -3.4)
+script = ExtResource("7_rest")
+display_name = "Village Shrine"
 
 [node name="Characters" type="Node3D" parent="."]
 

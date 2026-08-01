@@ -1,10 +1,11 @@
-[gd_scene load_steps=20 format=3 uid="uid://tamori_fields"]
+[gd_scene load_steps=21 format=3 uid="uid://tamori_fields"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
 [ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
 [ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
+[ext_resource type="Script" path="res://scripts/world/rest_point.gd" id="7_rest"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Rouge_01.gltf" id="c_sarro"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_01.gltf" id="c_liris"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Baird.gltf" id="c_bandit"]
@@ -116,6 +117,19 @@ spawn_id = "fields_west"
 target_plane = "tamori"
 target_spawn_id = "east_gate"
 
+[node name="EastPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 18, 0, 0)
+script = ExtResource("6_portal")
+display_name = "The Anchor Tear"
+spawn_id = "fields_east"
+target_plane = "tamori_anchor"
+target_spawn_id = "anchor_west"
+
+[node name="FieldsRest" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 0, 4)
+script = ExtResource("7_rest")
+display_name = "Roadside Tear"
+
 [node name="Characters" type="Node3D" parent="."]
 
 [node name="Sarro" type="CharacterBody3D" parent="Characters" groups=["players"]]
@@ -167,6 +181,58 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_char")
 
 [node name="Skin" parent="Enemies/FieldBandit2" instance=ExtResource("c_bandit")]
+
+[node name="FieldBandit3" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -12)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "bandit"
+xp_value = 100
+
+[node name="FieldBandit3Collision" type="CollisionShape3D" parent="Enemies/FieldBandit3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/FieldBandit3" instance=ExtResource("c_bandit")]
+
+[node name="FieldBandit4" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.9, -1)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "bandit"
+xp_value = 100
+
+[node name="FieldBandit4Collision" type="CollisionShape3D" parent="Enemies/FieldBandit4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/FieldBandit4" instance=ExtResource("c_bandit")]
+
+[node name="FieldBrute1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.9, -13)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "brute"
+xp_value = 250
+
+[node name="FieldBrute1Collision" type="CollisionShape3D" parent="Enemies/FieldBrute1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/FieldBrute1" instance=ExtResource("c_bandit")]
+
+[node name="FieldBrute2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.9, -16)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "brute"
+xp_value = 250
+
+[node name="FieldBrute2Collision" type="CollisionShape3D" parent="Enemies/FieldBrute2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/FieldBrute2" instance=ExtResource("c_bandit")]
 
 [node name="CameraPivot" type="Node3D" parent="."]
 

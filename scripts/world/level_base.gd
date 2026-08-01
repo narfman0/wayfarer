@@ -64,9 +64,27 @@ func _apply_loaded_state() -> void:
 				break
 		SceneManager.pending_spawn_id = ""
 
+var _defeated := false
+
 func _process(_delta: float) -> void:
 	_cam_pivot.global_position = _player.global_position
 	_check_player_targeting()
+	if not _defeated and GameState.sarro != null and GameState.sarro.stats.current_hp <= 0:
+		_on_party_defeated()
+
+## Sarro at 0 HP: the Veil pulls the party back to the last stable tear —
+## fiction for a soft respawn. HP restored, XP kept, enemies reset.
+func _on_party_defeated() -> void:
+	_defeated = true
+	_player.set_control_enabled(false)
+	if _attacker != null:
+		_attacker.stop()
+	print("[Combat] The Veil pulls you back...")
+	GameState.sarro.stats.current_hp = GameState.sarro.stats.max_hp
+	if GameState.liris != null:
+		GameState.liris.stats.current_hp = GameState.liris.stats.max_hp
+	GameState.pending_player_pos = null
+	SceneManager.change_level(plane_id)
 
 func _setup_hud() -> void:
 	var hud_scene := load("res://scenes/ui/hud.tscn")
@@ -79,13 +97,18 @@ func _setup_combat() -> void:
 	_attacker.owner_body = _player
 	_attacker.character  = GameState.sarro  # party is synced before combat setup
 	add_child(_attacker)
+	var liris_attacker = _MeleeAttacker.new()
+	liris_attacker.owner_body = _companion
+	liris_attacker.character  = GameState.liris
+	add_child(liris_attacker)
+	_companion.attacker = liris_attacker
 
 func _setup_enemies() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		var ec = enemy if enemy.get_script() != null and enemy.has_method("receive_damage") else null
 		if ec == null:
 			continue
-		ec.character = _Factory.make_enemy_char()
+		ec.character = _Factory.make_enemy(ec.enemy_type)
 		ec.died.connect(_on_enemy_died.bind(ec))
 
 func _check_player_targeting() -> void:

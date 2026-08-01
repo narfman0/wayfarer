@@ -98,14 +98,32 @@ static func make_liris():
 		[10, 14, 12, 14, 16, 12],
 		[int(_SRD.Skill.INSIGHT), int(_SRD.Skill.PERCEPTION)])
 
-static func make_enemy_char():
+## Enemy roster. Draft stats + XP values live in docs/design/progression.md.
+static func make_enemy(enemy_type: String = "bandit"):
 	var c = _WC.new()
-	c.display_name = "Bandit"
-	c.stats.character_name = "Bandit"
-	c.stats.level = 1; c.stats.max_hp = 11
-	c.equipment.equip_armor(_ArmorData.make_studded_leather())
-	c.stats.strength = 12; c.stats.dexterity = 10; c.stats.constitution = 10
+	match enemy_type:
+		"brute":
+			c.display_name = "Bandit Brute"
+			c.stats.level = 3; c.stats.max_hp = 26
+			c.stats.strength = 16; c.stats.dexterity = 8; c.stats.constitution = 14
+			c.equipment.equip_armor(_ArmorData.make_studded_leather())
+			c.equipment.equip_main_hand(_WeaponData.make_greatsword())
+		"anchor_warden":
+			c.display_name = "Warped Anchor Warden"
+			c.stats.level = 5; c.stats.max_hp = 65
+			c.stats.strength = 18; c.stats.dexterity = 10; c.stats.constitution = 16
+			c.equipment.equip_armor(_ArmorData.make_chain_mail())
+			c.equipment.equip_main_hand(_WeaponData.make_greatsword())
+		_:  # "bandit"
+			c.display_name = "Bandit"
+			c.stats.level = 1; c.stats.max_hp = 11
+			c.stats.strength = 12; c.stats.dexterity = 10; c.stats.constitution = 10
+			c.equipment.equip_armor(_ArmorData.make_studded_leather())
+			c.equipment.equip_main_hand(_WeaponData.make_dagger())
+	c.stats.character_name = c.display_name
 	c.stats.reset()
-	c.equipment.equip_main_hand(_WeaponData.make_dagger())
 	c.setup()
 	return c
+
+static func make_enemy_char():
+	return make_enemy("bandit")

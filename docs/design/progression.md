@@ -40,11 +40,15 @@ Rule of thumb when placing an encounter: `xp_value ≈ (level XP span) /
 | Enemy | Scene | xp_value |
 |---|---|---|
 | BanditGuard | tamori.tscn | 100 |
-| FieldBandit1/2 | tamori_fields.tscn | 100 each |
+| FieldBandit1–4 | tamori_fields.tscn | 100 each |
+| FieldBrute1–2 | tamori_fields.tscn | 250 each |
+| Brute1–2 (arena) | tamori_anchor.tscn | 250 each |
+| Warped Anchor Warden (boss) | tamori_anchor.tscn | 1500 |
 | Odo intro / fields intel | village.dialogue | 25 + 25 |
 
-With these, a fresh character finishing current content sits at 350/300 XP
-→ **level 2**, which matches the curve (fields = beat 1.3, target L2–3).
+Full clear of Act 1 content: 100 + 50 + 400 + 500 + 500 + 1500 =
+**3,050 XP → level 4** at the boss kill (threshold 2,700), on curve for
+the act finale; Act 2 entry lands mid-level-4.
 
 ## Tuning loop
 

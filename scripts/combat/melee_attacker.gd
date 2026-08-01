@@ -7,6 +7,7 @@ const _Dice           = preload("res://addons/srd/dice.gd")
 const _CharacterStats = preload("res://addons/srd/resources/character_stats.gd")
 const _Combatant      = preload("res://addons/srd/systems/combatant.gd")
 const _ArmorData      = preload("res://addons/srd/resources/armor_data.gd")
+const _DamageNumber   = preload("res://scripts/world/damage_number.gd")
 
 const MELEE_RANGE  := 1.6   # metres
 const ATTACK_RATE  := 1.0   # seconds between attacks
@@ -63,10 +64,14 @@ func _do_attack() -> void:
 	var crit: bool = d20 == 20
 	var target_name: String = _target.name  # capture before damage — a kill nulls _target via stop()
 
+	var target_pos: Vector3 = _target.global_position
 	var dmg := 0
 	if hit:
 		dmg = attacker.roll_damage(crit)
+		_DamageNumber.hit(owner_body.get_tree().current_scene, target_pos, dmg, crit)
 		_target.receive_damage(dmg)
+	else:
+		_DamageNumber.miss(owner_body.get_tree().current_scene, target_pos)
 
 	var ev := {
 		"type": "attack",

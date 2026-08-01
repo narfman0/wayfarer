@@ -5,6 +5,7 @@ extends CharacterBody3D
 
 const _Dice           = preload("res://addons/srd/dice.gd")
 const _CharacterStats = preload("res://addons/srd/resources/character_stats.gd")
+const _DamageNumber   = preload("res://scripts/world/damage_number.gd")
 
 enum State { PATROL, CHASE, ATTACK }
 
@@ -18,6 +19,8 @@ const CHASE_DIST := 12.0  # metres — give up chase beyond this
 ## XP granted to the party on kill. First-draft tuning values live in
 ## docs/design/progression.md.
 @export var xp_value: int = 50
+## Roster key for character_factory.make_enemy (bandit / brute / anchor_warden).
+@export var enemy_type: String = "bandit"
 
 ## Filled by WayfarerCharacter factory in task 8. Nil = use defaults.
 var character = null  # WayfarerCharacter
@@ -121,13 +124,15 @@ func _fire_attack() -> void:
 	if hit and target_char != null:
 		dmg = attacker.roll_damage(crit)
 		target_char.stats.current_hp = max(0, target_char.stats.current_hp - dmg)
-		if target_char.stats.current_hp <= 0:
-			print("[Combat] Sarro is defeated!")
+		_DamageNumber.hit(get_tree().current_scene, _target.global_position, dmg, crit)
+	elif _target != null:
+		_DamageNumber.miss(get_tree().current_scene, _target.global_position)
 
+	var enemy_name: String = character.display_name
 	if hit:
-		print("[Combat] Bandit hits Sarro for %d (d20=%d+%d vs AC%d)" % [dmg, d20, atk_mod, target_ac])
+		print("[Combat] %s hits Sarro for %d (d20=%d+%d vs AC%d)" % [enemy_name, dmg, d20, atk_mod, target_ac])
 	else:
-		print("[Combat] Bandit misses Sarro (d20=%d+%d vs AC%d)" % [d20, atk_mod, target_ac])
+		print("[Combat] %s misses Sarro (d20=%d+%d vs AC%d)" % [enemy_name, d20, atk_mod, target_ac])
 
 func receive_damage(amount: int) -> void:
 	if character == null:
