@@ -65,6 +65,7 @@ func _do_attack() -> void:
 	var target_name: String = _target.name  # capture before damage — a kill nulls _target via stop()
 
 	var target_pos: Vector3 = _target.global_position
+	lunge(owner_body, target_pos)
 	var dmg := 0
 	if hit:
 		dmg = attacker.roll_damage(crit)
@@ -82,6 +83,22 @@ func _do_attack() -> void:
 	}
 	attack_result.emit(ev)
 	print("[Combat] ", _format(ev))
+
+## Procedural attack swing: dart the body's Skin toward the target and back.
+## (No combat clips in the animation pack yet — this sells the hit at
+## isometric zoom.)
+static func lunge(body: Node3D, toward: Vector3) -> void:
+	var skin = body.get_node_or_null("Skin")
+	if skin == null:
+		return
+	var dir: Vector3 = (toward - body.global_position)
+	dir.y = 0.0
+	if dir.length() < 0.01:
+		return
+	var local_dir: Vector3 = body.global_transform.basis.inverse() * dir.normalized()
+	var tween := skin.create_tween()
+	tween.tween_property(skin, "position", local_dir * 0.4, 0.08).set_ease(Tween.EASE_OUT)
+	tween.tween_property(skin, "position", Vector3.ZERO, 0.18).set_ease(Tween.EASE_IN_OUT)
 
 func _make_default_enemy_combatant():
 	var stats = _CharacterStats.new()

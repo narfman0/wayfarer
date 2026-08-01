@@ -6,6 +6,7 @@ extends CharacterBody3D
 const _Dice           = preload("res://addons/srd/dice.gd")
 const _CharacterStats = preload("res://addons/srd/resources/character_stats.gd")
 const _DamageNumber   = preload("res://scripts/world/damage_number.gd")
+const _MeleeAttacker  = preload("res://scripts/combat/melee_attacker.gd")
 
 enum State { PATROL, CHASE, ATTACK }
 
@@ -106,6 +107,7 @@ func _do_attack(delta: float) -> void:
 func _fire_attack() -> void:
 	if character == null or _target == null:
 		return
+	_MeleeAttacker.lunge(self, _target.global_position)
 	var target_char = null
 	if _target.has_method("get") and GameState.sarro != null:
 		target_char = GameState.sarro
