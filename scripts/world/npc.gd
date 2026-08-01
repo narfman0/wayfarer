@@ -5,20 +5,29 @@ class_name VillageNPC
 extends Node3D
 
 const _SyntySkin = preload("res://scripts/world/synty_skin.gd")
+const _Animator  = preload("res://scripts/world/character_animator.gd")
 
 @export var npc_display_name: String = "Villager"
 @export_file("*.dialogue") var dialogue_path: String = ""
 @export var dialogue_title: String = ""
 @export var talk_radius: float = 2.5
+@export var feminine: bool = false
+## Ambient one-liners shown when the player wanders close (used when there is
+## no dialogue, or alongside it as flavor between conversations).
+@export var bark_lines: Array[String] = []
+
+const BARK_COOLDOWN_MS := 9000
 
 var _player_near := false
 var _talking := false
 var _prompt: Label3D
+var _last_bark_ms := -BARK_COOLDOWN_MS
 
 func _ready() -> void:
 	var skin := get_node_or_null("Skin")
 	if skin != null:
 		_SyntySkin.apply_auto(skin)
+		_Animator.attach(skin, null, "femn" if feminine else "masc")
 
 	_prompt = Label3D.new()
 	_prompt.text = "[F] Talk to %s" % npc_display_name
@@ -67,7 +76,21 @@ func _talk() -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("players"):
 		_player_near = true
-		_prompt.visible = not _talking
+		if dialogue_path.is_empty() and bark_lines.size() > 0:
+			_show_bark()
+		else:
+			_prompt.visible = not _talking
+
+func _show_bark() -> void:
+	var now := Time.get_ticks_msec()
+	if now - _last_bark_ms < BARK_COOLDOWN_MS:
+		return
+	_last_bark_ms = now
+	_prompt.text = "%s: %s" % [npc_display_name, bark_lines.pick_random()]
+	_prompt.visible = true
+	await get_tree().create_timer(3.5).timeout
+	if is_instance_valid(_prompt) and dialogue_path.is_empty():
+		_prompt.visible = false
 
 func _on_body_exited(body: Node3D) -> void:
 	if body.is_in_group("players"):

@@ -13,7 +13,9 @@ cheaply, and the Synty pass then reskins working content. The reverse order
 
 ---
 
-## Phase 1 — World infrastructure (no assets needed)
+## Phase 1 — World infrastructure — DONE 2026-07-31 (SceneManager, flag-gated portals, level_base, story flags; barks + retargeted idle/run animations landed alongside)
+
+## (original Phase 1 spec follows)
 
 The plumbing every level needs. All testable in graybox headless.
 

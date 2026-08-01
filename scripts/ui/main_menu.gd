@@ -15,7 +15,7 @@ func _ready() -> void:
 
 func _on_continue() -> void:
 	if GameState.load_game():
-		get_tree().change_scene_to_file("res://scenes/world/tamori.tscn")
+		get_tree().change_scene_to_file(SceneManager.level_scene_for(GameState.current_plane))
 
 func _on_new_game() -> void:
 	get_tree().change_scene_to_file("res://scenes/ui/character_creation.tscn")

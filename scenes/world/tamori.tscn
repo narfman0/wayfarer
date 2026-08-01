@@ -1,4 +1,4 @@
-[gd_scene load_steps=45 format=3 uid="uid://tamori"]
+[gd_scene load_steps=48 format=3 uid="uid://tamori"]
 
 [ext_resource type="Script" path="res://scripts/world/tamori.gd" id="1_tamori"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
@@ -35,6 +35,9 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Dead_04.glb" id="e_dead"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Peasant_01.glb" id="c_npc"]
 [ext_resource type="Script" path="res://scripts/world/npc.gd" id="5_npc"]
+[ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_02.glb" id="c_npc_f"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Sorcerer.glb" id="c_npc_m2"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -234,6 +237,33 @@ dialogue_path = "res://dialogue/village.dialogue"
 dialogue_title = "well_keeper"
 
 [node name="Skin" parent="Level/WellKeeper" instance=ExtResource("c_npc")]
+
+[node name="EastPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 19, 0, 2)
+script = ExtResource("6_portal")
+display_name = "Eastern Fields"
+spawn_id = "east_gate"
+target_plane = "tamori_fields"
+target_spawn_id = "fields_west"
+required_flag = "heard_about_fields"
+blocked_hint = "Sarro: I should ask around the village before wandering east."
+
+[node name="Villager1" type="Node3D" parent="Level"]
+transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, -10.2, 0, -6.8)
+script = ExtResource("5_npc")
+npc_display_name = "Mira"
+feminine = true
+bark_lines = Array[String](["Another dry week. The east paddies used to feed half the plane.", "Mind the road after dark, stranger.", "You look like you have somewhere to be."])
+
+[node name="Villager2" type="Node3D" parent="Level"]
+transform = Transform3D(-0.643, 0, -0.766, 0, 1, 0, 0.766, 0, -0.643, 10.6, 0, -8.2)
+script = ExtResource("5_npc")
+npc_display_name = "Old Tam"
+bark_lines = Array[String](["They always close. Fifty years I have seen tears come and go.", "The air tastes wrong since the eastern tear opened.", "Odo talks too much. But he is not wrong."])
+
+[node name="Skin" parent="Level/Villager1" instance=ExtResource("c_npc_f")]
+
+[node name="Skin" parent="Level/Villager2" instance=ExtResource("c_npc_m2")]
 
 [node name="Characters" type="Node3D" parent="."]
 
