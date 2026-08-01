@@ -1,9 +1,24 @@
-[gd_scene load_steps=19 format=3 uid="uid://tamori"]
+[gd_scene load_steps=29 format=3 uid="uid://tamori"]
 
 [ext_resource type="Script" path="res://scripts/world/tamori.gd" id="1_tamori"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
 [ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Rouge_01.glb" id="c_sarro"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_01.glb" id="c_liris"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Baird.glb" id="c_bandit"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Well_01.glb" id="e_well"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Tent_Round_01.glb" id="e_tent_round"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Tent_Open_01.glb" id="e_tent_open"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Hay_Cart_01.glb" id="e_hay_cart"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Hay_Bale_01.glb" id="e_hay_bale"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Barrel_01.glb" id="e_barrel"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Crate_Stack_01.glb" id="e_crate"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Fence_01.glb" id="e_fence"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Direction_Sign_02.glb" id="e_sign"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Round_02.glb" id="e_tree_meadow"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Thin_03.glb" id="e_birch"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Rock_04.glb" id="e_rock"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -38,23 +53,7 @@ ambient_light_source = 3
 tonemap_mode = 2
 
 [sub_resource type="StandardMaterial3D" id="Mat_ground"]
-albedo_color = Color(0.38, 0.33, 0.24, 1)
-
-[sub_resource type="StandardMaterial3D" id="Mat_sarro"]
-albedo_color = Color(0.25, 0.45, 0.85, 1)
-
-[sub_resource type="StandardMaterial3D" id="Mat_liris"]
-albedo_color = Color(0.3, 0.7, 0.45, 1)
-
-[sub_resource type="StandardMaterial3D" id="Mat_enemy"]
-albedo_color = Color(0.8, 0.25, 0.2, 1)
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_char"]
-radius = 0.35
-height = 1.8
-
-[sub_resource type="BoxMesh" id="BoxMesh_dirmark"]
-size = Vector3(0.15, 0.15, 0.4)
+albedo_color = Color(0.34, 0.47, 0.26, 1)
 
 [node name="Tamori" type="Node3D"]
 script = ExtResource("1_tamori")
@@ -82,6 +81,66 @@ shape = SubResource("WorldBoundaryShape3D_1")
 
 [node name="Props" type="Node3D" parent="Level"]
 
+[node name="Well" parent="Level/Props" instance=ExtResource("e_well")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -4)
+
+[node name="TentRound" parent="Level/Props" instance=ExtResource("e_tent_round")]
+transform = Transform3D(0.825, 0, 0.565, 0, 1, 0, -0.565, 0, 0.825, -12, 0, -11)
+
+[node name="TentOpen" parent="Level/Props" instance=ExtResource("e_tent_open")]
+transform = Transform3D(0.878, 0, -0.479, 0, 1, 0, 0.479, 0, 0.878, 12, 0, -12)
+
+[node name="HayCart" parent="Level/Props" instance=ExtResource("e_hay_cart")]
+transform = Transform3D(0.939, 0, 0.343, 0, 1, 0, -0.343, 0, 0.939, 8.5, 0, -7.5)
+
+[node name="HayBale" parent="Level/Props" instance=ExtResource("e_hay_bale")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -6)
+
+[node name="Barrel" parent="Level/Props" instance=ExtResource("e_barrel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 0, -8.5)
+
+[node name="CrateStack" parent="Level/Props" instance=ExtResource("e_crate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.2, 0, -10.2)
+
+[node name="Fence1" parent="Level/Props" instance=ExtResource("e_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 0, -15.5)
+
+[node name="Fence2" parent="Level/Props" instance=ExtResource("e_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 0, -15.5)
+
+[node name="Fence3" parent="Level/Props" instance=ExtResource("e_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0, -15.5)
+
+[node name="Fence4" parent="Level/Props" instance=ExtResource("e_fence")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -15.5)
+
+[node name="Sign" parent="Level/Props" instance=ExtResource("e_sign")]
+transform = Transform3D(0.921, 0, -0.389, 0, 1, 0, 0.389, 0, 0.921, 2.2, 0, 5.6)
+
+[node name="TreeMeadow1" parent="Level/Props" instance=ExtResource("e_tree_meadow")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16,  0,  -15)
+
+[node name="Birch1" parent="Level/Props" instance=ExtResource("e_birch")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16,  0,  -14)
+
+[node name="TreeMeadow2" parent="Level/Props" instance=ExtResource("e_tree_meadow")]
+transform = Transform3D(0.766, 0, -0.643, 0, 1, 0, 0.643, 0, 0.766, -15,  0,  11)
+
+[node name="Birch2" parent="Level/Props" instance=ExtResource("e_birch")]
+transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, 15.5,  0,  10.5)
+
+[node name="TreeMeadow3" parent="Level/Props" instance=ExtResource("e_tree_meadow")]
+transform = Transform3D(0.174, 0, 0.985, 0, 1, 0, -0.985, 0, 0.174, 18,  0,  -3)
+
+[node name="Birch3" parent="Level/Props" instance=ExtResource("e_birch")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18,  0,  3)
+
+[node name="Rock1" parent="Level/Props" instance=ExtResource("e_rock")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10,  0,  14)
+
+[node name="Rock2" parent="Level/Props" instance=ExtResource("e_rock")]
+transform = Transform3D(0.49, 0, 0.49, 0, 0.7, 0, -0.49, 0, 0.49, -9,  0,  15)
+
 [node name="Characters" type="Node3D" parent="."]
 
 [node name="Sarro" type="CharacterBody3D" parent="Characters" groups=["players"]]
@@ -94,15 +153,7 @@ collision_mask = 7
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_sarro")
 
-[node name="SarroMesh" type="MeshInstance3D" parent="Characters/Sarro"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-mesh = SubResource("CapsuleMesh_char")
-surface_material_override/0 = SubResource("Mat_sarro")
-
-[node name="SarroFacing" type="MeshInstance3D" parent="Characters/Sarro"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, -0.4)
-mesh = SubResource("BoxMesh_dirmark")
-surface_material_override/0 = SubResource("Mat_sarro")
+[node name="Skin" parent="Characters/Sarro" instance=ExtResource("c_sarro")]
 
 [node name="Liris" type="CharacterBody3D" parent="Characters"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.9, 3.5)
@@ -114,10 +165,7 @@ collision_mask = 3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_liris")
 
-[node name="LirisMesh" type="MeshInstance3D" parent="Characters/Liris"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-mesh = SubResource("CapsuleMesh_char")
-surface_material_override/0 = SubResource("Mat_liris")
+[node name="Skin" parent="Characters/Liris" instance=ExtResource("c_liris")]
 
 [node name="Enemies" type="Node3D" parent="."]
 
@@ -130,10 +178,7 @@ collision_layer = 2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_enemy")
 
-[node name="EnemyMesh" type="MeshInstance3D" parent="Enemies/BanditGuard"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-mesh = SubResource("CapsuleMesh_char")
-surface_material_override/0 = SubResource("Mat_enemy")
+[node name="Skin" parent="Enemies/BanditGuard" instance=ExtResource("c_bandit")]
 
 [node name="CameraPivot" type="Node3D" parent="."]
 

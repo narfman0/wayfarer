@@ -120,8 +120,11 @@ changes art direction) or buy POLYGON Samurai and drop it in raw/.
 1. ~~Which Synty packs~~ — RESOLVED: asset server on srv (see Phase 4).
 2. ~~Export format~~ — RESOLVED: server cooks FBX → GLB; Godot imports GLB
    natively.
-3. **Tamori's look**: fantasy-kingdom village (packs on hand) or buy
-   POLYGON Samurai for the designed feudal-Japan aesthetic?
+3. ~~Tamori's look~~ — RESOLVED (2026-07-31): no Samurai pack; using
+   Fantasy Kingdom + available packs as placeholders. Tamori is dressed
+   with FK tents/props/trees. Note: Meadow Forest foliage needs its own
+   leaf textures + alpha materials, so FK stylized trees are used instead
+   for now.
 4. **Opening reconciliation**: tavern-brawl-then-farm (proposed) or cut
    the tavern to narration?
 5. OK to rename `tamori.tscn` → `levels/tamori/docks.tscn` as part of the

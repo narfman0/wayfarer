@@ -27,7 +27,7 @@ d = json.load(sys.stdin)
 for p in d['cooked']['packs']:
     if '$pack'.lower() in p['name'].lower():
         for f in p['files']:
-            if f['path'].endswith('.glb'):
+            if f['path'].endswith(('.glb', '.png')):
                 print(f['path'])
 " | while IFS= read -r path; do
 		out="$DEST/${path#assets/}"
