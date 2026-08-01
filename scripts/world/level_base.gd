@@ -7,7 +7,6 @@ extends Node3D
 
 const _Factory       = preload("res://scripts/characters/character_factory.gd")
 const _MeleeAttacker = preload("res://scripts/combat/melee_attacker.gd")
-const _SyntySkin     = preload("res://scripts/world/synty_skin.gd")
 const _Animator      = preload("res://scripts/world/character_animator.gd")
 
 ## Key into SceneManager.LEVELS — also stored as GameState.current_plane.
@@ -24,7 +23,6 @@ var _attacker = null  # MeleeAttacker
 func _ready() -> void:
 	_player.camera_pivot = _cam_pivot
 	_companion.follow_target = _player
-	_apply_synty_textures()
 	_setup_hud()
 	_sync_party_to_scene()
 	GameState.travel_to(plane_id)
@@ -39,14 +37,6 @@ func _ready() -> void:
 ## Override for level-specific setup (opening dialogue, triggers, ...).
 func _on_level_ready() -> void:
 	_player.set_control_enabled(true)
-
-## Colorize cooked Synty meshes with their pack atlases.
-func _apply_synty_textures() -> void:
-	_SyntySkin.apply_auto_children($Level/Props)
-	for body in _bodies_with_skins():
-		var skin = body.get_node_or_null("Skin")
-		if skin != null:
-			_SyntySkin.apply_auto(skin)
 
 func _setup_animators() -> void:
 	for body in _bodies_with_skins():

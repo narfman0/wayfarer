@@ -4,7 +4,6 @@
 class_name VillageNPC
 extends Node3D
 
-const _SyntySkin = preload("res://scripts/world/synty_skin.gd")
 const _Animator  = preload("res://scripts/world/character_animator.gd")
 
 @export var npc_display_name: String = "Villager"
@@ -26,7 +25,6 @@ var _last_bark_ms := -BARK_COOLDOWN_MS
 func _ready() -> void:
 	var skin := get_node_or_null("Skin")
 	if skin != null:
-		_SyntySkin.apply_auto(skin)
 		_Animator.attach(skin, null, "femn" if feminine else "masc")
 
 	_prompt = Label3D.new()
