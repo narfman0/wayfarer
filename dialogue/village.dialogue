@@ -9,17 +9,20 @@ if GameState.has_flag("met_odo")
 			Odo: Three weeks now. The water in the east paddies went bad overnight — crops black by morning.
 			Odo: Something came through that tear. Nobody's been out there since.
 			do GameState.set_flag("heard_about_fields")
+			do GameState.grant_xp(25)
 		- Just passing through
 			Odo: Mm. Keep your sword loose all the same.
 else
 	Odo: New face. We don't get many since the eastern fields went bad.
 	Odo: I'm Odo. I keep the well. Only honest work left around here.
 	do GameState.set_flag("met_odo")
+	do GameState.grant_xp(25)
 	- Who's the armed man by the road?
 		Odo: Trouble. Been eyeing the hay cart all morning. Were I you, I'd deal with him before he deals with you.
 	- What happened to the fields?
 		Odo: Three weeks now. The water in the east paddies went bad overnight — crops black by morning.
 		Odo: Something came through that tear. Nobody's been out there since.
 		do GameState.set_flag("heard_about_fields")
+		do GameState.grant_xp(25)
 
 => END

@@ -5,12 +5,16 @@ extends Node
 
 const SaveManager = preload("res://scripts/system/save_manager.gd")
 const _Factory    = preload("res://scripts/characters/character_factory.gd")
+const _Experience = preload("res://addons/srd/systems/experience.gd")
+const _LevelUp    = preload("res://addons/srd/systems/level_up.gd")
 
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 
 signal party_updated
 signal plane_changed(plane_id: String)
 signal game_saved
+signal xp_gained(amount: int)
+signal leveled_up(new_level: int)
 
 var sarro = null  # WayfarerCharacter — set by scenes
 var liris = null  # WayfarerCharacter — set by scenes
@@ -46,6 +50,26 @@ func party() -> Array:
 	if sarro != null: p.append(sarro)
 	if liris != null: p.append(liris)
 	return p
+
+# ── Experience ───────────────────────────────────────────────────────────────
+
+## Grant XP to the whole party (kills, quests — any XP-worthy event calls
+## this; dialogue can use `do GameState.grant_xp(25)`). Applies SRD level-ups
+## as thresholds are crossed.
+func grant_xp(amount: int) -> void:
+	if amount <= 0:
+		return
+	var any_level := 0
+	for c in party():
+		c.stats.xp += amount
+		var target: int = _Experience.level_for_xp(c.stats.xp)
+		while c.stats.level < target and c.stats.level < 20:
+			_LevelUp.level_up(c.stats, c.class_data, c.energy_slots)
+			c.stats.current_hp = c.stats.max_hp  # level-up refills HP
+			any_level = c.stats.level
+	xp_gained.emit(amount)
+	if any_level > 0:
+		leveled_up.emit(any_level)
 
 # ── Story flags ──────────────────────────────────────────────────────────────
 

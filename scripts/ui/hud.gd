@@ -9,9 +9,31 @@ extends Control
 @onready var _enemy_name: Label = $EnemyRow/EnemyName
 
 var _tracked_enemy: EnemyController = null
+var _toast: Label
 
 func _ready() -> void:
 	_enemy_row.visible = false
+	_toast = Label.new()
+	_toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_toast.position.y = 60
+	_toast.add_theme_font_size_override("font_size", 22)
+	_toast.visible = false
+	add_child(_toast)
+	GameState.xp_gained.connect(_on_xp_gained)
+	GameState.leveled_up.connect(_on_leveled_up)
+
+func _on_xp_gained(amount: int) -> void:
+	_show_toast("+%d XP  (Level %d — %d XP)" % [amount, GameState.sarro.stats.level, GameState.sarro.stats.xp])
+
+func _on_leveled_up(new_level: int) -> void:
+	_show_toast("Level %d!" % new_level)
+
+func _show_toast(text: String) -> void:
+	_toast.text = text
+	_toast.visible = true
+	var tween := create_tween()
+	tween.tween_interval(2.2)
+	tween.tween_callback(func(): _toast.visible = false)
 
 func _process(_delta: float) -> void:
 	_refresh_party()

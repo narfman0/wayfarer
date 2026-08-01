@@ -147,6 +147,7 @@ shape = SubResource("CapsuleShape3D_char")
 [node name="FieldBandit1" type="CharacterBody3D" parent="Enemies"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.9, -10)
 script = ExtResource("4_enemy")
+xp_value = 100
 collision_layer = 2
 
 [node name="Bandit1Collision" type="CollisionShape3D" parent="Enemies/FieldBandit1"]
@@ -158,6 +159,7 @@ shape = SubResource("CapsuleShape3D_char")
 [node name="FieldBandit2" type="CharacterBody3D" parent="Enemies"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.9, 4)
 script = ExtResource("4_enemy")
+xp_value = 100
 collision_layer = 2
 
 [node name="Bandit2Collision" type="CollisionShape3D" parent="Enemies/FieldBandit2"]

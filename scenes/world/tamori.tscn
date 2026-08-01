@@ -282,6 +282,7 @@ shape = SubResource("CapsuleShape3D_liris")
 [node name="BanditGuard" type="CharacterBody3D" parent="Enemies"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.9, 2)
 script = ExtResource("4_enemy")
+xp_value = 100
 collision_layer = 2
 
 [node name="EnemyCollision" type="CollisionShape3D" parent="Enemies/BanditGuard"]

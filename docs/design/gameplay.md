@@ -78,7 +78,14 @@ Enemy ability use follows simple priority: heal self if HP < 25%, use signature 
 
 ## Character progression
 
-No levels gained through XP. Progression happens through:
+AMENDED 2026-08-01 (experiment — see progression.md): classic XP leveling
+1–20. Kills and quest beats grant party XP (`GameState.grant_xp`); SRD
+thresholds; level 20 lands at the Convergence. No hard level gates —
+under-leveled play is allowed and survivable. The original no-levels
+design below is retained for reference; feats/equipment remain layers on
+top of levels rather than replacements.
+
+Original design (superseded):
 
 1. **Story milestones** — each act end grants a feat or ability upgrade.
 2. **Equipment** — weapons and armor found in the world swap stats.

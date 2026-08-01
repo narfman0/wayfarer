@@ -15,6 +15,9 @@ const CHASE_DIST := 12.0  # metres — give up chase beyond this
 
 @export var patrol_points: Array[NodePath] = []
 @export var aggro_radius: float = 6.0
+## XP granted to the party on kill. First-draft tuning values live in
+## docs/design/progression.md.
+@export var xp_value: int = 50
 
 ## Filled by WayfarerCharacter factory in task 8. Nil = use defaults.
 var character = null  # WayfarerCharacter
@@ -132,6 +135,7 @@ func receive_damage(amount: int) -> void:
 	character.stats.current_hp = max(0, character.stats.current_hp - amount)
 	hp_changed.emit(character.stats.current_hp, character.stats.max_hp)
 	if character.stats.current_hp <= 0:
+		GameState.grant_xp(xp_value)
 		died.emit()
 		queue_free()
 
