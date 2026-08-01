@@ -109,7 +109,7 @@ shape = SubResource("CapsuleShape3D_char")
 
 [node name="Skin" parent="Characters/Sarro" instance=ExtResource("c_sarro")]
 
-[node name="Liris" type="CharacterBody3D" parent="Characters"]
+[node name="Liris" type="CharacterBody3D" parent="Characters" groups=["companions"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0.9, 9.5)
 script = ExtResource("3_companion")
 collision_layer = 4

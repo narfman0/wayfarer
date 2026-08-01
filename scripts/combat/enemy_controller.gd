@@ -45,10 +45,38 @@ func _ready() -> void:
 	shape_node.shape = sphere
 	aggro_area.add_child(shape_node)
 	aggro_area.collision_layer = 0
-	aggro_area.collision_mask  = 1  # detect layer 1 (player)
+	aggro_area.collision_mask  = 5  # detect player (1) and companion (4) layers
 	add_child(aggro_area)
 	aggro_area.body_entered.connect(_on_body_entered)
 	aggro_area.body_exited.connect(_on_body_exited)
+
+## Nearest living party member within chase range, or null.
+func _acquire_target() -> CharacterBody3D:
+	var best: CharacterBody3D = null
+	var best_d := CHASE_DIST
+	var candidates: Array = get_tree().get_nodes_in_group("players") + get_tree().get_nodes_in_group("companions")
+	for body in candidates:
+		if not body is CharacterBody3D or not _is_alive(body):
+			continue
+		var d: float = global_position.distance_to(body.global_position)
+		if d < best_d:
+			best_d = d
+			best = body
+	return best
+
+func _is_alive(body: Node) -> bool:
+	var c = _char_for(body)
+	return c != null and c.stats.current_hp > 0
+
+## The WayfarerCharacter behind a party body.
+func _char_for(body: Node):
+	if body == null:
+		return null
+	if body.is_in_group("players"):
+		return GameState.sarro
+	if body.is_in_group("companions"):
+		return GameState.liris
+	return null
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
@@ -79,6 +107,7 @@ func _do_patrol(delta: float) -> void:
 	rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 8.0 * delta)
 
 func _do_chase(delta: float) -> void:
+	_target = _acquire_target()
 	if _target == null:
 		_state = State.PATROL; return
 	var to_target := _target.global_position - global_position
@@ -94,6 +123,7 @@ func _do_chase(delta: float) -> void:
 	rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 10.0 * delta)
 
 func _do_attack(delta: float) -> void:
+	_target = _acquire_target()
 	if _target == null:
 		_state = State.PATROL; return
 	var dist := global_position.distance_to(_target.global_position)
@@ -108,33 +138,36 @@ func _fire_attack() -> void:
 	if character == null or _target == null:
 		return
 	_MeleeAttacker.lunge(self, _target.global_position)
-	var target_char = null
-	if _target.has_method("get") and GameState.sarro != null:
-		target_char = GameState.sarro
+	var target_char = _char_for(_target)
+	if target_char == null:
+		return
 
 	var attacker = character.make_combatant()
 
 	var d20: int       = _Dice.roll_d20()
 	var atk_mod: int   = attacker.attack_modifier()
 	var total_atk: int = d20 + atk_mod
-	var target_ac: int = target_char.make_combatant().armor_class if target_char != null else 10
+	var target_ac: int = target_char.make_combatant().armor_class
 
 	var hit: bool  = total_atk >= target_ac
 	var crit: bool = d20 == 20
 	var dmg  := 0
 
-	if hit and target_char != null:
+	if hit:
 		dmg = attacker.roll_damage(crit)
 		target_char.stats.current_hp = max(0, target_char.stats.current_hp - dmg)
 		_DamageNumber.hit(get_tree().current_scene, _target.global_position, dmg, crit)
-	elif _target != null:
+	else:
 		_DamageNumber.miss(get_tree().current_scene, _target.global_position)
 
 	var enemy_name: String = character.display_name
+	var target_name: String = target_char.display_name
 	if hit:
-		print("[Combat] %s hits Sarro for %d (d20=%d+%d vs AC%d)" % [enemy_name, dmg, d20, atk_mod, target_ac])
+		print("[Combat] %s hits %s for %d (d20=%d+%d vs AC%d)" % [enemy_name, target_name, dmg, d20, atk_mod, target_ac])
+		if target_char.stats.current_hp <= 0 and target_char == GameState.liris:
+			print("[Combat] Liris is down!")
 	else:
-		print("[Combat] %s misses Sarro (d20=%d+%d vs AC%d)" % [enemy_name, d20, atk_mod, target_ac])
+		print("[Combat] %s misses %s (d20=%d+%d vs AC%d)" % [enemy_name, target_name, d20, atk_mod, target_ac])
 
 func receive_damage(amount: int) -> void:
 	if character == null:

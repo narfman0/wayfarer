@@ -14,12 +14,17 @@ const MELEE_DIST  := 1.5
 ## MeleeAttacker wired by the level (character = GameState.liris).
 var attacker = null
 
+var _down := false
+
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 
 	var enemy = _nearest_enemy()
-	if enemy != null:
+	if _update_down_state(enemy != null):
+		velocity.x = move_toward(velocity.x, 0.0, SPEED * 8.0 * delta)
+		velocity.z = move_toward(velocity.z, 0.0, SPEED * 8.0 * delta)
+	elif enemy != null:
 		_engage(enemy, delta)
 	else:
 		if attacker != null:
@@ -27,6 +32,28 @@ func _physics_process(delta: float) -> void:
 		_follow(delta)
 
 	move_and_slide()
+
+## Liris at 0 HP drops out of the fight; the Veil steadies her once combat
+## ends and she gets back up at partial strength. Returns true while down.
+func _update_down_state(in_combat: bool) -> bool:
+	var c = GameState.liris
+	if c == null:
+		return false
+	if not _down and c.stats.current_hp <= 0:
+		_down = true
+		if attacker != null:
+			attacker.stop()
+		var skin = get_node_or_null("Skin")
+		if skin != null:
+			skin.rotation.x = -PI / 2
+	elif _down and not in_combat:
+		_down = false
+		c.stats.current_hp = maxi(1, c.stats.max_hp / 3)
+		var skin = get_node_or_null("Skin")
+		if skin != null:
+			skin.rotation.x = 0.0
+		print("[Combat] Liris gets back up.")
+	return _down
 
 func _engage(enemy: Node3D, delta: float) -> void:
 	var to_enemy := enemy.global_position - global_position
