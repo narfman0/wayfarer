@@ -27,10 +27,24 @@ var _debug_party := false
 @onready var _player    = $Characters/Sarro     # PlayerController
 @onready var _companion = $Characters/Liris     # CompanionFollow
 @onready var _cam_pivot: Node3D = $CameraPivot
+@onready var _camera: Camera3D = $CameraPivot/Camera3D
 @onready var _hud_root:  Control = $HUD
 
 var _hud = null       # HUD
 var _attacker = null  # MeleeAttacker
+
+# ── Dialogue camera ───────────────────────────────────────────────────────────
+# The Camera3D sits aimed straight at the pivot origin, so scaling its local
+# position toward that origin dollies in while staying framed. During dialogue
+# we ease closer, swing the yaw for a 3/4 angle, and lift the focus to torso
+# height; on dialogue end we ease everything back.
+const _CAM_DIALOGUE_DOLLY := 0.6           # fraction of resting camera distance
+const _CAM_DIALOGUE_YAW   := deg_to_rad(28.0)
+const _CAM_DIALOGUE_FOCUS := Vector3(0.0, 1.1, 0.0)  # pivot lift toward the torso
+const _CAM_BLEND_SECS      := 0.7
+var _cam_rest_pos: Vector3 = Vector3.ZERO  # resting Camera3D local position
+var _cam_focus: Vector3 = Vector3.ZERO     # extra pivot offset (dialogue framing)
+var _cam_tween: Tween = null
 
 ## Actions queued during pause; fired on resume.
 var _queued_sarro: String = ""
@@ -39,6 +53,9 @@ var _queued_liris: String = ""
 func _ready() -> void:
 	_player.camera_pivot = _cam_pivot
 	_companion.follow_target = _player
+	_cam_rest_pos = _camera.position
+	DialogueManager.dialogue_started.connect(_on_dialogue_started)
+	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 	_setup_hud()
 	_sync_party_to_scene()
 	GameState.travel_to(plane_id)
@@ -84,7 +101,7 @@ func _apply_loaded_state() -> void:
 var _defeated := false
 
 func _process(_delta: float) -> void:
-	_cam_pivot.global_position = _player.global_position
+	_cam_pivot.global_position = _player.global_position + _cam_focus
 	_check_player_targeting()
 	if not _defeated and GameState.sarro != null and GameState.sarro.stats.current_hp <= 0:
 		_on_party_defeated()
@@ -101,6 +118,23 @@ func _on_party_defeated() -> void:
 		GameState.liris.stats.current_hp = GameState.liris.stats.max_hp
 	GameState.pending_player_pos = null
 	SceneManager.change_level(plane_id)
+
+## Ease the camera into the closer, angled conversation framing.
+func _on_dialogue_started(_resource) -> void:
+	_blend_camera(_cam_rest_pos * _CAM_DIALOGUE_DOLLY, _CAM_DIALOGUE_YAW, _CAM_DIALOGUE_FOCUS)
+
+## Ease the camera back to the resting gameplay framing.
+func _on_dialogue_ended(_resource) -> void:
+	_blend_camera(_cam_rest_pos, 0.0, Vector3.ZERO)
+
+func _blend_camera(cam_pos: Vector3, pivot_yaw: float, focus: Vector3) -> void:
+	if _cam_tween != null and _cam_tween.is_valid():
+		_cam_tween.kill()
+	_cam_tween = create_tween().set_parallel(true) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	_cam_tween.tween_property(_camera, "position", cam_pos, _CAM_BLEND_SECS)
+	_cam_tween.tween_property(_cam_pivot, "rotation:y", pivot_yaw, _CAM_BLEND_SECS)
+	_cam_tween.tween_property(self, "_cam_focus", focus, _CAM_BLEND_SECS)
 
 func _setup_hud() -> void:
 	var hud_scene := load("res://scenes/ui/hud.tscn")
