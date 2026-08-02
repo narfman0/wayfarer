@@ -70,7 +70,7 @@ func _refresh_hotbar() -> void:
 		var hw := "%d charge" % lc.healing_word_charges if lc.healing_word_charges == 1 else "Spent"
 		var cd := "Ready" if lc.channel_divinity_ready else "Spent"
 		_liris_label.text = "Liris — [2] Guiding Bolt: %s  [3] Healing Word: %s  [4] Channel Divinity: %s" % [gb, hw, cd]
-		var any_ready := lc.guiding_bolt_ready or lc.healing_word_charges > 0 or lc.channel_divinity_ready
+		var any_ready: bool = lc.guiding_bolt_ready or lc.healing_word_charges > 0 or lc.channel_divinity_ready
 		_liris_label.modulate = Color(0.6, 0.8, 1.0) if any_ready else Color(0.55, 0.55, 0.6)
 
 func track_enemy(enemy: EnemyController) -> void:

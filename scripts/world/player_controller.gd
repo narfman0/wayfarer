@@ -113,5 +113,5 @@ func _camera_flat_basis() -> Basis:
 	if cam == null:
 		return Basis.IDENTITY
 	var fwd   := Vector3(cam.global_transform.basis.z.x, 0.0, cam.global_transform.basis.z.z).normalized()
-	var right := fwd.cross(Vector3.UP).normalized()
+	var right := Vector3.UP.cross(fwd).normalized()
 	return Basis(right, Vector3.UP, fwd)

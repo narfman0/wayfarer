@@ -24,6 +24,11 @@ var _current := ""
 ## Build an animator under `skin` (a Synty character GLB instance).
 ## body: pass the CharacterBody3D to drive idle/run from velocity, or null.
 static func attach(skin: Node, body: CharacterBody3D = null, set_key: String = "masc") -> CharacterAnimator:
+	# Synty POLYGON meshes are authored facing +Z, but Godot's facing/movement
+	# convention is -Z forward (see PlayerController's atan2 yaw). Left as-is the
+	# skin shows its back; spin it 180° so the visible front matches body facing.
+	if skin is Node3D:
+		(skin as Node3D).rotation.y += PI
 	var skels: Array = skin.find_children("*", "Skeleton3D", true, false)
 	if skels.is_empty():
 		return null
