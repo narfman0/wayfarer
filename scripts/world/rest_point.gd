@@ -54,6 +54,9 @@ func _rest() -> void:
 	for c in GameState.party():
 		c.stats.current_hp = c.stats.max_hp
 		c.second_wind_used = false
+		c.healing_word_charges = 1
+		c.channel_divinity_ready = true
+		c.guiding_bolt_ready = true
 	_prompt.text = "The current steadies you."
 	var timer := get_tree().create_timer(2.0)
 	timer.timeout.connect(func():

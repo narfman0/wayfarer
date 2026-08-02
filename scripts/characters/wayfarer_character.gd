@@ -20,6 +20,12 @@ var energy_slots = null
 
 ## Ability state (session-scoped; refreshed at rest points).
 var second_wind_used: bool = false
+## Liris: Healing Word — short-rest resource (1 charge, recovers at rest).
+var healing_word_charges: int = 1
+## Liris: Guiding Bolt — long-rest recharge; marks target for advantage.
+var guiding_bolt_ready: bool = true
+## Liris: Channel Divinity — short-rest recharge; Sacred Flame burst.
+var channel_divinity_ready: bool = true
 
 func _init() -> void:
 	stats    = _CharacterStats.new()

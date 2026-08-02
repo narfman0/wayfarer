@@ -1,4 +1,4 @@
-## In-world HUD: party HP bars + targeted enemy HP.
+## In-world HUD: party HP bars + targeted enemy HP + ability hotbar.
 class_name HUD
 extends Control
 
@@ -10,23 +10,33 @@ extends Control
 
 var _tracked_enemy: EnemyController = null
 var _toast: Label
-var _ability_label: Label
+var _sarro_label: Label   # hotbar row for Sarro
+var _liris_label: Label   # hotbar row for Liris
 
 func _ready() -> void:
 	_enemy_row.visible = false
+
 	_toast = Label.new()
 	_toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_toast.position.y = 60
 	_toast.add_theme_font_size_override("font_size", 22)
 	_toast.visible = false
 	add_child(_toast)
+
+	_sarro_label = Label.new()
+	_sarro_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_sarro_label.position.y = -62
+	_sarro_label.add_theme_font_size_override("font_size", 15)
+	add_child(_sarro_label)
+
+	_liris_label = Label.new()
+	_liris_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_liris_label.position.y = -40
+	_liris_label.add_theme_font_size_override("font_size", 15)
+	add_child(_liris_label)
+
 	GameState.xp_gained.connect(_on_xp_gained)
 	GameState.leveled_up.connect(_on_leveled_up)
-	_ability_label = Label.new()
-	_ability_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_ability_label.position.y = -46
-	_ability_label.add_theme_font_size_override("font_size", 16)
-	add_child(_ability_label)
 
 func _on_xp_gained(amount: int) -> void:
 	_show_toast("+%d XP  (Level %d — %d XP)" % [amount, GameState.sarro.stats.level, GameState.sarro.stats.xp])
@@ -41,11 +51,27 @@ func _show_toast(text: String) -> void:
 	tween.tween_interval(2.2)
 	tween.tween_callback(func(): _toast.visible = false)
 
+func show_boss_phase(phase: int) -> void:
+	_show_toast("⚠ Boss Phase %d!" % phase)
+
 func _process(_delta: float) -> void:
 	_refresh_party()
-	if GameState.sarro != null and _ability_label != null:
-		_ability_label.text = "[1] Second Wind — %s" % ("Ready" if not GameState.sarro.second_wind_used else "Spent (rest to recover)")
-		_ability_label.modulate = Color(0.6, 1.0, 0.7) if not GameState.sarro.second_wind_used else Color(0.6, 0.6, 0.65)
+	_refresh_hotbar()
+
+func _refresh_hotbar() -> void:
+	if GameState.sarro != null and _sarro_label != null:
+		var sw := "Ready" if not GameState.sarro.second_wind_used else "Spent"
+		_sarro_label.text = "Sarro — [1] Second Wind: %s" % sw
+		_sarro_label.modulate = Color(0.6, 1.0, 0.7) if not GameState.sarro.second_wind_used else Color(0.55, 0.55, 0.6)
+
+	if GameState.liris != null and _liris_label != null:
+		var lc = GameState.liris
+		var gb := "Ready" if lc.guiding_bolt_ready else "Spent"
+		var hw := "%d charge" % lc.healing_word_charges if lc.healing_word_charges == 1 else "Spent"
+		var cd := "Ready" if lc.channel_divinity_ready else "Spent"
+		_liris_label.text = "Liris — [2] Guiding Bolt: %s  [3] Healing Word: %s  [4] Channel Divinity: %s" % [gb, hw, cd]
+		var any_ready := lc.guiding_bolt_ready or lc.healing_word_charges > 0 or lc.channel_divinity_ready
+		_liris_label.modulate = Color(0.6, 0.8, 1.0) if any_ready else Color(0.55, 0.55, 0.6)
 
 func track_enemy(enemy: EnemyController) -> void:
 	if _tracked_enemy != null:

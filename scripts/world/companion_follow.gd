@@ -9,24 +9,35 @@ const GRAVITY     := 9.8
 const ENGAGE_DIST := 7.0  # metres — join combat when an enemy is this close
 const MELEE_DIST  := 1.5
 
+const _Dice = preload("res://addons/srd/dice.gd")
+const _DamageNumber = preload("res://scripts/world/damage_number.gd")
+
 @export var follow_target: CharacterBody3D
 
 ## MeleeAttacker wired by the level (character = GameState.liris).
 var attacker = null
 
 var _down := false
+var _heal_cooldown: float = 0.0
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
+
+	if _heal_cooldown > 0.0:
+		_heal_cooldown -= delta
 
 	var enemy = _nearest_enemy()
 	if _update_down_state(enemy != null):
 		velocity.x = move_toward(velocity.x, 0.0, SPEED * 8.0 * delta)
 		velocity.z = move_toward(velocity.z, 0.0, SPEED * 8.0 * delta)
 	elif enemy != null:
+		if _heal_cooldown <= 0.0:
+			_try_auto_heal()
 		_engage(enemy, delta)
 	else:
+		if _heal_cooldown <= 0.0:
+			_try_auto_heal()
 		if attacker != null:
 			attacker.stop()
 		_follow(delta)
@@ -54,6 +65,30 @@ func _update_down_state(in_combat: bool) -> bool:
 			skin.rotation.x = 0.0
 		print("[Combat] Liris gets back up.")
 	return _down
+
+## Auto-use Healing Word when Sarro is below 40% HP and charges remain.
+func _try_auto_heal() -> void:
+	var liris_char = GameState.liris
+	var sarro_char = GameState.sarro
+	if liris_char == null or sarro_char == null:
+		return
+	if liris_char.healing_word_charges <= 0:
+		return
+	if sarro_char.stats.max_hp <= 0:
+		return
+	var sarro_pct := float(sarro_char.stats.current_hp) / float(sarro_char.stats.max_hp)
+	if sarro_pct < 0.4 and sarro_char.stats.current_hp > 0:
+		_cast_healing_word(liris_char, sarro_char)
+
+func _cast_healing_word(caster, target) -> void:
+	caster.healing_word_charges -= 1
+	_heal_cooldown = 10.0  # don't spam — 10s between auto-heals
+	var heal: int = _Dice.roll(4) + caster.stats.ability_modifier(4)  # 4 = WIS
+	heal = maxi(1, heal)
+	target.stats.current_hp = mini(target.stats.max_hp, target.stats.current_hp + heal)
+	_DamageNumber.spawn(get_tree().current_scene, target.global_position + Vector3(0, 1.5, 0),
+		"+%d HW" % heal, Color(0.4, 1.0, 0.6))
+	print("[Spell] Liris: Healing Word — %s +%d HP" % [target.display_name, heal])
 
 func _engage(enemy: Node3D, delta: float) -> void:
 	var to_enemy := enemy.global_position - global_position

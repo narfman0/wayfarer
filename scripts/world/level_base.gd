@@ -32,6 +32,10 @@ var _debug_party := false
 var _hud = null       # HUD
 var _attacker = null  # MeleeAttacker
 
+## Actions queued during pause; fired on resume.
+var _queued_sarro: String = ""
+var _queued_liris: String = ""
+
 func _ready() -> void:
 	_player.camera_pivot = _cam_pivot
 	_companion.follow_target = _player
@@ -85,8 +89,7 @@ func _process(_delta: float) -> void:
 	if not _defeated and GameState.sarro != null and GameState.sarro.stats.current_hp <= 0:
 		_on_party_defeated()
 
-## Sarro at 0 HP: the Veil pulls the party back to the last stable tear —
-## fiction for a soft respawn. HP restored, XP kept, enemies reset.
+## Sarro at 0 HP: the Veil pulls the party back to the last stable tear.
 func _on_party_defeated() -> void:
 	_defeated = true
 	_player.set_control_enabled(false)
@@ -108,7 +111,7 @@ func _setup_hud() -> void:
 func _setup_combat() -> void:
 	_attacker = _MeleeAttacker.new()
 	_attacker.owner_body = _player
-	_attacker.character  = GameState.sarro  # party is synced before combat setup
+	_attacker.character  = GameState.sarro
 	add_child(_attacker)
 	var liris_attacker = _MeleeAttacker.new()
 	liris_attacker.owner_body = _companion
@@ -123,6 +126,8 @@ func _setup_enemies() -> void:
 			continue
 		ec.character = _Factory.make_enemy(ec.enemy_type)
 		ec.died.connect(_on_enemy_died.bind(ec))
+		if ec.is_boss:
+			ec.phase_changed.connect(_on_boss_phase.bind(ec))
 
 func _check_player_targeting() -> void:
 	var tgt = _player.target_enemy
@@ -138,13 +143,17 @@ func _check_player_targeting() -> void:
 		if not _attacker.is_attacking(ec):
 			_attacker.start(ec)
 
-func _on_enemy_died(ec) -> void:  # EnemyController
+func _on_enemy_died(ec) -> void:
 	if _attacker != null:
 		_attacker.stop()
 	_player.target_enemy = null
 	if _hud != null:
 		_hud.track_enemy(null)
 	print("[Combat] Enemy defeated!")
+
+func _on_boss_phase(phase: int, _ec) -> void:
+	if _hud != null:
+		_hud.show_boss_phase(phase)
 
 func _sync_party_to_scene() -> void:
 	if GameState.sarro == null:
@@ -159,8 +168,16 @@ func _input(event: InputEvent) -> void:
 		_open_pause_menu()
 	elif event.is_action_pressed("ability_1"):
 		_use_second_wind()
+	elif event.is_action_pressed("ability_2"):
+		_use_guiding_bolt()
+	elif event.is_action_pressed("ability_3"):
+		_use_healing_word()
+	elif event.is_action_pressed("ability_4"):
+		_use_channel_divinity()
 
-## Second Wind (hotbar slot 1): heal 1d10 + level, once per rest.
+# ── Sarro Abilities ───────────────────────────────────────────────────────────
+
+## [1] Second Wind: heal 1d10 + level, once per rest.
 func _use_second_wind() -> void:
 	var c = GameState.sarro
 	if c == null or c.second_wind_used or _defeated:
@@ -173,8 +190,85 @@ func _use_second_wind() -> void:
 	_DamageNumber.spawn(self, _player.global_position, "+%d" % heal, Color(0.4, 1.0, 0.5))
 	print("[Combat] Second Wind: +%d HP" % heal)
 
+# ── Liris Abilities ───────────────────────────────────────────────────────────
+
+## [2] Guiding Bolt: mark the current target so the next attack hits with advantage.
+func _use_guiding_bolt() -> void:
+	var c = GameState.liris
+	if c == null or not c.guiding_bolt_ready or _defeated:
+		return
+	var tgt = _player.target_enemy
+	if tgt == null or not tgt.has_method("receive_damage"):
+		return
+	c.guiding_bolt_ready = false
+	tgt.guiding_bolt_active = true
+	_DamageNumber.spawn(self, tgt.global_position + Vector3(0, 1.5, 0),
+		"Guiding Bolt!", Color(0.95, 0.85, 0.3))
+	print("[Spell] Liris: Guiding Bolt on %s" % tgt.name)
+
+## [3] Healing Word: heal Sarro for 1d4 + WIS mod (short-rest charge).
+func _use_healing_word() -> void:
+	var c = GameState.liris
+	var sarro = GameState.sarro
+	if c == null or sarro == null or c.healing_word_charges <= 0 or _defeated:
+		return
+	if sarro.stats.current_hp <= 0:
+		return
+	c.healing_word_charges -= 1
+	var heal: int = maxi(1, _Dice.roll(4) + c.stats.ability_modifier(4))  # 4 = WIS
+	sarro.stats.current_hp = mini(sarro.stats.max_hp, sarro.stats.current_hp + heal)
+	_DamageNumber.spawn(self, _player.global_position + Vector3(0, 1.5, 0),
+		"+%d HW" % heal, Color(0.4, 1.0, 0.5))
+	print("[Spell] Liris: Healing Word — Sarro +%d HP" % heal)
+
+## [4] Channel Divinity — Sacred Flame burst on all enemies within 8 m of Liris.
+## DEX save (DC = 8 + WIS mod + proficiency) or take 1d8 radiant.
+func _use_channel_divinity() -> void:
+	var c = GameState.liris
+	if c == null or not c.channel_divinity_ready or _defeated:
+		return
+	c.channel_divinity_ready = false
+	var dc: int = 8 + c.stats.ability_modifier(4) + c.stats.proficiency_bonus()
+	var hit_count := 0
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not enemy is Node3D or not enemy.has_method("receive_damage"):
+			continue
+		var dist: float = _companion.global_position.distance_to(enemy.global_position)
+		if dist > 8.0:
+			continue
+		var save_roll: int = _Dice.roll_d20()
+		if enemy.character != null:
+			save_roll += enemy.character.stats.ability_modifier(1)  # 1 = DEX
+		if save_roll < dc:
+			var dmg: int = _Dice.roll(8)
+			enemy.receive_damage(dmg)
+			_DamageNumber.hit(self, enemy.global_position, dmg, false)
+			hit_count += 1
+	_DamageNumber.spawn(self, _companion.global_position + Vector3(0, 2.0, 0),
+		"Sacred Flame ×%d" % hit_count, Color(0.95, 0.85, 0.3))
+	print("[Spell] Liris: Channel Divinity — %d enemies hit (DC %d)" % [hit_count, dc])
+
+# ── Pause / queue ─────────────────────────────────────────────────────────────
+
 func _open_pause_menu() -> void:
 	get_tree().paused = true
 	var pause_scene := load("res://scenes/ui/pause_menu.tscn")
 	if pause_scene:
-		add_child(pause_scene.instantiate())
+		var pm = pause_scene.instantiate()
+		pm.queued.connect(_on_actions_queued)
+		add_child(pm)
+
+func _on_actions_queued(sarro_action: String, liris_action: String) -> void:
+	_queued_sarro = sarro_action
+	_queued_liris = liris_action
+	_execute_queued_actions()
+
+func _execute_queued_actions() -> void:
+	match _queued_sarro:
+		"ability_1": _use_second_wind()
+	_queued_sarro = ""
+	match _queued_liris:
+		"ability_2": _use_guiding_bolt()
+		"ability_3": _use_healing_word()
+		"ability_4": _use_channel_divinity()
+	_queued_liris = ""

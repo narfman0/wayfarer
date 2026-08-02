@@ -55,7 +55,14 @@ func _do_attack() -> void:
 	var attacker = character.make_combatant()
 	var defender = _target.character.make_combatant() if _target.character != null else _make_default_enemy_combatant()
 
-	var d20: int       = _Dice.roll_d20()
+	# Advantage from Guiding Bolt: roll 2d20 take higher.
+	var advantage: bool = _target.get("guiding_bolt_active") == true
+	var d20: int
+	if advantage:
+		d20 = maxi(_Dice.roll_d20(), _Dice.roll_d20())
+		_target.guiding_bolt_active = false
+	else:
+		d20 = _Dice.roll_d20()
 	var atk_mod: int   = attacker.attack_modifier()
 	var total_atk: int = d20 + atk_mod
 	var target_ac: int = defender.armor_class
