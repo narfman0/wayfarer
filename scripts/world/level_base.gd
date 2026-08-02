@@ -61,6 +61,7 @@ func _ready() -> void:
 	GameState.travel_to(plane_id)
 	_setup_combat()
 	_setup_enemies()
+	_setup_prop_collision()
 	_setup_animators()
 	_apply_loaded_state()
 	if not _debug_party:
@@ -71,6 +72,41 @@ func _ready() -> void:
 ## Override for level-specific setup (opening dialogue, triggers, ...).
 func _on_level_ready() -> void:
 	_player.set_control_enabled(true)
+
+## World props ship as Synty GLTFs with no collision. Generate a trimesh
+## collider per prop mesh at load so the player can't walk through them.
+##
+## Colliders go on a dedicated layer (not the ground/enemy layers), and the
+## player is told to collide with it — but click-to-move's raycast (CLICK_MASK
+## = ground + enemies) deliberately omits this layer, so clicking past a prop
+## still targets the ground instead of stopping on the prop's surface.
+##
+## Trimesh (not a box) matters for tall props: the player capsule tops out at
+## 1.8 m, so a tree only blocks at its trunk while its canopy — and any box
+## drawn around it — would otherwise wall off the ground around it.
+const _PROP_LAYER := 1 << 3  # value 8; unused by ground(1)/enemies(2)/companion(4)
+
+func _setup_prop_collision() -> void:
+	var props := get_node_or_null("Level/Props")
+	if props == null:
+		return
+	for mi: MeshInstance3D in props.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		mi.create_trimesh_collision()
+		var body := _generated_static_body(mi)
+		if body != null:
+			body.collision_layer = _PROP_LAYER
+			body.collision_mask = 0
+	_player.collision_mask |= _PROP_LAYER
+
+## The StaticBody3D that create_trimesh_collision() just parented under `mi`
+## (Synty prop meshes carry no collision of their own, so it's the only one).
+func _generated_static_body(mi: Node) -> StaticBody3D:
+	for i in range(mi.get_child_count() - 1, -1, -1):
+		if mi.get_child(i) is StaticBody3D:
+			return mi.get_child(i)
+	return null
 
 func _setup_animators() -> void:
 	for body in _bodies_with_skins():
