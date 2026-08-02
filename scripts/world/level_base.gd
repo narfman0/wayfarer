@@ -8,6 +8,7 @@ extends Node3D
 const _Factory       = preload("res://scripts/characters/character_factory.gd")
 const _MeleeAttacker = preload("res://scripts/combat/melee_attacker.gd")
 const _Animator      = preload("res://scripts/world/character_animator.gd")
+const _Scenery       = preload("res://scripts/world/scenery.gd")
 const _DamageNumber  = preload("res://scripts/world/damage_number.gd")
 const _Dice          = preload("res://addons/srd/dice.gd")
 const _Experience    = preload("res://addons/srd/systems/experience.gd")
@@ -19,6 +20,11 @@ const _Experience    = preload("res://addons/srd/systems/experience.gd")
 ## Current Scene" in the editor), the fallback debug party is boosted to this
 ## level so late-game planes are actually testable. Ignored in normal play.
 @export_range(1, 20) var debug_party_level: int = 1
+
+## Generate the MeadowForest scenery pass (backdrop ring, ground-cover, grass,
+## bushes, rocks) on load. Turn off per-scene for planes that want a different
+## look. See scripts/world/scenery.gd.
+@export var generate_scenery: bool = true
 
 ## True when this run spawned its own debug party — autosave is skipped so an
 ## isolated test never overwrites the real save slot.
@@ -64,6 +70,7 @@ func _ready() -> void:
 	_setup_prop_collision()
 	_setup_animators()
 	_apply_loaded_state()
+	_setup_scenery()  # after _apply_loaded_state so avoid-points use final positions
 	if not _debug_party:
 		GameState.save_game()  # autosave on plane entry
 	_on_level_ready()
@@ -107,6 +114,34 @@ func _generated_static_body(mi: Node) -> StaticBody3D:
 		if mi.get_child(i) is StaticBody3D:
 			return mi.get_child(i)
 	return null
+
+func _setup_scenery() -> void:
+	if not generate_scenery:
+		return
+	var level := get_node_or_null("Level")
+	if level == null:
+		return
+	var ground := get_node_or_null("Level/Ground/GroundMesh") as MeshInstance3D
+	_Scenery.generate(level, ground, _scenery_avoid_points(), plane_id)
+
+## World positions the scatter should keep clear of, so foliage never spawns
+## inside a prop or on top of a character.
+func _scenery_avoid_points() -> PackedVector3Array:
+	var pts := PackedVector3Array()
+	var props := get_node_or_null("Level/Props")
+	if props != null:
+		for c in props.get_children():
+			if c is Node3D:
+				pts.append((c as Node3D).global_position)
+	pts.append(_player.global_position)
+	pts.append(_companion.global_position)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if e is Node3D:
+			pts.append((e as Node3D).global_position)
+	for n in get_node("Level").find_children("*", "Node3D", true, false):
+		if n is VillageNPC:
+			pts.append((n as Node3D).global_position)
+	return pts
 
 func _setup_animators() -> void:
 	for body in _bodies_with_skins():
