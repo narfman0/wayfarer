@@ -75,10 +75,12 @@ func _do_attack() -> void:
 	var target_pos: Vector3 = _target.global_position
 	lunge(owner_body, target_pos)
 	var dmg := 0
+	AudioManager.play_sfx("swing")
 	if hit:
 		dmg = attacker.roll_damage(crit)
 		_DamageNumber.hit(owner_body.get_tree().current_scene, target_pos, dmg, crit)
 		_target.receive_damage(dmg, owner_body.global_position)
+		AudioManager.play_sfx("crit" if crit else "hit")
 		_Juice.hit_stop(owner_body.get_tree(), 0.08 if crit else 0.05)
 		if crit:
 			_Juice.shake(owner_body.get_viewport().get_camera_3d(), 0.16)

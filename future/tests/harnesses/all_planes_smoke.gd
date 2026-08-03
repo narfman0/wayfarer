@@ -57,6 +57,8 @@ func _check_plane(plane_id: String, level: Node3D) -> void:
 				[plane_id, min_h, max_h, measured])
 	_check(level.get_node_or_null("AmbientMotes") != null,
 		"%s: ambient particle field present" % plane_id)
+	_check(AudioManager._ambient_name != "" and AudioManager._ambient_current.playing,
+		"%s: ambient loop playing (%s)" % [plane_id, AudioManager._ambient_name])
 
 func _check(cond: bool, label: String) -> void:
 	print("  [%s] %s" % ["PASS" if cond else "FAIL", label])

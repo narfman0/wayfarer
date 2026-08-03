@@ -66,6 +66,7 @@ func _ready() -> void:
 	_setup_hud()
 	_sync_party_to_scene()
 	GameState.travel_to(plane_id)
+	AudioManager.play_ambient(plane_id)
 	_setup_combat()
 	_setup_enemies()
 	_setup_prop_collision()

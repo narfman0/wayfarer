@@ -241,6 +241,7 @@ func _fire_attack() -> void:
 	if character == null or _target == null:
 		return
 	_MeleeAttacker.lunge(self, _target.global_position)
+	AudioManager.play_sfx("swing", -3.0)
 	_resolve_attack_on(_target)
 
 ## SRD attack roll vs the party character behind `body`; applies damage.
@@ -279,6 +280,7 @@ func _resolve_attack_on(body: CharacterBody3D) -> void:
 func _apply_party_damage(target_char, body: Node3D, dmg: int, crit: bool) -> void:
 	target_char.stats.current_hp = max(0, target_char.stats.current_hp - dmg)
 	var scene := get_tree().current_scene
+	AudioManager.play_sfx("crit" if crit else "hit", -2.0)
 	_DamageNumber.hit(scene, body.global_position, dmg, crit)
 	_Juice.impact_burst(scene, body.global_position, Color(1.0, 0.45, 0.3))
 	if body.is_in_group("players"):
@@ -292,6 +294,7 @@ func _fire_projectile() -> void:
 	if character == null or _target == null:
 		return
 	_MeleeAttacker.lunge(self, _target.global_position)
+	AudioManager.play_sfx("swing", -4.0, 0.15)
 	_Projectile.fire(get_tree().current_scene, global_position,
 		_target.global_position, _on_projectile_hit)
 
@@ -366,6 +369,7 @@ func _die() -> void:
 	collision_mask = 0
 	set_physics_process(false)
 	GameState.grant_xp(xp_value)
+	AudioManager.play_sfx("death")
 	if loot_preset != "":
 		_spawn_loot()
 	died.emit()

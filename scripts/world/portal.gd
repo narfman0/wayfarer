@@ -71,6 +71,7 @@ func _try_travel() -> void:
 			if is_instance_valid(_prompt) and _player_near:
 				_prompt.text = _prompt_text())
 		return
+	AudioManager.play_sfx("portal")
 	SceneManager.change_level(target_plane, target_spawn_id)
 
 func _prompt_text() -> String:
