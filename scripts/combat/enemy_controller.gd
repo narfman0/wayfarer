@@ -1,5 +1,10 @@
-## Placeholder enemy — simple 3-state machine: Patrol → Chase → Attack.
-## No Beehave yet. Wired to SRD Combatant in task 8.
+## Enemy AI: Patrol → Chase → Attack state machine, plus an archetype layer
+## that changes the player's counterplay per enemy type:
+##   bruiser    — walks up and swings (the original behavior)
+##   skirmisher — kites to a range band and fires dodgeable projectiles
+##   heavy      — melee plus a telegraphed AoE slam (step out of the circle)
+## Archetype is derived from enemy_type (see _TYPE_ARCHETYPES) so existing
+## scenes upgrade without edits; the export overrides per placement.
 class_name EnemyController
 extends CharacterBody3D
 
@@ -10,6 +15,9 @@ const _MeleeAttacker  = preload("res://scripts/combat/melee_attacker.gd")
 const _EquipPickup    = preload("res://scripts/world/equipment_pickup.gd")
 const _WeaponData     = preload("res://addons/srd/resources/weapon_data.gd")
 const _ArmorData      = preload("res://addons/srd/resources/armor_data.gd")
+const _Telegraph      = preload("res://scripts/combat/telegraph.gd")
+const _Projectile     = preload("res://scripts/combat/projectile.gd")
+const _Juice          = preload("res://scripts/combat/juice.gd")
 
 enum State { PATROL, CHASE, ATTACK }
 
@@ -18,7 +26,30 @@ const GRAVITY    := 9.8
 const MELEE_DIST := 1.6   # metres — switch to Attack state
 const CHASE_DIST := 12.0  # metres — give up chase beyond this
 
+# Skirmisher: hold [RANGED_MIN, RANGED_MAX] and volley; retreat when crowded.
+const RANGED_MIN  := 4.0
+const RANGED_MAX  := 9.5
+const RANGED_RATE := 2.2
+
+# Heavy: telegraphed circle slam at the target's feet.
+const SLAM_RANGE  := 5.0   # start the windup within this range
+const SLAM_RADIUS := 2.4
+const SLAM_WINDUP := 1.1   # telegraph duration — the dodge window
+const SLAM_RATE   := 7.0   # cooldown between slams
+
 const _PHASE_INVULN := 1.8  # seconds of invulnerability during phase transition
+
+## Melee counterplay per enemy type. Anything unlisted is a bruiser.
+const _TYPE_ARCHETYPES := {
+	"brute": "heavy",
+	"anchor_warden": "heavy",
+	"extractor_guard": "skirmisher",
+	"extractor_enforcer": "heavy",
+	"kaveth_shade": "heavy",
+	"dock_blade": "skirmisher",
+	"veil_fragment": "skirmisher",
+	"cael": "heavy",
+}
 
 @export var patrol_points: Array[NodePath] = []
 @export var aggro_radius: float = 6.0
@@ -26,6 +57,8 @@ const _PHASE_INVULN := 1.8  # seconds of invulnerability during phase transition
 @export var xp_value: int = 50
 ## Roster key for character_factory.make_enemy (bandit / brute / anchor_warden).
 @export var enemy_type: String = "bandit"
+## "auto" derives from enemy_type via _TYPE_ARCHETYPES.
+@export_enum("auto", "bruiser", "skirmisher", "heavy") var archetype: String = "auto"
 ## Set true for the boss; enables phase transitions.
 @export var is_boss: bool = false
 ## Equipment to drop on death: "greatsword", "longsword", "chain_mail", "scale_mail", or "".
@@ -38,9 +71,15 @@ var character = null  # WayfarerCharacter
 var guiding_bolt_active: bool = false
 
 var _state: State = State.PATROL
+var _arch: String = "bruiser"
 var _patrol_idx: int = 0
 var _target: CharacterBody3D = null
 var _attack_timer: float = 0.0
+var _ranged_timer: float = 0.0
+var _slam_timer: float = 2.5   # first slam lands shortly after combat starts
+var _slam_winding: bool = false
+var _knockback: Vector3 = Vector3.ZERO
+var _dead: bool = false
 var _phase: int = 0          # 0 = fresh, 1 = 60% threshold, 2 = 30% threshold
 var _invuln_timer: float = 0.0
 
@@ -53,6 +92,7 @@ signal phase_changed(phase: int)
 
 func _ready() -> void:
 	add_to_group("enemies")
+	_arch = archetype if archetype != "auto" else str(_TYPE_ARCHETYPES.get(enemy_type, "bruiser"))
 	var aggro_area := Area3D.new()
 	var shape_node := CollisionShape3D.new()
 	var sphere     := SphereShape3D.new()
@@ -100,10 +140,21 @@ func _physics_process(delta: float) -> void:
 	if _invuln_timer > 0.0:
 		_invuln_timer -= delta
 
-	match _state:
-		State.PATROL: _do_patrol(delta)
-		State.CHASE:  _do_chase(delta)
-		State.ATTACK: _do_attack(delta)
+	if _slam_winding:
+		velocity.x = 0.0
+		velocity.z = 0.0
+	else:
+		match _state:
+			State.PATROL: _do_patrol(delta)
+			State.CHASE:  _do_chase(delta)
+			State.ATTACK: _do_attack(delta)
+		if _arch == "heavy" and _state != State.PATROL:
+			_tick_slam(delta)
+
+	# Knockback rides on top of whatever the state set, then decays fast.
+	velocity.x += _knockback.x
+	velocity.z += _knockback.z
+	_knockback = _knockback.move_toward(Vector3.ZERO, 18.0 * delta)
 
 	move_and_slide()
 
@@ -128,6 +179,9 @@ func _do_chase(delta: float) -> void:
 	_target = _acquire_target()
 	if _target == null:
 		_state = State.PATROL; return
+	if _arch == "skirmisher":
+		_do_chase_skirmisher(delta)
+		return
 	var to_target := _target.global_position - global_position
 	to_target.y   = 0.0
 	var dist := to_target.length()
@@ -139,6 +193,34 @@ func _do_chase(delta: float) -> void:
 	velocity.x = dir.x * SPEED
 	velocity.z = dir.z * SPEED
 	rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 10.0 * delta)
+
+## Skirmisher chase: face the target, hold the range band, volley. Falls back
+## to melee only when actually caught.
+func _do_chase_skirmisher(delta: float) -> void:
+	var to_target := _target.global_position - global_position
+	to_target.y   = 0.0
+	var dist := to_target.length()
+	if dist > CHASE_DIST:
+		_state = State.PATROL; _target = null; return
+	var dir := to_target.normalized()
+	rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 10.0 * delta)
+
+	if dist <= MELEE_DIST:
+		_state = State.ATTACK; velocity.x = 0.0; velocity.z = 0.0; return
+	elif dist < RANGED_MIN:      # crowded — back away, still firing
+		velocity.x = -dir.x * SPEED * 0.8
+		velocity.z = -dir.z * SPEED * 0.8
+	elif dist <= RANGED_MAX:     # in the band — hold and fire
+		velocity.x = 0.0
+		velocity.z = 0.0
+	else:                        # too far — close in
+		velocity.x = dir.x * SPEED
+		velocity.z = dir.z * SPEED
+
+	_ranged_timer -= delta
+	if _ranged_timer <= 0.0 and dist <= RANGED_MAX and _invuln_timer <= 0.0:
+		_ranged_timer = RANGED_RATE
+		_fire_projectile()
 
 func _do_attack(delta: float) -> void:
 	_target = _acquire_target()
@@ -153,11 +235,19 @@ func _do_attack(delta: float) -> void:
 		if _invuln_timer <= 0.0:
 			_fire_attack()
 
+# ── Attack resolution (shared by melee, projectile, slam) ────────────────────
+
 func _fire_attack() -> void:
 	if character == null or _target == null:
 		return
 	_MeleeAttacker.lunge(self, _target.global_position)
-	var target_char = _char_for(_target)
+	_resolve_attack_on(_target)
+
+## SRD attack roll vs the party character behind `body`; applies damage.
+func _resolve_attack_on(body: CharacterBody3D) -> void:
+	if character == null:
+		return
+	var target_char = _char_for(body)
 	if target_char == null:
 		return
 
@@ -174,34 +264,112 @@ func _fire_attack() -> void:
 
 	if hit:
 		dmg = attacker.roll_damage(crit)
-		target_char.stats.current_hp = max(0, target_char.stats.current_hp - dmg)
-		_DamageNumber.hit(get_tree().current_scene, _target.global_position, dmg, crit)
+		_apply_party_damage(target_char, body, dmg, crit)
 	else:
-		_DamageNumber.miss(get_tree().current_scene, _target.global_position)
+		_DamageNumber.miss(get_tree().current_scene, body.global_position)
 
 	var enemy_name: String = character.display_name
 	var target_name: String = target_char.display_name
 	if hit:
 		print("[Combat] %s hits %s for %d (d20=%d+%d vs AC%d)" % [enemy_name, target_name, dmg, d20, atk_mod, target_ac])
-		if target_char.stats.current_hp <= 0 and target_char == GameState.liris:
-			print("[Combat] Liris is down!")
 	else:
 		print("[Combat] %s misses %s (d20=%d+%d vs AC%d)" % [enemy_name, target_name, d20, atk_mod, target_ac])
 
-func receive_damage(amount: int) -> void:
-	if character == null or _invuln_timer > 0.0:
+## Damage + feedback for a party member taking a hit from this enemy.
+func _apply_party_damage(target_char, body: Node3D, dmg: int, crit: bool) -> void:
+	target_char.stats.current_hp = max(0, target_char.stats.current_hp - dmg)
+	var scene := get_tree().current_scene
+	_DamageNumber.hit(scene, body.global_position, dmg, crit)
+	_Juice.impact_burst(scene, body.global_position, Color(1.0, 0.45, 0.3))
+	if body.is_in_group("players"):
+		_Juice.shake(get_viewport().get_camera_3d(), 0.09)
+	if target_char.stats.current_hp <= 0 and target_char == GameState.liris:
+		print("[Combat] Liris is down!")
+
+# ── Skirmisher ────────────────────────────────────────────────────────────────
+
+func _fire_projectile() -> void:
+	if character == null or _target == null:
+		return
+	_MeleeAttacker.lunge(self, _target.global_position)
+	_Projectile.fire(get_tree().current_scene, global_position,
+		_target.global_position, _on_projectile_hit)
+
+func _on_projectile_hit(body: CharacterBody3D) -> void:
+	if _dead or character == null:
+		return
+	_resolve_attack_on(body)
+
+# ── Heavy slam ────────────────────────────────────────────────────────────────
+
+func _tick_slam(delta: float) -> void:
+	_slam_timer -= delta
+	if _slam_timer > 0.0 or _invuln_timer > 0.0:
+		return
+	var tgt := _acquire_target()
+	if tgt == null or global_position.distance_to(tgt.global_position) > SLAM_RANGE:
+		return
+	_slam_timer = SLAM_RATE
+	_slam_winding = true
+	var t = _Telegraph.show_circle(get_tree().current_scene,
+		tgt.global_position, SLAM_RADIUS, SLAM_WINDUP)
+	t.fired.connect(_on_slam_fired.bind(t))
+
+## Fires on the telegraph the player watched fill — hit iff still inside it.
+func _on_slam_fired(t) -> void:
+	_slam_winding = false
+	if _dead or character == null:
+		return
+	_MeleeAttacker.lunge(self, t.global_position)
+	_Juice.shake(get_viewport().get_camera_3d(), 0.12)
+	var attacker = character.make_combatant()
+	var bodies: Array = get_tree().get_nodes_in_group("players") \
+		+ get_tree().get_nodes_in_group("companions")
+	for body in bodies:
+		if not body is Node3D or not _is_alive(body):
+			continue
+		if not t.contains((body as Node3D).global_position):
+			continue
+		var target_char = _char_for(body)
+		var dmg: int = attacker.roll_damage(false)
+		_apply_party_damage(target_char, body, dmg, false)
+		print("[Combat] %s's slam catches %s for %d" %
+			[character.display_name, target_char.display_name, dmg])
+
+# ── Damage intake / death ─────────────────────────────────────────────────────
+
+func receive_damage(amount: int, from: Vector3 = Vector3.INF) -> void:
+	if character == null or _invuln_timer > 0.0 or _dead:
 		return
 	guiding_bolt_active = false  # consumed on hit regardless of outcome
 	character.stats.current_hp = max(0, character.stats.current_hp - amount)
 	hp_changed.emit(character.stats.current_hp, character.stats.max_hp)
+	_Juice.impact_burst(get_tree().current_scene, global_position)
+	if from != Vector3.INF:
+		var away := global_position - from
+		away.y = 0.0
+		if away.length_squared() > 0.0001:
+			_knockback = away.normalized() * 3.5
 	if is_boss:
 		_check_phase_transition()
 	if character.stats.current_hp <= 0:
-		GameState.grant_xp(xp_value)
-		if loot_preset != "":
-			_spawn_loot()
-		died.emit()
-		queue_free()
+		_die()
+
+## Corpse goes inert immediately (no group, no collision, no AI) so targeting,
+## clicks, and further hits all pass over it — then Juice animates the
+## send-off and frees the body.
+func _die() -> void:
+	_dead = true
+	_slam_winding = false
+	remove_from_group("enemies")
+	collision_layer = 0
+	collision_mask = 0
+	set_physics_process(false)
+	GameState.grant_xp(xp_value)
+	if loot_preset != "":
+		_spawn_loot()
+	died.emit()
+	_Juice.death_collapse(self)
 
 # ── Boss phases ───────────────────────────────────────────────────────────────
 

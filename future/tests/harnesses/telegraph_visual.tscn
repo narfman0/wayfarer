@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://telegraphviz"]
+
+[ext_resource type="Script" path="res://future/tests/harnesses/telegraph_visual.gd" id="1_viz"]
+
+[node name="TelegraphVisual" type="Node3D"]
+script = ExtResource("1_viz")

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://phase1smoke"]
+
+[ext_resource type="Script" path="res://future/tests/harnesses/phase1_smoke.gd" id="1_smoke"]
+
+[node name="Phase1Smoke" type="Node"]
+script = ExtResource("1_smoke")

@@ -8,6 +8,7 @@ const _CharacterStats = preload("res://addons/srd/resources/character_stats.gd")
 const _Combatant      = preload("res://addons/srd/systems/combatant.gd")
 const _ArmorData      = preload("res://addons/srd/resources/armor_data.gd")
 const _DamageNumber   = preload("res://scripts/world/damage_number.gd")
+const _Juice          = preload("res://scripts/combat/juice.gd")
 
 const MELEE_RANGE  := 1.6   # metres
 const ATTACK_RATE  := 1.0   # seconds between attacks
@@ -77,7 +78,10 @@ func _do_attack() -> void:
 	if hit:
 		dmg = attacker.roll_damage(crit)
 		_DamageNumber.hit(owner_body.get_tree().current_scene, target_pos, dmg, crit)
-		_target.receive_damage(dmg)
+		_target.receive_damage(dmg, owner_body.global_position)
+		_Juice.hit_stop(owner_body.get_tree(), 0.08 if crit else 0.05)
+		if crit:
+			_Juice.shake(owner_body.get_viewport().get_camera_3d(), 0.16)
 	else:
 		_DamageNumber.miss(owner_body.get_tree().current_scene, target_pos)
 

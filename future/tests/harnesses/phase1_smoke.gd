@@ -1,0 +1,93 @@
+## Headless smoke test for the phase-1 combat feel pass. Loads the Reach,
+## shoves Sarro at a skirmisher and then a heavy, and asserts that:
+##   1. skirmishers fire projectiles,
+##   2. heavies put a telegraph on the ground,
+##   3. a killed enemy leaves the "enemies" group immediately and its body
+##      frees after the death collapse.
+## Run: godot --headless res://future/tests/harnesses/phase1_smoke.tscn
+extends Node
+
+const _ProjectileScript = preload("res://scripts/combat/projectile.gd")
+const _TelegraphScript  = preload("res://scripts/combat/telegraph.gd")
+
+var _level: Node
+var _player: CharacterBody3D
+var _failures: Array[String] = []
+
+func _ready() -> void:
+	_level = load("res://scenes/world/reach.tscn").instantiate()
+	add_child(_level)
+	await get_tree().process_frame
+	_player = _level.get_node("Characters/Sarro")
+	# The debug party is level 5 in a level-6/7 plane — pad HP so a party wipe
+	# can't reload the scene mid-test.
+	GameState.sarro.stats.max_hp = 900
+	GameState.sarro.stats.current_hp = 900
+	GameState.liris.stats.max_hp = 900
+	GameState.liris.stats.current_hp = 900
+	_run()
+
+func _run() -> void:
+	await _test_skirmisher_fires()
+	await _test_heavy_telegraphs()
+	await _test_death_collapse()
+	if _failures.is_empty():
+		print("PHASE1 SMOKE: ALL PASS")
+	else:
+		for f in _failures:
+			print("PHASE1 SMOKE FAIL: ", f)
+	get_tree().quit(0 if _failures.is_empty() else 1)
+
+func _test_skirmisher_fires() -> void:
+	var guard := _level.get_node("Enemies/PenGuard1") as CharacterBody3D
+	_teleport_party(guard.global_position + Vector3(6.0, 0, 0))
+	var ok := await _wait_for_script_node(_ProjectileScript, 6.0)
+	_check(ok, "skirmisher fired a projectile within 6s")
+
+func _test_heavy_telegraphs() -> void:
+	var heavy := _level.get_node("Enemies/Enforcer1") as CharacterBody3D
+	_teleport_party(heavy.global_position + Vector3(1.2, 0, 0))
+	var ok := await _wait_for_script_node(_TelegraphScript, 8.0)
+	_check(ok, "heavy showed a slam telegraph within 8s")
+
+func _test_death_collapse() -> void:
+	var guard := _level.get_node_or_null("Enemies/PenGuard2")
+	if guard == null:
+		_check(false, "PenGuard2 present for death test")
+		return
+	guard.receive_damage(9999, _player.global_position)
+	_check(not guard.is_in_group("enemies"), "dead enemy leaves 'enemies' group immediately")
+	_check(guard.collision_layer == 0, "dead enemy stops colliding immediately")
+	await get_tree().create_timer(3.0).timeout
+	_check(not is_instance_valid(guard), "corpse frees after death collapse")
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+func _teleport_party(pos: Vector3) -> void:
+	_player.global_position = pos
+	var liris := _level.get_node("Characters/Liris") as CharacterBody3D
+	liris.global_position = pos + Vector3(1.0, 0, 1.0)
+
+## True if a node with the given script appears in the tree within `secs`.
+func _wait_for_script_node(script: Script, secs: float) -> bool:
+	var waited := 0.0
+	while waited < secs:
+		if _find_script_node(get_tree().root, script) != null:
+			return true
+		await get_tree().create_timer(0.2).timeout
+		waited += 0.2
+	return false
+
+func _find_script_node(root: Node, script: Script) -> Node:
+	if root.get_script() == script:
+		return root
+	for child in root.get_children():
+		var found := _find_script_node(child, script)
+		if found != null:
+			return found
+	return null
+
+func _check(cond: bool, label: String) -> void:
+	print("  [%s] %s" % ["PASS" if cond else "FAIL", label])
+	if not cond:
+		_failures.append(label)
