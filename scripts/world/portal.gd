@@ -17,23 +17,17 @@ extends Node3D
 var _player_near := false
 var _prompt: Label3D
 
+const _VeilTear = preload("res://scripts/world/veil_tear.gd")
+
 func _ready() -> void:
 	add_to_group("portals")
 
-	var mesh := MeshInstance3D.new()
-	var torus := TorusMesh.new()
-	torus.inner_radius = 0.9
-	torus.outer_radius = 1.1
-	mesh.mesh = torus
-	mesh.rotation_degrees.x = 90.0
-	mesh.position.y = 1.4
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.45, 0.3, 0.85)
-	mat.emission_enabled = true
-	mat.emission = Color(0.55, 0.35, 1.0)
-	mat.emission_energy_multiplier = 2.0
-	mesh.material_override = mat
-	add_child(mesh)
+	var tear := _VeilTear.new()
+	tear.color = Color(0.55, 0.35, 1.0)
+	tear.ring_radius = 1.1
+	tear.intensity = 1.0
+	tear.position.y = 1.4
+	add_child(tear)
 
 	_prompt = Label3D.new()
 	_prompt.position = Vector3(0, 2.9, 0)

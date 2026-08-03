@@ -9,21 +9,16 @@ extends Node3D
 var _player_near := false
 var _prompt: Label3D
 
+const _VeilTear = preload("res://scripts/world/veil_tear.gd")
+
 func _ready() -> void:
-	var mesh := MeshInstance3D.new()
-	var torus := TorusMesh.new()
-	torus.inner_radius = 0.5
-	torus.outer_radius = 0.62
-	mesh.mesh = torus
-	mesh.position.y = 0.9
-	mesh.rotation_degrees.x = 90.0
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.3, 0.8, 0.6)
-	mat.emission_enabled = true
-	mat.emission = Color(0.35, 0.95, 0.7)
-	mat.emission_energy_multiplier = 1.6
-	mesh.material_override = mat
-	add_child(mesh)
+	# A stable tear: same motif as every other tear, calm variant.
+	var tear := _VeilTear.new()
+	tear.color = Color(0.35, 0.95, 0.7)
+	tear.ring_radius = 0.6
+	tear.intensity = 0.4
+	tear.position.y = 0.9
+	add_child(tear)
 
 	_prompt = Label3D.new()
 	_prompt.position = Vector3(0, 2.2, 0)

@@ -219,6 +219,14 @@ write_wav("sfx_death.wav", sfx_death())
 write_wav("sfx_telegraph.wav", sfx_telegraph())
 write_wav("sfx_portal.wav", sfx_portal())
 
+# Short seamless hum for VeilTear's AudioStreamPlayer3D (B3 shared language).
+def veil_hum():
+    n = int(4.0 * SR)
+    return mix(drone(n, [72, 72.5, 144.5], 0.5, 0.5, 0.35),
+               drone(n, [288.5], 0.06, 1.0, 0.5))
+
+write_wav("veil_hum.wav", seamless(veil_hum()))
+
 write_wav("ambient_meadow.wav", seamless(amb_meadow()))
 write_wav("ambient_fields.wav", seamless(amb_fields()))
 write_wav("ambient_reach.wav", seamless(amb_reach()))
