@@ -188,6 +188,8 @@ var _defeated := false
 func _process(_delta: float) -> void:
 	_cam_pivot.global_position = _player.global_position + _cam_focus
 	_check_player_targeting()
+	if GameState.sarro != null and GameState.sarro.shield_bash_cd > 0.0:
+		GameState.sarro.shield_bash_cd = maxf(0.0, GameState.sarro.shield_bash_cd - _delta)
 	if not _defeated and GameState.sarro != null and GameState.sarro.stats.current_hp <= 0:
 		_on_party_defeated()
 
@@ -293,6 +295,8 @@ func _input(event: InputEvent) -> void:
 		_use_healing_word()
 	elif event.is_action_pressed("ability_4"):
 		_use_channel_divinity()
+	elif event.is_action_pressed("ability_5"):
+		_use_shield_bash()
 
 # ── Sarro Abilities ───────────────────────────────────────────────────────────
 
@@ -308,6 +312,34 @@ func _use_second_wind() -> void:
 	c.stats.current_hp = mini(c.stats.max_hp, c.stats.current_hp + heal)
 	_DamageNumber.spawn(self, _player.global_position, "+%d" % heal, Color(0.4, 1.0, 0.5))
 	print("[Combat] Second Wind: +%d HP" % heal)
+
+## [5] Shield Bash — Sarro's interrupt (unlocked at level 3). Slam the current
+## target: cancels a channeled cast (long punish stun) or briefly staggers a
+## non-casting enemy. 8 s cooldown, melee range.
+const _SHIELD_BASH_CD := 8.0
+const _SHIELD_BASH_RANGE := 2.5
+
+func _use_shield_bash() -> void:
+	var c = GameState.sarro
+	if c == null or c.shield_bash_cd > 0.0 or _defeated or c.stats.level < 3:
+		return
+	var tgt = _player.target_enemy
+	if tgt == null or not tgt.has_method("interrupt_cast"):
+		return
+	if _player.global_position.distance_to(tgt.global_position) > _SHIELD_BASH_RANGE:
+		return
+	c.shield_bash_cd = _SHIELD_BASH_CD
+	_MeleeAttacker.lunge(_player, tgt.global_position)
+	AudioManager.play_sfx("hit", 1.0)
+	if tgt.is_casting():
+		tgt.interrupt_cast(2.5)
+		_DamageNumber.spawn(self, tgt.global_position + Vector3(0, 2.0, 0),
+			"INTERRUPTED!", Color(1.0, 0.55, 0.15))
+		print("[Combat] Shield Bash interrupts %s" % tgt.name)
+	else:
+		tgt.stun(1.0)
+		_DamageNumber.spawn(self, tgt.global_position + Vector3(0, 2.0, 0),
+			"Bash", Color(0.9, 0.8, 0.5))
 
 # ── Liris Abilities ───────────────────────────────────────────────────────────
 

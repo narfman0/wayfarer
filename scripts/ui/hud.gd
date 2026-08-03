@@ -54,15 +54,24 @@ func _show_toast(text: String) -> void:
 func show_boss_phase(phase: int) -> void:
 	_show_toast("⚠ Boss Phase %d!" % phase)
 
+## Public toast for level scripts (boss mechanics callouts etc.).
+func show_toast_text(text: String) -> void:
+	_show_toast(text)
+
 func _process(_delta: float) -> void:
 	_refresh_party()
 	_refresh_hotbar()
 
 func _refresh_hotbar() -> void:
 	if GameState.sarro != null and _sarro_label != null:
-		var sw := "Ready" if not GameState.sarro.second_wind_used else "Spent"
-		_sarro_label.text = "Sarro — [1] Second Wind: %s" % sw
-		_sarro_label.modulate = Color(0.6, 1.0, 0.7) if not GameState.sarro.second_wind_used else Color(0.55, 0.55, 0.6)
+		var sc = GameState.sarro
+		var sw := "Ready" if not sc.second_wind_used else "Spent"
+		var line := "Sarro — [1] Second Wind: %s" % sw
+		if sc.stats.level >= 3:
+			var sb := "Ready" if sc.shield_bash_cd <= 0.0 else "%ds" % ceili(sc.shield_bash_cd)
+			line += "  [5] Shield Bash: %s" % sb
+		_sarro_label.text = line
+		_sarro_label.modulate = Color(0.6, 1.0, 0.7) if not sc.second_wind_used or sc.shield_bash_cd <= 0.0 else Color(0.55, 0.55, 0.6)
 
 	if GameState.liris != null and _liris_label != null:
 		var lc = GameState.liris

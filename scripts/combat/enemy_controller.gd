@@ -83,12 +83,22 @@ var _dead: bool = false
 var _phase: int = 0          # 0 = fresh, 1 = 60% threshold, 2 = 30% threshold
 var _invuln_timer: float = 0.0
 
+# Casting/channeling (A4 interrupt hook): while a cast runs the enemy stands
+# still showing a bar; Shield Bash cancels it inside the window.
+var _cast_label: String = ""
+var _cast_left: float = 0.0
+var _cast_total: float = 0.0
+var _cast_bar: Label3D = null
+var _stun_left: float = 0.0
+
 ## Emitted when this enemy takes damage (hp_current, hp_max).
 signal hp_changed(current: int, max_hp: int)
 ## Emitted when dead.
 signal died
 ## Emitted when boss enters a new phase (1 = 60%, 2 = 30%).
 signal phase_changed(phase: int)
+signal cast_finished(label: String)
+signal cast_interrupted(label: String)
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -140,7 +150,18 @@ func _physics_process(delta: float) -> void:
 	if _invuln_timer > 0.0:
 		_invuln_timer -= delta
 
-	if _slam_winding:
+	if _stun_left > 0.0:
+		_stun_left -= delta
+		velocity.x = 0.0
+		velocity.z = 0.0
+		move_and_slide()
+		return
+
+	if _cast_left > 0.0:
+		_tick_cast(delta)
+		velocity.x = 0.0
+		velocity.z = 0.0
+	elif _slam_winding:
 		velocity.x = 0.0
 		velocity.z = 0.0
 	else:
@@ -339,6 +360,61 @@ func _on_slam_fired(t) -> void:
 		print("[Combat] %s's slam catches %s for %d" %
 			[character.display_name, target_char.display_name, dmg])
 
+# ── Casting / channeling (A4) ─────────────────────────────────────────────────
+
+## Begin a visible cast. The enemy roots in place showing a text bar; after
+## `secs`, `cast_finished` fires — unless Shield Bash lands first, in which
+## case `cast_interrupted` fires and the enemy eats a stun (the punish
+## window). One cast at a time.
+func start_cast(label: String, secs: float) -> void:
+	if _dead or _cast_left > 0.0:
+		return
+	_cast_label = label
+	_cast_total = maxf(0.1, secs)
+	_cast_left = _cast_total
+	_cast_bar = Label3D.new()
+	_cast_bar.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_cast_bar.position = Vector3(0, 2.6, 0)
+	_cast_bar.font_size = 40
+	_cast_bar.pixel_size = 0.004
+	_cast_bar.modulate = Color(1.0, 0.75, 0.3)
+	add_child(_cast_bar)
+	AudioManager.play_sfx("telegraph", -4.0)
+
+func is_casting() -> bool:
+	return _cast_left > 0.0
+
+## Cancel the current cast (Shield Bash). Applies the punish-window stun.
+func interrupt_cast(stun_secs: float = 2.5) -> void:
+	if _cast_left <= 0.0:
+		return
+	var label := _cast_label
+	_end_cast()
+	_stun_left = stun_secs
+	cast_interrupted.emit(label)
+
+func stun(secs: float) -> void:
+	_stun_left = maxf(_stun_left, secs)
+
+func _tick_cast(delta: float) -> void:
+	_cast_left -= delta
+	var frac := 1.0 - _cast_left / _cast_total
+	if _cast_bar != null:
+		var filled := int(round(frac * 10.0))
+		_cast_bar.text = "%s\n%s%s" % [_cast_label,
+			"▰".repeat(filled), "▱".repeat(10 - filled)]
+	if _cast_left <= 0.0:
+		var label := _cast_label
+		_end_cast()
+		cast_finished.emit(label)
+
+func _end_cast() -> void:
+	_cast_left = 0.0
+	_cast_label = ""
+	if _cast_bar != null:
+		_cast_bar.queue_free()
+		_cast_bar = null
+
 # ── Damage intake / death ─────────────────────────────────────────────────────
 
 func receive_damage(amount: int, from: Vector3 = Vector3.INF) -> void:
@@ -364,6 +440,7 @@ func receive_damage(amount: int, from: Vector3 = Vector3.INF) -> void:
 func _die() -> void:
 	_dead = true
 	_slam_winding = false
+	_end_cast()
 	remove_from_group("enemies")
 	collision_layer = 0
 	collision_mask = 0
