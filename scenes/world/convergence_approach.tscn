@@ -1,0 +1,274 @@
+[gd_scene load_steps=18 format=3 uid="uid://convergence_approach"]
+
+[ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
+[ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
+[ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
+[ext_resource type="Script" path="res://scripts/world/rest_point.gd" id="7_rest"]
+[ext_resource type="Script" path="res://scripts/world/story_event.gd" id="8_event"]
+[ext_resource type="Script" path="res://scripts/world/scar_tissue.gd" id="9_scar"]
+[ext_resource type="Environment" path="res://resources/env_convergence.tres" id="env_shared"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Rouge_01.gltf" id="c_sarro"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_01.gltf" id="c_liris"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Wizard.gltf" id="c_zealot"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Tent_Round_01.gltf" id="p_tent1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Banner_01.gltf" id="p_banner"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Item_Crystal_01.gltf" id="p_crystal1"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_char"]
+height = 1.8
+radius = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(44, 0.2, 44)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.27, 0.2, 0.33, 1)
+
+[node name="ConvergenceApproach" type="Node3D"]
+script = ExtResource("1_level")
+plane_id = "convergence_approach"
+debug_party_level = 15
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = ExtResource("env_shared")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 10, 0)
+light_energy = 0.55
+shadow_enabled = true
+
+[node name="Level" type="Node3D" parent="."]
+
+[node name="Ground" type="StaticBody3D" parent="Level"]
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Level/Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+mesh = SubResource("BoxMesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="Level/Ground"]
+shape = SubResource("WorldBoundaryShape3D_1")
+
+[node name="Props" type="Node3D" parent="Level"]
+
+[node name="MenderTent1" parent="Level/Props" instance=ExtResource("p_tent1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -4)
+
+[node name="MenderTent2" parent="Level/Props" instance=ExtResource("p_tent1")]
+transform = Transform3D(0.707, 0, -0.707, 0, 1, 0, 0.707, 0, 0.707, 7, 0, -8)
+
+[node name="MenderBanner1" parent="Level/Props" instance=ExtResource("p_banner")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -2)
+
+[node name="MenderBanner2" parent="Level/Props" instance=ExtResource("p_banner")]
+transform = Transform3D(0.866, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866, 4, 0, -13)
+
+[node name="Crystal1" parent="Level/Props" instance=ExtResource("p_crystal1")]
+transform = Transform3D(1.6, 0, 0, 0, 1.6, 0, 0, 0, 1.6, -11, 0, -11)
+
+[node name="Crystal2" parent="Level/Props" instance=ExtResource("p_crystal1")]
+transform = Transform3D(1.2, 0, 0.4, 0, 1.26, 0, -0.4, 0, 1.2, 12, 0, -3)
+
+[node name="ApproachScar1" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -7)
+script = ExtResource("9_scar")
+patch_radius = 3.0
+shard_count = 11
+
+[node name="ApproachScar2" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 0, 3)
+script = ExtResource("9_scar")
+
+[node name="ThroughTheMenders" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -14)
+script = ExtResource("8_event")
+display_name = "Through the Menders"
+flag_name = "menders_passed"
+xp_amount = 10000
+resolve_text = "Junior Menders, talked aside. Serane's face disorients
+the old colleagues more than any blade would."
+
+[node name="SouthPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -19, 0, 14)
+script = ExtResource("6_portal")
+display_name = "Back to Ashan"
+spawn_id = "approach_south"
+target_plane = "ashan"
+target_spawn_id = "ashan_north"
+
+[node name="NorthPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 19, 0, -14)
+script = ExtResource("6_portal")
+display_name = "To Cael's Apparatus"
+spawn_id = "approach_north"
+target_plane = "convergence"
+target_spawn_id = "convergence_south"
+required_flag = "menders_passed"
+blocked_hint = "The Mender line holds. Words first, or nothing."
+
+[node name="RestPoint" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, 16)
+script = ExtResource("7_rest")
+display_name = "Fraying Tear"
+
+[node name="Characters" type="Node3D" parent="."]
+
+[node name="Sarro" type="CharacterBody3D" parent="Characters" groups=["players"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 0.9, 14)
+script = ExtResource("2_player")
+collision_layer = 1
+collision_mask = 7
+
+[node name="SarroCollision" type="CollisionShape3D" parent="Characters/Sarro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Sarro" instance=ExtResource("c_sarro")]
+
+[node name="Liris" type="CharacterBody3D" parent="Characters" groups=["companions"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 0.9, 15.5)
+script = ExtResource("3_companion")
+collision_layer = 4
+collision_mask = 3
+
+[node name="LirisCollision" type="CollisionShape3D" parent="Characters/Liris"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Liris" instance=ExtResource("c_liris")]
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Zealot1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.9, -2)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "mender_zealot"
+xp_value = 8000
+aggro_radius = 7.0
+pack_id = "first_line"
+
+[node name="Zealot1Collision" type="CollisionShape3D" parent="Enemies/Zealot1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Zealot1" instance=ExtResource("c_zealot")]
+
+[node name="Zealot2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.9, 1)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "mender_zealot"
+xp_value = 8000
+aggro_radius = 7.0
+pack_id = "first_line"
+
+[node name="Zealot2Collision" type="CollisionShape3D" parent="Enemies/Zealot2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Zealot2" instance=ExtResource("c_zealot")]
+
+[node name="Chorister1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.9, -6)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "mender_zealot"
+archetype = "support"
+xp_value = 9000
+aggro_radius = 8.0
+pack_id = "first_line"
+
+[node name="Chorister1Collision" type="CollisionShape3D" parent="Enemies/Chorister1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Chorister1" instance=ExtResource("c_zealot")]
+
+[node name="Zealot3" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.9, -10)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "mender_zealot"
+xp_value = 8000
+aggro_radius = 7.0
+pack_id = "second_line"
+
+[node name="Zealot3Collision" type="CollisionShape3D" parent="Enemies/Zealot3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Zealot3" instance=ExtResource("c_zealot")]
+
+[node name="Zealot4" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.9, -7)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "mender_zealot"
+xp_value = 8000
+aggro_radius = 7.0
+pack_id = "second_line"
+
+[node name="Zealot4Collision" type="CollisionShape3D" parent="Enemies/Zealot4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Zealot4" instance=ExtResource("c_zealot")]
+
+[node name="Chorister2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.9, -13)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "mender_zealot"
+archetype = "support"
+xp_value = 9000
+aggro_radius = 8.0
+pack_id = "second_line"
+
+[node name="Chorister2Collision" type="CollisionShape3D" parent="Enemies/Chorister2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Chorister2" instance=ExtResource("c_zealot")]
+
+[node name="Fragment1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -16)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "veil_fragment"
+xp_value = 6000
+aggro_radius = 8.0
+
+[node name="Fragment1Collision" type="CollisionShape3D" parent="Enemies/Fragment1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Fragment1" instance=ExtResource("c_zealot")]
+
+[node name="Fragment2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.9, -14)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "veil_fragment"
+xp_value = 6000
+aggro_radius = 8.0
+
+[node name="Fragment2Collision" type="CollisionShape3D" parent="Enemies/Fragment2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Fragment2" instance=ExtResource("c_zealot")]
+
+[node name="CameraPivot" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.651, 0.759, 0, -0.759, 0.651, 0, 14, 12)
+current = true
+
+[node name="HUD" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0

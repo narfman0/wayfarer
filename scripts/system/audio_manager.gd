@@ -21,6 +21,7 @@ const _AMBIENTS := {
 	"verath_seawall": "ambient_verath",
 	"between": "ambient_between",
 	"ashan": "ambient_ashan",
+	"convergence_approach": "ambient_convergence",
 	"convergence": "ambient_convergence",
 }
 

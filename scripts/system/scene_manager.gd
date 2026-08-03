@@ -15,6 +15,7 @@ const LEVELS := {
 	"verath_seawall": "res://scenes/world/verath_seawall.tscn",
 	"between": "res://scenes/world/between.tscn",
 	"ashan": "res://scenes/world/ashan.tscn",
+	"convergence_approach": "res://scenes/world/convergence_approach.tscn",
 	"convergence": "res://scenes/world/convergence.tscn",
 }
 

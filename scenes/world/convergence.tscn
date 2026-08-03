@@ -105,15 +105,6 @@ transform = Transform3D(4.0, 0, 0, 0, 0, -4.0, 0, 4.0, 0, 0, 4.5, -21)
 mesh = SubResource("TearMesh")
 surface_material_override/0 = SubResource("Mat_tear")
 
-[node name="ThroughTheMenders" type="Node3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
-script = ExtResource("8_event")
-display_name = "Through the Menders"
-flag_name = "menders_passed"
-xp_amount = 10000
-resolve_text = "Junior Menders, talked aside. Serane's face disorients
-the old colleagues more than any blade would."
-
 [node name="TheConversation" type="Node3D" parent="Level"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -12)
 script = ExtResource("8_event")
@@ -126,10 +117,10 @@ resolve_text = "Kaveth. The Between. Ashan — through six years ago, alive.
 [node name="SouthPortal" type="Node3D" parent="Level"]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -21, 0, 16)
 script = ExtResource("6_portal")
-display_name = "Back to Ashan"
+display_name = "Back down the Approach"
 spawn_id = "convergence_south"
-target_plane = "ashan"
-target_spawn_id = "ashan_north"
+target_plane = "convergence_approach"
+target_spawn_id = "approach_north"
 
 [node name="RestPoint" type="Node3D" parent="Level"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 0, 18)
@@ -164,104 +155,6 @@ shape = SubResource("CapsuleShape3D_char")
 
 [node name="Enemies" type="Node3D" parent="."]
 
-[node name="Zealot1" type="CharacterBody3D" parent="Enemies"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.9, 8)
-script = ExtResource("4_enemy")
-collision_layer = 2
-enemy_type = "mender_zealot"
-xp_value = 10000
-aggro_radius = 7.0
-
-[node name="Zealot1Collision" type="CollisionShape3D" parent="Enemies/Zealot1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-shape = SubResource("CapsuleShape3D_char")
-
-[node name="Skin" parent="Enemies/Zealot1" instance=ExtResource("c_zealot")]
-
-[node name="Zealot2" type="CharacterBody3D" parent="Enemies"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.9, 5)
-script = ExtResource("4_enemy")
-collision_layer = 2
-enemy_type = "mender_zealot"
-xp_value = 10000
-aggro_radius = 7.0
-
-[node name="Zealot2Collision" type="CollisionShape3D" parent="Enemies/Zealot2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-shape = SubResource("CapsuleShape3D_char")
-
-[node name="Skin" parent="Enemies/Zealot2" instance=ExtResource("c_zealot")]
-
-[node name="Zealot3" type="CharacterBody3D" parent="Enemies"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.9, 8)
-script = ExtResource("4_enemy")
-collision_layer = 2
-enemy_type = "mender_zealot"
-xp_value = 10000
-aggro_radius = 7.0
-
-[node name="Zealot3Collision" type="CollisionShape3D" parent="Enemies/Zealot3"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-shape = SubResource("CapsuleShape3D_char")
-
-[node name="Skin" parent="Enemies/Zealot3" instance=ExtResource("c_zealot")]
-
-[node name="Zealot4" type="CharacterBody3D" parent="Enemies"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.9, 4)
-script = ExtResource("4_enemy")
-collision_layer = 2
-enemy_type = "mender_zealot"
-xp_value = 10000
-aggro_radius = 7.0
-
-[node name="Zealot4Collision" type="CollisionShape3D" parent="Enemies/Zealot4"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-shape = SubResource("CapsuleShape3D_char")
-
-[node name="Skin" parent="Enemies/Zealot4" instance=ExtResource("c_zealot")]
-
-[node name="Zealot5" type="CharacterBody3D" parent="Enemies"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.9, 6)
-script = ExtResource("4_enemy")
-collision_layer = 2
-enemy_type = "mender_zealot"
-xp_value = 10000
-aggro_radius = 7.0
-
-[node name="Zealot5Collision" type="CollisionShape3D" parent="Enemies/Zealot5"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-shape = SubResource("CapsuleShape3D_char")
-
-[node name="Skin" parent="Enemies/Zealot5" instance=ExtResource("c_zealot")]
-
-[node name="Zealot6" type="CharacterBody3D" parent="Enemies"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.9, -8)
-script = ExtResource("4_enemy")
-collision_layer = 2
-enemy_type = "mender_zealot"
-xp_value = 10000
-aggro_radius = 7.0
-
-[node name="Zealot6Collision" type="CollisionShape3D" parent="Enemies/Zealot6"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-shape = SubResource("CapsuleShape3D_char")
-
-[node name="Skin" parent="Enemies/Zealot6" instance=ExtResource("c_zealot")]
-
-[node name="Zealot7" type="CharacterBody3D" parent="Enemies"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.9, -10)
-script = ExtResource("4_enemy")
-collision_layer = 2
-enemy_type = "mender_zealot"
-xp_value = 10000
-aggro_radius = 7.0
-
-[node name="Zealot7Collision" type="CollisionShape3D" parent="Enemies/Zealot7"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-shape = SubResource("CapsuleShape3D_char")
-
-[node name="Skin" parent="Enemies/Zealot7" instance=ExtResource("c_zealot")]
-
 [node name="Zealot8" type="CharacterBody3D" parent="Enemies"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -6)
 script = ExtResource("4_enemy")
@@ -283,6 +176,7 @@ collision_layer = 2
 enemy_type = "cael"
 xp_value = 65000
 aggro_radius = 9.0
+is_boss = true
 
 [node name="CaelCollision" type="CollisionShape3D" parent="Enemies/Cael"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)

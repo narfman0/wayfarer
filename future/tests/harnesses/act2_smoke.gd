@@ -65,9 +65,9 @@ func _test_rig_scene() -> void:
 	g2.global_position = g2._spawn_pos + Vector3(25, 0, 0)
 	player.global_position = g2.global_position + Vector3(2, 0, 0)
 	liris.global_position = player.global_position + Vector3(1, 0, 1)
-	await get_tree().process_frame
-	await get_tree().process_frame
-	_check(g2._state == EnemyController.State.RETURN, "over-leash chaser turns home")
+	var returned := await _wait_until(func():
+		return g2._state == EnemyController.State.RETURN, 2.0)
+	_check(returned, "over-leash chaser turns home")
 	g2.global_position = g2._spawn_pos + Vector3(1.5, 0, 0)
 	var healed := await _wait_until(func():
 		return g2.character.stats.current_hp == g2.character.stats.max_hp, 4.0)

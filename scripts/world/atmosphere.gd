@@ -74,6 +74,7 @@ const _ALIASES := {
 	"reach_rig": "reach",
 	"kaveth_vault": "kaveth",
 	"verath_seawall": "verath",
+	"convergence_approach": "convergence",
 }
 
 static func apply(level: Node3D, plane_id: String, sun: DirectionalLight3D,

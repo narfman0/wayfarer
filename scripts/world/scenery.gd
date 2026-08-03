@@ -301,6 +301,7 @@ const _RECIPE_ALIASES := {
 	"reach_rig": "reach",
 	"kaveth_vault": "kaveth",
 	"verath_seawall": "verath",
+	"convergence_approach": "convergence",
 }
 
 static func generate(level: Node3D, ground_mi: MeshInstance3D, avoid: PackedVector3Array,

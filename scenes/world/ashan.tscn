@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://ashan"]
+[gd_scene load_steps=25 format=3 uid="uid://ashan"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
@@ -7,6 +7,9 @@
 [ext_resource type="Script" path="res://scripts/world/rest_point.gd" id="7_rest"]
 [ext_resource type="Script" path="res://scripts/world/story_event.gd" id="8_event"]
 [ext_resource type="Environment" path="res://resources/env_ashan.tres" id="env_shared"]
+[ext_resource type="Script" path="res://scripts/world/npc.gd" id="9_npc"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Peasant_01.gltf" id="c_npc_m"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_02.gltf" id="c_npc_f"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Rouge_01.gltf" id="c_sarro"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_01.gltf" id="c_liris"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_NatureBiomes_MeadowForest_SourceFiles_v2/Meadow_Source_Files/FBX/SM_Bld_Stone_Cabin_01.gltf" id="p_cabin"]
@@ -116,10 +119,67 @@ transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 19, 0, -14)
 script = ExtResource("6_portal")
 display_name = "To the Convergence"
 spawn_id = "ashan_north"
-target_plane = "convergence"
-target_spawn_id = "convergence_south"
+target_plane = "convergence_approach"
+target_spawn_id = "approach_south"
 required_flag = "ashan_done"
 blocked_hint = "Not before goodbye."
+
+[node name="Strolls" type="Node3D" parent="Level"]
+
+[node name="SA1" type="Node3D" parent="Level/Strolls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 2)
+
+[node name="SA2" type="Node3D" parent="Level/Strolls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 7)
+
+[node name="SB1" type="Node3D" parent="Level/Strolls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -2)
+
+[node name="SB2" type="Node3D" parent="Level/Strolls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 6)
+
+[node name="SC1" type="Node3D" parent="Level/Strolls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -6)
+
+[node name="SC2" type="Node3D" parent="Level/Strolls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -10)
+
+[node name="Amma" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 2)
+script = ExtResource("9_npc")
+npc_display_name = "Amma"
+feminine = true
+bark_lines = Array[String](["Fruit is heaviest the week before you leave. It always knows.", "Sit if you like. The light does the talking here.", "Nobody hurries in Ashan. It never once helped."])
+wander_points = Array[NodePath]([NodePath("../Strolls/SA1"), NodePath("../Strolls/SA2")])
+
+[node name="Skin" parent="Level/Amma" instance=ExtResource("c_npc_f")]
+
+[node name="Toma" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -2)
+script = ExtResource("9_npc")
+npc_display_name = "Toma"
+bark_lines = Array[String](["Your sister mended that fence, third post from the gate.", "The tear here never took a thing from us. Some don't.", "Stay for the evening bell. Everyone does, once."])
+wander_points = Array[NodePath]([NodePath("../Strolls/SB1"), NodePath("../Strolls/SB2")])
+
+[node name="Skin" parent="Level/Toma" instance=ExtResource("c_npc_m")]
+
+[node name="Old_Vess" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -6)
+script = ExtResource("9_npc")
+npc_display_name = "Old Vess"
+bark_lines = Array[String](["I crossed nine planes to stop crossing planes. Best trade I made.", "The Veil hums low here. Like a kept hive.", "You have the look of a man mid-errand. Ashan is where errands end."])
+wander_points = Array[NodePath]([NodePath("../Strolls/SC1"), NodePath("../Strolls/SC2")])
+
+[node name="Skin" parent="Level/Old_Vess" instance=ExtResource("c_npc_m")]
+
+[node name="Mirei" type="Node3D" parent="Level"]
+transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, 6, 0, 3)
+script = ExtResource("9_npc")
+npc_display_name = "Mirei"
+feminine = true
+bark_lines = Array[String](["She talked about you. The brother with the maps in his head.", "Harvest first. Grief after. That is the order that works.", "The kettle is always on at the third house. That is a rule."])
+
+[node name="Skin" parent="Level/Mirei" instance=ExtResource("c_npc_f")]
 
 [node name="RestPoint" type="Node3D" parent="Level"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, 14)

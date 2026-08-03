@@ -1,0 +1,24 @@
+~ final
+
+Sarro: The apparatus is dark and the Veil is... loud. In the good way. Like water moving again.
+Sarro: There's a tear here that goes anywhere, Liris. Last of its kind for a while, I'd guess. So — I'm asking.
+Liris: Asking what, wayfarer?
+Sarro: Where we go. Together, or I chase what's left of my sister's trail alone, or we just... don't. Stay put somewhere with fences and a well and let the Veil forget our names.
+- Go together
+	Liris: You'd have wandered off a cliff three planes ago without me.
+	Sarro: Two planes ago. The cliff in Verath doesn't count, I saw it.
+	Liris: (she shoulders her bag) Together. Pick a direction, and I'll tell you why it's wrong on the way.
+	do GameState.set_flag("final_portal", "together")
+- Go alone — some debts are his
+	Sarro: Her trail's mine to finish. You have a village that needs a warden who's seen what you've seen.
+	Liris: Then walk it well. And Sarro — when it ends, whatever it is you find or don't...
+	Sarro: I know where the well is.
+	Liris: (she watches the tear close behind him, and stands a while in the quiet)
+	do GameState.set_flag("final_portal", "alone")
+- Don't go — stay
+	Sarro: ...Or we let it close. All of it. There's a plane back there with a harvest coming in and nobody hunting anybody.
+	Liris: You'd go mad by spring planting.
+	Sarro: Probably. I'd like to find out, though. I've never once stayed to find out.
+	Liris: (quietly) Then stay, wayfarer. That's the bravest crossing you've made yet.
+	do GameState.set_flag("final_portal", "stay")
+=> END
