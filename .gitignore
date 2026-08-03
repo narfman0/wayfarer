@@ -3,3 +3,5 @@
 
 # Fetched from the asset server (srv) — see fetch_assets.sh
 assets/meshes/
+# Gallery screenshots from future/tests/harnesses/plane_gallery.tscn
+.screenshots/

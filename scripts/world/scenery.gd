@@ -51,22 +51,22 @@ const PACKS := {
 	},
 	"egypt": {
 		"dir": "res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/",
-		"ext": ".glb",
+		"ext": ".gltf",
 		"unit": 1.0,
 	},
 	"scifi": {
 		"dir": "res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/",
-		"ext": ".glb",
+		"ext": ".gltf",
 		"unit": 1.0,
 	},
 	"western": {
 		"dir": "res://assets/meshes/POLYGON_Western_Pack_Source_Files_v4/SourceFiles/FBX/",
-		"ext": ".glb",
+		"ext": ".gltf",
 		"unit": 1.0,
 	},
 	"proto": {
 		"dir": "res://assets/meshes/POLYGON_Prototype_SourceFiles_v4/SourceFiles/FBX/",
-		"ext": ".glb",
+		"ext": ".gltf",
 		"unit": 1.0,
 	},
 }
@@ -166,9 +166,12 @@ const _EGYPT_VESSELS := [
 	"egypt:Props/SM_Prop_Vase_01", "egypt:Props/SM_Prop_Vase_02", "egypt:Props/SM_Prop_Vase_03",
 	"egypt:Props/SM_Prop_Plinth_01", "egypt:Props/SM_Prop_Plinth_02",
 ]
+# Slim monumental silhouettes only — the pyramid blocks are ~2:1 wide and at
+# ring distance their footprint reaches the camera.
 const _EGYPT_BACKDROP := [
 	"egypt:Environment/SM_Env_Rock_Wall_01", "egypt:Environment/SM_Env_Rock_Wall_02",
-	"egypt:Buildings/SM_Bld_Pyramid_Block_Full_01", "egypt:Buildings/SM_Bld_Pyramid_Block_Top_01",
+	"egypt:Buildings/SM_Bld_Pillar_Ornate_Large_01", "egypt:Buildings/SM_Bld_Pillar_Ornate_Large_02",
+	"egypt:Buildings/SM_Bld_Archway_Ornate_01",
 ]
 
 const _WESTERN_CLIFFS := [
@@ -318,9 +321,14 @@ static func generate(level: Node3D, ground_mi: MeshInstance3D, avoid: PackedVect
 
 # ── Layers ────────────────────────────────────────────────────────────────────
 
-# Backdrop meshes vary wildly in raw size (hills ~9m, cliffs ~40m at unit
-# scale), so scale each to a target world height instead of a fixed multiplier,
-# giving a consistent horizon ring.
+# Widest a backdrop piece may get. Height-only normalization explodes
+# wide-flat meshes (Background_Hill is 17 m wide but 1.9 m tall — scaling it
+# to a 17 m TALL target makes a 150 m monster that swallows the arena, camera
+# included), so the footprint caps the scale.
+const _BACKDROP_MAX_W := 32.0
+
+# Backdrop meshes vary wildly in raw size and proportion, so scale each toward
+# a target world height — clamped by footprint — for a consistent horizon ring.
 static func _backdrop(parent: Node3D, rng: RandomNumberGenerator, radius: float,
 		spec: Dictionary) -> void:
 	var names: Array = spec["names"]
@@ -332,28 +340,33 @@ static func _backdrop(parent: Node3D, rng: RandomNumberGenerator, radius: float,
 		var inst: Node3D = ps.instantiate()
 		parent.add_child(inst)
 		var ang := TAU * i / count + rng.randf_range(-0.12, 0.12)
-		var r := radius + rng.randf_range(3.0, 11.0)
+		var r := radius + rng.randf_range(6.0, 14.0)
 		inst.position = Vector3(cos(ang) * r, rng.randf_range(-1.5, 0.0), sin(ang) * r)
 		inst.rotation.y = rng.randf_range(0.0, TAU)
 		var target_h := rng.randf_range(spec["h_min"], spec["h_max"])
-		var s := target_h / _world_height(inst)
+		var ab := _world_aabb(inst)
+		var s := minf(target_h / maxf(0.01, ab.size.y),
+			_BACKDROP_MAX_W / maxf(0.01, maxf(ab.size.x, ab.size.z)))
 		inst.scale = Vector3(s, s, s)
 
-## World-space height of an instance's first mesh at unit root scale. The mesh
+## World-space AABB of an instance's first mesh at unit root scale. The mesh
 ## AABB is transformed through every node below the root — the .glb cook bakes
 ## its unit/axis correction (0.01 scale, 90° X) on a child node, so the raw
 ## AABB alone is centimetre Z-up garbage for those packs.
-static func _world_height(inst: Node3D) -> float:
+static func _world_aabb(inst: Node3D) -> AABB:
 	var mis: Array = inst.find_children("*", "MeshInstance3D", true, false)
 	if mis.is_empty() or (mis[0] as MeshInstance3D).mesh == null:
-		return 100.0
+		return AABB(Vector3.ZERO, Vector3(100.0, 100.0, 100.0))
 	var mi := mis[0] as MeshInstance3D
 	var xf := mi.transform
 	var n: Node = mi.get_parent()
 	while n != null and n != inst and n is Node3D:
 		xf = (n as Node3D).transform * xf
 		n = n.get_parent()
-	return maxf(0.01, (xf * mi.mesh.get_aabb()).size.y)
+	return xf * mi.mesh.get_aabb()
+
+static func _world_height(inst: Node3D) -> float:
+	return maxf(0.01, _world_aabb(inst).size.y)
 
 static func _scatter(parent: Node3D, rng: RandomNumberGenerator, hx: float, hz: float,
 		avoid: PackedVector3Array, clear_centers: PackedVector3Array,
