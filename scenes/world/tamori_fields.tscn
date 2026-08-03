@@ -1,6 +1,8 @@
-[gd_scene load_steps=21 format=3 uid="uid://tamori_fields"]
+[gd_scene load_steps=23 format=3 uid="uid://tamori_fields"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/world/story_event.gd" id="8_story"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Wall_Tower_S_01.gltf" id="e_tower"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
 [ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
@@ -109,6 +111,27 @@ transform = Transform3D(0.49, 0, 0.49, 0, 0.7, 0, -0.49, 0, 0.49, 15, 0, 15)
 [node name="GroundLogs" parent="Level/Props" instance=ExtResource("e_log")]
 transform = Transform3D(0.939, 0, 0.343, 0, 1, 0, -0.343, 0, 0.939, -9, 0, 3)
 
+[node name="RuinedWatchPost" parent="Level/Props" instance=ExtResource("e_tower")]
+transform = Transform3D(0.94, 0, 0.342, 0, 1, 0, -0.342, 0, 0.94, 14, 0, -9)
+
+[node name="Waypoints" type="Node3D" parent="Level"]
+
+[node name="WP1" type="Node3D" parent="Level/Waypoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -9)
+
+[node name="WP2" type="Node3D" parent="Level/Waypoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -4)
+
+[node name="BlackenedPaddy" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -3)
+script = ExtResource("8_story")
+display_name = "The Blackened Paddy"
+flag_name = "paddy_examined"
+xp_amount = 100
+resolve_text = "The water is still. Black threads run through it like veins,
+all pointing the same way — east, toward the anchor.
+Whatever is wrong with the tear, this is where it is bleeding in."
+
 [node name="WestPortal" type="Node3D" parent="Level"]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -18, 0, 0)
 script = ExtResource("6_portal")
@@ -188,6 +211,7 @@ script = ExtResource("4_enemy")
 collision_layer = 2
 enemy_type = "bandit"
 xp_value = 100
+patrol_points = Array[NodePath]([NodePath("../../Level/Waypoints/WP1"), NodePath("../../Level/Waypoints/WP2")])
 
 [node name="FieldBandit3Collision" type="CollisionShape3D" parent="Enemies/FieldBandit3"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
@@ -227,6 +251,7 @@ script = ExtResource("4_enemy")
 collision_layer = 2
 enemy_type = "brute"
 xp_value = 250
+loot_preset = "scale_mail"
 
 [node name="FieldBrute2Collision" type="CollisionShape3D" parent="Enemies/FieldBrute2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)

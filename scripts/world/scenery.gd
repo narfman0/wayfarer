@@ -315,7 +315,7 @@ static func generate(level: Node3D, ground_mi: MeshInstance3D, avoid: PackedVect
 	if recipe.has("ground_color") and ground_mi != null:
 		_tint_ground(ground_mi, recipe["ground_color"])
 	if recipe.has("backdrop"):
-		_backdrop(scenery, rng, maxf(hx, hz), recipe["backdrop"])
+		_backdrop(scenery, rng, maxf(hx, hz), recipe["backdrop"], clear_centers)
 	for layer in recipe.get("layers", []):
 		_scatter(scenery, rng, hx, hz, avoid, clear_centers, layer)
 
@@ -330,7 +330,7 @@ const _BACKDROP_MAX_W := 32.0
 # Backdrop meshes vary wildly in raw size and proportion, so scale each toward
 # a target world height — clamped by footprint — for a consistent horizon ring.
 static func _backdrop(parent: Node3D, rng: RandomNumberGenerator, radius: float,
-		spec: Dictionary) -> void:
+		spec: Dictionary, clear_centers: PackedVector3Array) -> void:
 	var names: Array = spec["names"]
 	var count: int = spec["count"]
 	for i in count:
@@ -341,13 +341,26 @@ static func _backdrop(parent: Node3D, rng: RandomNumberGenerator, radius: float,
 		parent.add_child(inst)
 		var ang := TAU * i / count + rng.randf_range(-0.12, 0.12)
 		var r := radius + rng.randf_range(6.0, 14.0)
-		inst.position = Vector3(cos(ang) * r, rng.randf_range(-1.5, 0.0), sin(ang) * r)
+		var y := rng.randf_range(-1.5, 0.0)
 		inst.rotation.y = rng.randf_range(0.0, TAU)
 		var target_h := rng.randf_range(spec["h_min"], spec["h_max"])
 		var ab := _world_aabb(inst)
 		var s := minf(target_h / maxf(0.01, ab.size.y),
 			_BACKDROP_MAX_W / maxf(0.01, maxf(ab.size.x, ab.size.z)))
 		inst.scale = Vector3(s, s, s)
+		# Pieces near a spawn point can engulf the party — or the CAMERA,
+		# which orbits ~16 m up-and-back from the player and pokes past the
+		# arena edge when a spawn sits in a corner (the Anchor Tear). Slide
+		# the piece outward along its ray until its footprint clears every
+		# character position by the camera boom. Deterministic — no extra RNG.
+		var footprint_r: float = maxf(ab.size.x, ab.size.z) * s * 0.5
+		var pos := Vector3(cos(ang) * r, y, sin(ang) * r)
+		for _try in 8:
+			if not _too_close(pos, clear_centers, footprint_r + 16.0):
+				break
+			r += 5.0
+			pos = Vector3(cos(ang) * r, y, sin(ang) * r)
+		inst.position = pos
 
 ## World-space AABB of an instance's first mesh at unit root scale. The mesh
 ## AABB is transformed through every node below the root — the .glb cook bakes

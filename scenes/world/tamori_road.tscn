@@ -1,6 +1,8 @@
-[gd_scene load_steps=18 format=3 uid="uid://tamori_road"]
+[gd_scene load_steps=20 format=3 uid="uid://tamori_road"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/world/story_event.gd" id="8_story"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Wall_Tower_M_01.gltf" id="e_tower"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
 [ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
@@ -83,6 +85,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, -8)
 [node name="Tree4" parent="Level/Props" instance=ExtResource("e_thin")]
 transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, 22, 0, 7)
 
+[node name="WaymarkTower" parent="Level/Props" instance=ExtResource("e_tower")]
+transform = Transform3D(0.866, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866, 4, 0, -13)
+
 [node name="Rock1" parent="Level/Props" instance=ExtResource("e_rock")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -9)
 
@@ -117,6 +122,16 @@ target_spawn_id = "fields_west"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
 script = ExtResource("7_rest")
 display_name = "Waymarker Tear"
+
+[node name="MenderCampsite" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 11)
+script = ExtResource("8_story")
+display_name = "An Abandoned Campsite"
+flag_name = "mender_camp_found"
+xp_amount = 150
+resolve_text = "Notes, instruments, a half-finished map of the eastern tear.
+Whoever camped here was studying the Veil-point — deliberately, patiently.
+The map marks the anchor. They were here six weeks ago."
 
 [node name="Characters" type="Node3D" parent="."]
 
