@@ -28,6 +28,7 @@ func _ready() -> void:
 	_run()
 
 func _run() -> void:
+	await _test_camera_zoom()
 	await _test_skirmisher_fires()
 	await _test_heavy_telegraphs()
 	await _test_death_collapse()
@@ -37,6 +38,21 @@ func _run() -> void:
 		for f in _failures:
 			print("PHASE1 SMOKE FAIL: ", f)
 	get_tree().quit(0 if _failures.is_empty() else 1)
+
+func _test_camera_zoom() -> void:
+	var cam: Camera3D = _level.get_node("CameraPivot/Camera3D")
+	var rest_len: float = cam.position.length()
+	_level._adjust_zoom(-0.09)
+	await get_tree().create_timer(0.4).timeout
+	_check(cam.position.length() < rest_len - 0.1, "wheel zoom dollies the camera in")
+	for i in 10:
+		_level._adjust_zoom(-0.09)
+	await get_tree().create_timer(0.4).timeout
+	_check(cam.position.length() >= rest_len * 0.5, "zoom clamps at the close limit")
+	for i in 10:
+		_level._adjust_zoom(0.09)
+	await get_tree().create_timer(0.4).timeout
+	_check(absf(cam.position.length() - rest_len) < 0.1, "zooming out returns to rest distance")
 
 func _test_skirmisher_fires() -> void:
 	var guard := _level.get_node("Enemies/PenGuard1") as CharacterBody3D

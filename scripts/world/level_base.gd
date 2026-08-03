@@ -53,6 +53,18 @@ var _cam_rest_pos: Vector3 = Vector3.ZERO  # resting Camera3D local position
 var _cam_focus: Vector3 = Vector3.ZERO     # extra pivot offset (dialogue framing)
 var _cam_tween: Tween = null
 
+# ── Walk-around zoom ──────────────────────────────────────────────────────────
+# Mouse wheel dollies the gameplay camera between full distance (1.0) and a
+# modest close-up, riding the same scale-toward-pivot trick as the dialogue
+# camera. Ignored during dialogue so the two never fight; the dialogue camera
+# returns to the player's chosen zoom when the conversation ends.
+const _ZOOM_MIN  := 0.55
+const _ZOOM_MAX  := 1.0
+const _ZOOM_STEP := 0.09
+var _zoom: float = 1.0
+var _zoom_tween: Tween = null
+var _dialogue_active := false
+
 ## Actions queued during pause; fired on resume.
 var _queued_sarro: String = ""
 var _queued_liris: String = ""
@@ -208,11 +220,16 @@ func _on_party_defeated() -> void:
 
 ## Ease the camera into the closer, angled conversation framing.
 func _on_dialogue_started(_resource) -> void:
+	_dialogue_active = true
+	if _zoom_tween != null and _zoom_tween.is_valid():
+		_zoom_tween.kill()
 	_blend_camera(_cam_rest_pos * _CAM_DIALOGUE_DOLLY, _CAM_DIALOGUE_YAW, _CAM_DIALOGUE_FOCUS)
 
-## Ease the camera back to the resting gameplay framing.
+## Ease the camera back to the resting gameplay framing (at the zoom the
+## player had dialed in before the conversation).
 func _on_dialogue_ended(_resource) -> void:
-	_blend_camera(_cam_rest_pos, 0.0, Vector3.ZERO)
+	_dialogue_active = false
+	_blend_camera(_cam_rest_pos * _zoom, 0.0, Vector3.ZERO)
 
 func _blend_camera(cam_pos: Vector3, pivot_yaw: float, focus: Vector3) -> void:
 	if _cam_tween != null and _cam_tween.is_valid():
@@ -299,6 +316,23 @@ func _input(event: InputEvent) -> void:
 		_use_shield_bash()
 	elif event.is_action_pressed("ability_6"):
 		_use_action_surge()
+	elif event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			_adjust_zoom(-_ZOOM_STEP)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			_adjust_zoom(_ZOOM_STEP)
+
+func _adjust_zoom(step: float) -> void:
+	if _dialogue_active:
+		return
+	var target := clampf(_zoom + step, _ZOOM_MIN, _ZOOM_MAX)
+	if is_equal_approx(target, _zoom):
+		return
+	_zoom = target
+	if _zoom_tween != null and _zoom_tween.is_valid():
+		_zoom_tween.kill()
+	_zoom_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_zoom_tween.tween_property(_camera, "position", _cam_rest_pos * _zoom, 0.18)
 
 # ── Sarro Abilities ───────────────────────────────────────────────────────────
 
