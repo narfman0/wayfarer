@@ -19,7 +19,7 @@ const _Telegraph      = preload("res://scripts/combat/telegraph.gd")
 const _Projectile     = preload("res://scripts/combat/projectile.gd")
 const _Juice          = preload("res://scripts/combat/juice.gd")
 
-enum State { PATROL, CHASE, ATTACK }
+enum State { PATROL, CHASE, ATTACK, RETURN }
 
 const SPEED      := 3.0
 const GRAVITY    := 9.8
@@ -45,6 +45,7 @@ const _TYPE_ARCHETYPES := {
 	"anchor_warden": "heavy",
 	"extractor_guard": "skirmisher",
 	"extractor_enforcer": "heavy",
+	"extractor_engine": "heavy",
 	"kaveth_shade": "heavy",
 	"dock_blade": "skirmisher",
 	"veil_fragment": "skirmisher",
@@ -59,6 +60,13 @@ const _TYPE_ARCHETYPES := {
 @export var enemy_type: String = "bandit"
 ## "auto" derives from enemy_type via _TYPE_ARCHETYPES.
 @export_enum("auto", "bruiser", "skirmisher", "heavy") var archetype: String = "auto"
+## Enemies sharing a non-empty pack_id aggro together: pulling one guard
+## pulls the camp, so camp layouts matter.
+@export var pack_id: String = ""
+## Chase gives up beyond this radius FROM SPAWN (not from self) — the enemy
+## walks home and heals to full, so camps are re-attemptable and can't be
+## dragged apart one enemy at a time.
+@export var leash_radius: float = 18.0
 ## Set true for the boss; enables phase transitions.
 @export var is_boss: bool = false
 ## Equipment to drop on death: "greatsword", "longsword", "chain_mail", "scale_mail", or "".
@@ -82,6 +90,8 @@ var _knockback: Vector3 = Vector3.ZERO
 var _dead: bool = false
 var _phase: int = 0          # 0 = fresh, 1 = 60% threshold, 2 = 30% threshold
 var _invuln_timer: float = 0.0
+var _spawn_pos: Vector3 = Vector3.ZERO
+var _ambush_hidden := false
 
 # Casting/channeling (A4 interrupt hook): while a cast runs the enemy stands
 # still showing a bar; Shield Bash cancels it inside the window.
@@ -103,6 +113,7 @@ signal cast_interrupted(label: String)
 func _ready() -> void:
 	add_to_group("enemies")
 	_arch = archetype if archetype != "auto" else str(_TYPE_ARCHETYPES.get(enemy_type, "bruiser"))
+	_spawn_pos = global_position
 	var aggro_area := Area3D.new()
 	var shape_node := CollisionShape3D.new()
 	var sphere     := SphereShape3D.new()
@@ -169,7 +180,8 @@ func _physics_process(delta: float) -> void:
 			State.PATROL: _do_patrol(delta)
 			State.CHASE:  _do_chase(delta)
 			State.ATTACK: _do_attack(delta)
-		if _arch == "heavy" and _state != State.PATROL:
+			State.RETURN: _do_return(delta)
+		if _arch == "heavy" and (_state == State.CHASE or _state == State.ATTACK):
 			_tick_slam(delta)
 
 	# Knockback rides on top of whatever the state set, then decays fast.
@@ -197,6 +209,8 @@ func _do_patrol(delta: float) -> void:
 	rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 8.0 * delta)
 
 func _do_chase(delta: float) -> void:
+	if _leash_exceeded():
+		_start_return(); return
 	_target = _acquire_target()
 	if _target == null:
 		_state = State.PATROL; return
@@ -244,6 +258,8 @@ func _do_chase_skirmisher(delta: float) -> void:
 		_fire_projectile()
 
 func _do_attack(delta: float) -> void:
+	if _leash_exceeded():
+		_start_return(); return
 	_target = _acquire_target()
 	if _target == null:
 		_state = State.PATROL; return
@@ -498,11 +514,72 @@ func _spawn_loot() -> void:
 	get_tree().current_scene.add_child(pickup)
 
 func _on_body_entered(body: Node3D) -> void:
-	if body.is_in_group("players") and _state == State.PATROL:
-		_target = body as CharacterBody3D
-		_state  = State.CHASE
+	if body.is_in_group("players") and _state == State.PATROL and not _ambush_hidden:
+		alerted(body as CharacterBody3D)
+		_alert_pack(body as CharacterBody3D)
 
 func _on_body_exited(body: Node3D) -> void:
 	if body == _target and _state != State.ATTACK:
 		_target = null
 		_state  = State.PATROL
+
+## Enter chase (from an aggro trigger, a packmate's call, or an ambush).
+func alerted(body: CharacterBody3D) -> void:
+	if _dead or _ambush_hidden or _state == State.CHASE or _state == State.ATTACK:
+		return
+	_target = body
+	_state = State.CHASE
+
+## Pulling one guard pulls everyone sharing this pack_id.
+func _alert_pack(body: CharacterBody3D) -> void:
+	if pack_id == "":
+		return
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if e != self and e is EnemyController and (e as EnemyController).pack_id == pack_id:
+			(e as EnemyController).alerted(body)
+
+# ── Leashing ──────────────────────────────────────────────────────────────────
+
+func _leash_exceeded() -> bool:
+	return global_position.distance_to(_spawn_pos) > leash_radius
+
+func _start_return() -> void:
+	_state = State.RETURN
+	_target = null
+
+## Walk home ignoring everything; heal to full on arrival. Prevents dragging
+## a camp apart one enemy at a time and makes camps re-attemptable.
+func _do_return(delta: float) -> void:
+	var to_home := _spawn_pos - global_position
+	to_home.y = 0.0
+	if to_home.length() < 0.8:
+		if character != null:
+			character.stats.current_hp = character.stats.max_hp
+			hp_changed.emit(character.stats.current_hp, character.stats.max_hp)
+		_state = State.PATROL
+		return
+	var dir := to_home.normalized()
+	velocity.x = dir.x * SPEED * 0.9
+	velocity.z = dir.z * SPEED * 0.9
+	rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 8.0 * delta)
+
+# ── Ambush (used by AmbushTrigger) ────────────────────────────────────────────
+
+## Vanish until an AmbushTrigger fires: invisible, unclickable, no AI. Stays
+## in the "enemies" group so the level still assigns its character sheet.
+func ambush_hide() -> void:
+	_ambush_hidden = true
+	visible = false
+	collision_layer = 0
+	set_physics_process(false)
+
+func ambush_activate(body: CharacterBody3D) -> void:
+	if not _ambush_hidden or _dead:
+		return
+	_ambush_hidden = false
+	visible = true
+	collision_layer = 2
+	set_physics_process(true)
+	_Juice.impact_burst(get_tree().current_scene, global_position, Color(0.7, 0.4, 1.0))
+	AudioManager.play_sfx("telegraph", -2.0, 0.2)
+	alerted(body)
