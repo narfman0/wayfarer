@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://dt5cuqt4qqwgk"
+path="res://.godot/imported/extractor_deal.dialogue-09e770e7c915ec4e3d660590b7cc7d9c.tres"
+
+[deps]
+
+source_file="res://dialogue/extractor_deal.dialogue"
+dest_files=["res://.godot/imported/extractor_deal.dialogue-09e770e7c915ec4e3d660590b7cc7d9c.tres"]
+
+[params]
+
+defaults=true

@@ -104,4 +104,4 @@ interact={
 
 [internationalization]
 
-locale/translations_pot_files=PackedStringArray("res://dialogue/tamori_tavern.dialogue", "res://dialogue/liris_intro.dialogue", "res://dialogue/village.dialogue", "res://dialogue/warden_ritual.dialogue")
+locale/translations_pot_files=PackedStringArray("res://dialogue/tamori_tavern.dialogue", "res://dialogue/liris_intro.dialogue", "res://dialogue/village.dialogue", "res://dialogue/warden_ritual.dialogue", "res://dialogue/extractor_deal.dialogue", "res://dialogue/sarro_portal.dialogue")

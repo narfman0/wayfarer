@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://ccuo4w6cyifg5"
+path="res://.godot/imported/sarro_portal.dialogue-041d33ee244e9853640f9a13fb82cb45.tres"
+
+[deps]
+
+source_file="res://dialogue/sarro_portal.dialogue"
+dest_files=["res://.godot/imported/sarro_portal.dialogue-041d33ee244e9853640f9a13fb82cb45.tres"]
+
+[params]
+
+defaults=true
