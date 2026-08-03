@@ -1,0 +1,38 @@
+~ ritual
+
+Idris: Don't. Just— give me a moment.
+Idris: I know how it looks. The rig was clumsy. But the tear is still open, wayfarer, and open tears spread.
+Liris: She's right about that much.
+Idris: There's an older way. A warden's way, before we built machines to do it for us. I anchor it with something of mine. A season. A name. Whatever it asks.
+Idris: It will hold. It will cost me. I am telling you that plainly so you don't carry it after.
+Liris: Or we leave it. The Veil closes small wounds on its own — I've watched it do it my whole life. Slower. But it costs no one anything.
+Idris: And if you're wrong, it takes the eastern fields first.
+- Let her do the ritual
+	Sarro: It's her price to pay. Do it.
+	Idris: Thank you. For the honesty of a fight, and for this.
+	Idris: Look away if you like. Nobody owes the Veil an audience.
+	Idris: ...There. Done. Whatever it took, I don't remember missing it. That's the mercy of it.
+	Liris: The tear's still. I can't say she was wrong.
+	do GameState.set_flag("warden_ritual", "ritual")
+	do GameState.grant_xp(400)
+- Stop her — the Veil will close it [Liris]
+	Liris: No. Put it down, Idris. All of it.
+	Liris: I grew up next to a tear half this size. Nobody anchored it. It closed the way a river clears after rain — because that is what the Veil does when we stop tearing at it.
+	Idris: You'd stake this village on a story from your childhood.
+	Liris: I'd stake it on the only thing out here that hasn't lied to me yet.
+	Idris: ...Then watch it, warden. Every day. If it spreads, you send for me, and I will come.
+	Sarro: She'll watch. She sees more than either of us.
+	do GameState.set_flag("warden_ritual", "stopped")
+	do GameState.add_conviction(1)
+	do GameState.grant_xp(400)
+- Walk away — this isn't our debt
+	Sarro: We came to still the water. It's stilled. The rest is between you and your order.
+	Idris: That's not an answer, wayfarer. That's a door closing.
+	Liris: Sarro—
+	Sarro: We're leaving.
+	Idris: Then I'll do what I'd have done alone. Go. Mind the road.
+	Liris: (quietly) That was ours to help finish. Remember that I said so.
+	do GameState.set_flag("warden_ritual", "left")
+	do GameState.add_conviction(-1)
+	do GameState.grant_xp(150)
+=> END

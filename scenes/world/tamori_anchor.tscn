@@ -1,6 +1,7 @@
-[gd_scene load_steps=19 format=3 uid="uid://tamori_anchor"]
+[gd_scene load_steps=23 format=3 uid="uid://tamori_anchor"]
 
 [ext_resource type="Script" path="res://scripts/world/anchor_tear.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/combat/veil_rig.gd" id="1_rig"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
 [ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
@@ -26,6 +27,18 @@ size = Vector3(36, 0.2, 36)
 [sub_resource type="StandardMaterial3D" id="Mat_ground"]
 albedo_color = Color(0.3, 0.3, 0.26, 1)
 
+[sub_resource type="PrismMesh" id="RigCrystal"]
+size = Vector3(1.1, 2.6, 1.1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_rig"]
+albedo_color = Color(0.55, 0.35, 0.95, 1)
+emission_enabled = true
+emission = Color(0.55, 0.3, 1.0, 1)
+emission_energy_multiplier = 2.2
+
+[sub_resource type="BoxShape3D" id="RigShape"]
+size = Vector3(1.4, 2.6, 1.4)
+
 [sub_resource type="TorusMesh" id="TearMesh"]
 inner_radius = 0.85
 outer_radius = 1.05
@@ -39,6 +52,7 @@ emission_energy_multiplier = 3.0
 [node name="AnchorTear" type="Node3D"]
 script = ExtResource("1_level")
 plane_id = "tamori_anchor"
+debug_party_level = 5
 
 [node name="Environment" type="WorldEnvironment" parent="."]
 environment = ExtResource("env_shared")
@@ -168,6 +182,7 @@ collision_layer = 2
 enemy_type = "anchor_warden"
 xp_value = 1500
 aggro_radius = 9.0
+is_boss = true
 
 [node name="BossCollision" type="CollisionShape3D" parent="Enemies/AnchorWarden"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
@@ -175,6 +190,33 @@ shape = SubResource("CapsuleShape3D_char")
 
 [node name="Skin" parent="Enemies/AnchorWarden" instance=ExtResource("c_boss")]
 transform = Transform3D(1.35, 0, 0, 0, 1.35, 0, 0, 0, 1.35, 0, 0, 0)
+
+[node name="VeilRig" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6.2)
+script = ExtResource("1_rig")
+collision_layer = 2
+enemy_type = "veil_rig"
+xp_value = 900
+aggro_radius = 0.1
+
+[node name="RigCollision" type="CollisionShape3D" parent="Enemies/VeilRig"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+shape = SubResource("RigShape")
+
+[node name="RigMesh" type="MeshInstance3D" parent="Enemies/VeilRig"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+mesh = SubResource("RigCrystal")
+surface_material_override/0 = SubResource("Mat_rig")
+
+[node name="RigMeshTilt1" type="MeshInstance3D" parent="Enemies/VeilRig"]
+transform = Transform3D(0.62, -0.44, 0, 0.44, 0.62, 0, 0, 0, 0.76, -0.8, 0.9, 0.2)
+mesh = SubResource("RigCrystal")
+surface_material_override/0 = SubResource("Mat_rig")
+
+[node name="RigMeshTilt2" type="MeshInstance3D" parent="Enemies/VeilRig"]
+transform = Transform3D(0.55, 0.5, 0, -0.5, 0.55, 0, 0, 0, 0.74, 0.85, 0.8, -0.15)
+mesh = SubResource("RigCrystal")
+surface_material_override/0 = SubResource("Mat_rig")
 
 [node name="CameraPivot" type="Node3D" parent="."]
 

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://anchorfightsmoke"]
+
+[ext_resource type="Script" path="res://future/tests/harnesses/anchor_fight_smoke.gd" id="1_smoke"]
+
+[node name="AnchorFightSmoke" type="Node"]
+script = ExtResource("1_smoke")

@@ -86,6 +86,14 @@ func get_flag(flag_name: String, default: Variant = null) -> Variant:
 func has_flag(flag_name: String) -> bool:
 	return bool(flags.get(flag_name, false))
 
+## Liris's conviction score — adjusted by dialogue choices
+## (`do GameState.add_conviction(1)`), read by Act 3 gates. Persisted in flags.
+func add_conviction(amount: int) -> void:
+	flags["conviction"] = conviction() + amount
+
+func conviction() -> int:
+	return int(flags.get("conviction", 0))
+
 # ── Save / load ──────────────────────────────────────────────────────────────
 
 func has_save(slot: int = 0) -> bool:

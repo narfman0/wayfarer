@@ -109,11 +109,16 @@ static func make_enemy(enemy_type: String = "bandit"):
 			c.equipment.equip_armor(_ArmorData.make_studded_leather())
 			c.equipment.equip_main_hand(_WeaponData.make_greatsword())
 		"anchor_warden":
-			c.display_name = "Warped Anchor Warden"
+			c.display_name = "Idris, the Mender Anchor"
 			c.stats.level = 5; c.stats.max_hp = 65
 			c.stats.strength = 18; c.stats.dexterity = 10; c.stats.constitution = 16
 			c.equipment.equip_armor(_ArmorData.make_chain_mail())
 			c.equipment.equip_main_hand(_WeaponData.make_greatsword())
+		"veil_rig":
+			c.display_name = "Crystallization Rig"
+			c.stats.level = 5; c.stats.max_hp = 110
+			c.stats.strength = 1; c.stats.dexterity = 1; c.stats.constitution = 20
+			c.equipment.equip_armor(_ArmorData.make_chain_mail())  # AC stand-in: crystal lattice
 		# --- Act 2a: The Reach ---
 		"extractor_guard":
 			c.display_name = "Extractor Guard"
