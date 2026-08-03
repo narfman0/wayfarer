@@ -1,0 +1,326 @@
+[gd_scene load_steps=20 format=3 uid="uid://reach_rig"]
+
+[ext_resource type="Script" path="res://scripts/world/reach_rig.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
+[ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
+[ext_resource type="Script" path="res://scripts/combat/veil_rig.gd" id="5_pillar"]
+[ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
+[ext_resource type="Script" path="res://scripts/world/rest_point.gd" id="7_rest"]
+[ext_resource type="Script" path="res://scripts/world/veil_tear.gd" id="8_tear"]
+[ext_resource type="Script" path="res://scripts/world/scar_tissue.gd" id="9_scar"]
+[ext_resource type="Script" path="res://scripts/world/ambush_trigger.gd" id="10_ambush"]
+[ext_resource type="Environment" path="res://resources/env_reach.tres" id="env_shared"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Rouge_01.gltf" id="c_sarro"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_01.gltf" id="c_liris"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Peasant_01.gltf" id="c_guard"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Baird.gltf" id="c_enforcer"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_NatureBiomes_MeadowForest_SourceFiles_v2/Meadow_Source_Files/FBX/SM_Prop_SciFiCrate_01.gltf" id="p_crate"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_NatureBiomes_MeadowForest_SourceFiles_v2/Meadow_Source_Files/FBX/SM_Prop_SciFiCable_02.gltf" id="p_cable"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Item_Crystal_01.gltf" id="p_crystal"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_char"]
+height = 1.8
+radius = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(46, 0.2, 46)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.36, 0.33, 0.24, 1)
+
+[node name="ReachRig" type="Node3D"]
+script = ExtResource("1_level")
+plane_id = "reach_rig"
+debug_party_level = 6
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = ExtResource("env_shared")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 10, 0)
+light_energy = 0.9
+shadow_enabled = true
+
+[node name="Level" type="Node3D" parent="."]
+
+[node name="Ground" type="StaticBody3D" parent="Level"]
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Level/Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+mesh = SubResource("BoxMesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="Level/Ground"]
+shape = SubResource("WorldBoundaryShape3D_1")
+
+[node name="Props" type="Node3D" parent="Level"]
+
+[node name="RigCrate1" parent="Level/Props" instance=ExtResource("p_crate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -8)
+
+[node name="RigCrate2" parent="Level/Props" instance=ExtResource("p_crate")]
+transform = Transform3D(0.707, 0, -0.707, 0, 1, 0, 0.707, 0, 0.707, 4, 0, -10)
+
+[node name="RigCrate3" parent="Level/Props" instance=ExtResource("p_crate")]
+transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, -9, 0, 2)
+
+[node name="RigCable1" parent="Level/Props" instance=ExtResource("p_cable")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -9)
+
+[node name="RigCable2" parent="Level/Props" instance=ExtResource("p_cable")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 2, 0, -6)
+
+[node name="HarvestCrystal1" parent="Level/Props" instance=ExtResource("p_crystal")]
+transform = Transform3D(1.8, 0, 0, 0, 1.8, 0, 0, 0, 1.8, -6, 0, -12)
+
+[node name="HarvestCrystal2" parent="Level/Props" instance=ExtResource("p_crystal")]
+transform = Transform3D(1.3, 0, 0.4, 0, 1.36, 0, -0.4, 0, 1.3, 7, 0, -13)
+
+[node name="RigTear" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, -14)
+script = ExtResource("8_tear")
+color = Color(0.45, 0.85, 1.0, 1)
+ring_radius = 1.5
+
+[node name="ScarTissue1" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -14)
+script = ExtResource("9_scar")
+
+[node name="ScarTissue2" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -6)
+script = ExtResource("9_scar")
+patch_radius = 1.6
+shard_count = 6
+
+[node name="RigAmbush" type="Area3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 4)
+script = ExtResource("10_ambush")
+ambushers = Array[NodePath]([NodePath("../../Enemies/AmbushGuard1"), NodePath("../../Enemies/AmbushGuard2")])
+
+[node name="WestPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -19, 0, 12)
+script = ExtResource("6_portal")
+display_name = "Back to the Approach"
+spawn_id = "rig_west"
+target_plane = "reach"
+target_spawn_id = "reach_east"
+
+[node name="EastPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 19, 0, -12)
+script = ExtResource("6_portal")
+display_name = "To Old Kaveth"
+spawn_id = "rig_east"
+target_plane = "kaveth"
+target_spawn_id = "kaveth_west"
+required_flag = "reach_rig_done"
+blocked_hint = "The Engine still runs. Nothing crosses while it harvests."
+
+[node name="RestPoint" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, 15)
+script = ExtResource("7_rest")
+display_name = "Stable Tear"
+
+[node name="Characters" type="Node3D" parent="."]
+
+[node name="Sarro" type="CharacterBody3D" parent="Characters" groups=["players"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 0.9, 12)
+script = ExtResource("2_player")
+collision_layer = 1
+collision_mask = 7
+
+[node name="SarroCollision" type="CollisionShape3D" parent="Characters/Sarro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Sarro" instance=ExtResource("c_sarro")]
+
+[node name="Liris" type="CharacterBody3D" parent="Characters" groups=["companions"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 0.9, 13.5)
+script = ExtResource("3_companion")
+collision_layer = 4
+collision_mask = 3
+
+[node name="LirisCollision" type="CollisionShape3D" parent="Characters/Liris"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Liris" instance=ExtResource("c_liris")]
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="RigGuard1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.9, -4)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "extractor_guard"
+xp_value = 1500
+aggro_radius = 7.0
+pack_id = "rig_camp"
+
+[node name="RigGuard1Collision" type="CollisionShape3D" parent="Enemies/RigGuard1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/RigGuard1" instance=ExtResource("c_guard")]
+
+[node name="RigGuard2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.9, -3)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "extractor_guard"
+xp_value = 1500
+aggro_radius = 7.0
+pack_id = "rig_camp"
+
+[node name="RigGuard2Collision" type="CollisionShape3D" parent="Enemies/RigGuard2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/RigGuard2" instance=ExtResource("c_guard")]
+
+[node name="AmbushGuard1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.9, 5)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "extractor_guard"
+xp_value = 1500
+aggro_radius = 7.0
+
+[node name="AmbushGuard1Collision" type="CollisionShape3D" parent="Enemies/AmbushGuard1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/AmbushGuard1" instance=ExtResource("c_guard")]
+
+[node name="AmbushGuard2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.9, 7)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "extractor_guard"
+xp_value = 1500
+aggro_radius = 7.0
+
+[node name="AmbushGuard2Collision" type="CollisionShape3D" parent="Enemies/AmbushGuard2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/AmbushGuard2" instance=ExtResource("c_guard")]
+
+[node name="Enforcer1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.9, -7)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "extractor_enforcer"
+xp_value = 2500
+aggro_radius = 8.0
+pack_id = "rig_camp"
+
+[node name="Enforcer1Collision" type="CollisionShape3D" parent="Enemies/Enforcer1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Enforcer1" instance=ExtResource("c_enforcer")]
+
+[node name="Enforcer2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.9, -12)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "extractor_enforcer"
+xp_value = 2500
+aggro_radius = 8.0
+pack_id = "rig_camp"
+
+[node name="Enforcer2Collision" type="CollisionShape3D" parent="Enemies/Enforcer2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Enforcer2" instance=ExtResource("c_enforcer")]
+
+[node name="Captain" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.9, -14)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "extractor_enforcer"
+xp_value = 2500
+aggro_radius = 8.0
+loot_preset = "greatsword"
+
+[node name="CaptainCollision" type="CollisionShape3D" parent="Enemies/Captain"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Captain" instance=ExtResource("c_enforcer")]
+
+[node name="Pillar1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -16)
+script = ExtResource("5_pillar")
+collision_layer = 2
+enemy_type = "rig_pillar"
+xp_value = 200
+aggro_radius = 0.1
+
+[node name="Pillar1Collision" type="CollisionShape3D" parent="Enemies/Pillar1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Pillar1Mesh" parent="Enemies/Pillar1" instance=ExtResource("p_crystal")]
+transform = Transform3D(2.4, 0, 0, 0, 2.4, 0, 0, 0, 2.4, 0, 0, 0)
+
+[node name="Pillar2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -18)
+script = ExtResource("5_pillar")
+collision_layer = 2
+enemy_type = "rig_pillar"
+xp_value = 200
+aggro_radius = 0.1
+
+[node name="Pillar2Collision" type="CollisionShape3D" parent="Enemies/Pillar2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Pillar2Mesh" parent="Enemies/Pillar2" instance=ExtResource("p_crystal")]
+transform = Transform3D(2.4, 0, 0, 0, 2.4, 0, 0, 0, 2.4, 0, 0, 0)
+
+[node name="Pillar3" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -20)
+script = ExtResource("5_pillar")
+collision_layer = 2
+enemy_type = "rig_pillar"
+xp_value = 200
+aggro_radius = 0.1
+
+[node name="Pillar3Collision" type="CollisionShape3D" parent="Enemies/Pillar3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Pillar3Mesh" parent="Enemies/Pillar3" instance=ExtResource("p_crystal")]
+transform = Transform3D(2.4, 0, 0, 0, 2.4, 0, 0, 0, 2.4, 0, 0, 0)
+
+[node name="Engine" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -14)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "extractor_engine"
+xp_value = 6000
+aggro_radius = 10.0
+is_boss = true
+
+[node name="EngineCollision" type="CollisionShape3D" parent="Enemies/Engine"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Engine" instance=ExtResource("c_enforcer")]
+transform = Transform3D(1.6, 0, 0, 0, 1.6, 0, 0, 0, 1.6, 0, 0, 0)
+
+[node name="CameraPivot" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.651, 0.759, 0, -0.759, 0.651, 0, 14, 12)
+current = true
+
+[node name="HUD" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0

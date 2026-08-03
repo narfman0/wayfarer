@@ -1,0 +1,275 @@
+[gd_scene load_steps=22 format=3 uid="uid://kaveth_vault"]
+
+[ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
+[ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
+[ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
+[ext_resource type="Script" path="res://scripts/world/rest_point.gd" id="7_rest"]
+[ext_resource type="Script" path="res://scripts/world/story_event.gd" id="8_event"]
+[ext_resource type="Script" path="res://scripts/world/veil_tear.gd" id="9_tear"]
+[ext_resource type="Script" path="res://scripts/world/scar_tissue.gd" id="10_scar"]
+[ext_resource type="Script" path="res://scripts/world/ambush_trigger.gd" id="11_ambush"]
+[ext_resource type="Environment" path="res://resources/env_kaveth.tres" id="env_shared"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Rouge_01.gltf" id="c_sarro"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_01.gltf" id="c_liris"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Sorcerer.gltf" id="c_husk"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Witch.gltf" id="c_shade"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_DestroyedWall_Bottom_02.gltf" id="p_wall1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_DestroyedWall_RubblePile_01.gltf" id="p_rubble"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Pillar_Stone_01.gltf" id="p_pillar"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_char"]
+height = 1.8
+radius = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(42, 0.2, 42)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.24, 0.22, 0.27, 1)
+
+[node name="KavethVault" type="Node3D"]
+script = ExtResource("1_level")
+plane_id = "kaveth_vault"
+debug_party_level = 9
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = ExtResource("env_shared")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 10, 0)
+light_energy = 0.4
+shadow_enabled = true
+
+[node name="Level" type="Node3D" parent="."]
+
+[node name="Ground" type="StaticBody3D" parent="Level"]
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Level/Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+mesh = SubResource("BoxMesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="Level/Ground"]
+shape = SubResource("WorldBoundaryShape3D_1")
+
+[node name="Props" type="Node3D" parent="Level"]
+
+[node name="Wall1" parent="Level/Props" instance=ExtResource("p_wall1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -3)
+
+[node name="Wall2" parent="Level/Props" instance=ExtResource("p_wall1")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 4, 0, -1)
+
+[node name="Wall3" parent="Level/Props" instance=ExtResource("p_wall1")]
+transform = Transform3D(0.707, 0, 0.707, 0, 1, 0, -0.707, 0, 0.707, -2, 0, -12)
+
+[node name="Rubble1" parent="Level/Props" instance=ExtResource("p_rubble")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 4)
+
+[node name="Rubble2" parent="Level/Props" instance=ExtResource("p_rubble")]
+transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, 8, 0, -9)
+
+[node name="Pillar1" parent="Level/Props" instance=ExtResource("p_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -8)
+
+[node name="Pillar2" parent="Level/Props" instance=ExtResource("p_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -14)
+
+[node name="Pillar3" parent="Level/Props" instance=ExtResource("p_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0, 6)
+
+[node name="VaultScar1" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -8)
+script = ExtResource("10_scar")
+patch_radius = 3.5
+shard_count = 12
+
+[node name="VaultScar2" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -2)
+script = ExtResource("10_scar")
+
+[node name="WakingTearRing" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.0, -17)
+script = ExtResource("9_tear")
+color = Color(0.6, 0.3, 1.0, 1)
+ring_radius = 2.6
+
+[node name="WakingTear" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -15)
+script = ExtResource("8_event")
+display_name = "The Waking Tear"
+flag_name = "kaveth_done"
+xp_amount = 6000
+resolve_text = "The anchor stone didn't hold it shut.
+It marked it. It was healing on its own — for centuries."
+
+[node name="ShadeAmbush" type="Area3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -10)
+script = ExtResource("11_ambush")
+ambushers = Array[NodePath]([NodePath("../../Enemies/Shade1"), NodePath("../../Enemies/Shade2")])
+
+[node name="WestPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -17, 0, 10)
+script = ExtResource("6_portal")
+display_name = "Up to the Outer Ring"
+spawn_id = "vault_west"
+target_plane = "kaveth"
+target_spawn_id = "kaveth_east"
+
+[node name="EastPortal" type="Node3D" parent="Level"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 17, 0, 8)
+script = ExtResource("6_portal")
+display_name = "To Verath"
+spawn_id = "vault_east"
+target_plane = "verath"
+target_spawn_id = "verath_west"
+required_flag = "kaveth_done"
+blocked_hint = "Liris: The tear is still waking. I need to see it first."
+
+[node name="RestPoint" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 0, 14)
+script = ExtResource("7_rest")
+display_name = "Vault Mouth Tear"
+
+[node name="Characters" type="Node3D" parent="."]
+
+[node name="Sarro" type="CharacterBody3D" parent="Characters" groups=["players"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.9, 10)
+script = ExtResource("2_player")
+collision_layer = 1
+collision_mask = 7
+
+[node name="SarroCollision" type="CollisionShape3D" parent="Characters/Sarro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Sarro" instance=ExtResource("c_sarro")]
+
+[node name="Liris" type="CharacterBody3D" parent="Characters" groups=["companions"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 0.9, 11.5)
+script = ExtResource("3_companion")
+collision_layer = 4
+collision_mask = 3
+
+[node name="LirisCollision" type="CollisionShape3D" parent="Characters/Liris"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Characters/Liris" instance=ExtResource("c_liris")]
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Husk1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.9, 0)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3000
+aggro_radius = 6.0
+pack_id = "vault_pack"
+
+[node name="Husk1Collision" type="CollisionShape3D" parent="Enemies/Husk1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk1" instance=ExtResource("c_husk")]
+
+[node name="Husk2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.9, 2)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3000
+aggro_radius = 6.0
+pack_id = "vault_pack"
+
+[node name="Husk2Collision" type="CollisionShape3D" parent="Enemies/Husk2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk2" instance=ExtResource("c_husk")]
+
+[node name="Husk3" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -4)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3000
+aggro_radius = 6.0
+pack_id = "vault_pack"
+
+[node name="Husk3Collision" type="CollisionShape3D" parent="Enemies/Husk3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk3" instance=ExtResource("c_husk")]
+
+[node name="Husk4" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.9, -6)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3000
+aggro_radius = 6.0
+
+[node name="Husk4Collision" type="CollisionShape3D" parent="Enemies/Husk4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk4" instance=ExtResource("c_husk")]
+
+[node name="Husk5" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.9, -10)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "stitched_husk"
+xp_value = 3000
+aggro_radius = 6.0
+
+[node name="Husk5Collision" type="CollisionShape3D" parent="Enemies/Husk5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Husk5" instance=ExtResource("c_husk")]
+
+[node name="Shade1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.9, -13)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "kaveth_shade"
+xp_value = 5500
+aggro_radius = 8.0
+
+[node name="Shade1Collision" type="CollisionShape3D" parent="Enemies/Shade1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Shade1" instance=ExtResource("c_shade")]
+
+[node name="Shade2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.9, -15)
+script = ExtResource("4_enemy")
+collision_layer = 2
+enemy_type = "kaveth_shade"
+xp_value = 5500
+aggro_radius = 8.0
+
+[node name="Shade2Collision" type="CollisionShape3D" parent="Enemies/Shade2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_char")
+
+[node name="Skin" parent="Enemies/Shade2" instance=ExtResource("c_shade")]
+
+[node name="CameraPivot" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.651, 0.759, 0, -0.759, 0.651, 0, 14, 12)
+current = true
+
+[node name="HUD" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0

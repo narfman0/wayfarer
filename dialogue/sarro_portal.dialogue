@@ -1,0 +1,28 @@
+~ portal
+
+Sarro: ...Liris.
+Liris: I see it. It's small. Stable, though — stable like a thing that has been waiting.
+Sarro: It's hers. The resonance — I've carried a scrap of her signature through forty planes. This tear answers it.
+Liris: Then it goes somewhere she stood. Once. It doesn't promise more than that.
+Sarro: One way to know.
+Liris: Cael is ahead of us, Sarro. The gate on the other side of that wall won't wait forever. Neither will I — but I would. That's the problem.
+- Go through — he has to know
+	Sarro: I'll be fast. If it closes behind me, don't come after. Finish it.
+	Liris: (a long silence) Come back, wayfarer.
+	Sarro: ...
+	Sarro: Dust. A workbench. A coil of her rope, tied off the way she always tied it — and gone on somewhere the tear couldn't follow.
+	Sarro: She was here. She left. She was ALIVE to leave.
+	Liris: Then that's more than you had this morning.
+	Sarro: It's everything I had this morning, plus a direction. Let's go.
+	do GameState.set_flag("sarro_portal", "went")
+	do GameState.grant_xp(5000)
+- Stay — the debt in front of us comes first
+	Sarro: No. If I go through I stop being any use to anyone on this side.
+	Sarro: She got out of Tamori on her own feet. She can wait one more plane for me.
+	Liris: You don't have to make it sound easy.
+	Sarro: It isn't. Watch the gate.
+	Liris: (quietly, as the tear dims) Something shifts between them — a weight set down, or picked up. Hard to say which.
+	do GameState.set_flag("sarro_portal", "stayed")
+	do GameState.add_conviction(1)
+	do GameState.grant_xp(5000)
+=> END

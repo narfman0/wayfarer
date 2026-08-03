@@ -119,6 +119,17 @@ static func make_enemy(enemy_type: String = "bandit"):
 			c.stats.level = 5; c.stats.max_hp = 110
 			c.stats.strength = 1; c.stats.dexterity = 1; c.stats.constitution = 20
 			c.equipment.equip_armor(_ArmorData.make_chain_mail())  # AC stand-in: crystal lattice
+		"rig_pillar":
+			c.display_name = "Extraction Pillar"
+			c.stats.level = 6; c.stats.max_hp = 40
+			c.stats.strength = 1; c.stats.dexterity = 1; c.stats.constitution = 14
+			c.equipment.equip_armor(_ArmorData.make_scale_mail())
+		"extractor_engine":
+			c.display_name = "The Extractor Engine"
+			c.stats.level = 7; c.stats.max_hp = 170
+			c.stats.strength = 20; c.stats.dexterity = 6; c.stats.constitution = 20
+			c.equipment.equip_armor(_ArmorData.make_chain_mail())
+			c.equipment.equip_main_hand(_WeaponData.make_greatsword())
 		# --- Act 2a: The Reach ---
 		"extractor_guard":
 			c.display_name = "Extractor Guard"

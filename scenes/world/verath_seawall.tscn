@@ -1,22 +1,20 @@
-[gd_scene load_steps=25 format=3 uid="uid://verath"]
+[gd_scene load_steps=19 format=3 uid="uid://verath_seawall"]
 
-[ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/world/verath_seawall.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
 [ext_resource type="Script" path="res://scripts/combat/enemy_controller.gd" id="4_enemy"]
 [ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
 [ext_resource type="Script" path="res://scripts/world/rest_point.gd" id="7_rest"]
 [ext_resource type="Script" path="res://scripts/world/story_event.gd" id="8_event"]
+[ext_resource type="Script" path="res://scripts/world/veil_tear.gd" id="9_tear"]
 [ext_resource type="Environment" path="res://resources/env_verath.tres" id="env_shared"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Rouge_01.gltf" id="c_sarro"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_01.gltf" id="c_liris"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Baird.gltf" id="c_blade"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Pillar_Stone_01.gltf" id="p_pillar"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Archway_Small_01.gltf" id="p_arch"]
-[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Banner_01.gltf" id="p_banner1"]
-[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Banner_02.gltf" id="p_banner2"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Barrel_Stack_01.gltf" id="p_barrels"]
-[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Bridge_01.gltf" id="p_bridge"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -25,26 +23,21 @@ height = 1.8
 radius = 0.35
 
 [sub_resource type="BoxMesh" id="BoxMesh_ground"]
-size = Vector3(46, 0.2, 46)
+size = Vector3(46, 0.2, 30)
 
 [sub_resource type="StandardMaterial3D" id="Mat_ground"]
-albedo_color = Color(0.38, 0.38, 0.4, 1)
+albedo_color = Color(0.4, 0.4, 0.42, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_water"]
-size = Vector3(60, 0.2, 24)
+size = Vector3(70, 0.2, 40)
 
 [sub_resource type="StandardMaterial3D" id="Mat_water"]
-albedo_color = Color(0.1, 0.2, 0.32, 1)
-metallic = 0.3
-roughness = 0.2
+albedo_color = Color(0.09, 0.18, 0.3, 1)
 
-[sub_resource type="BoxShape3D" id="BoxShape_dock"]
-size = Vector3(3, 0.4, 10)
-
-[node name="Verath" type="Node3D"]
+[node name="VerathSeawall" type="Node3D"]
 script = ExtResource("1_level")
-plane_id = "verath"
-debug_party_level = 11
+plane_id = "verath_seawall"
+debug_party_level = 12
 
 [node name="Environment" type="WorldEnvironment" parent="."]
 environment = ExtResource("env_shared")
@@ -67,87 +60,77 @@ surface_material_override/0 = SubResource("Mat_ground")
 shape = SubResource("WorldBoundaryShape3D_1")
 
 [node name="Water" type="MeshInstance3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.55, 33)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.55, -33)
 mesh = SubResource("BoxMesh_water")
 surface_material_override/0 = SubResource("Mat_water")
 
 [node name="Props" type="Node3D" parent="Level"]
 
-[node name="Arch1" parent="Level/Props" instance=ExtResource("p_arch")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -2)
-
-[node name="Arch2" parent="Level/Props" instance=ExtResource("p_arch")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -2)
-
-[node name="Pillar1" parent="Level/Props" instance=ExtResource("p_pillar")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, 6)
-
-[node name="Pillar2" parent="Level/Props" instance=ExtResource("p_pillar")]
+[node name="SeawallPillar1" parent="Level/Props" instance=ExtResource("p_pillar")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -10)
 
-[node name="Pillar3" parent="Level/Props" instance=ExtResource("p_pillar")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 6)
+[node name="SeawallPillar2" parent="Level/Props" instance=ExtResource("p_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -11)
 
-[node name="Pillar4" parent="Level/Props" instance=ExtResource("p_pillar")]
+[node name="SeawallPillar3" parent="Level/Props" instance=ExtResource("p_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -11)
+
+[node name="SeawallPillar4" parent="Level/Props" instance=ExtResource("p_pillar")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -10)
 
-[node name="BannerIdealists" parent="Level/Props" instance=ExtResource("p_banner1")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -4)
+[node name="CraneArch" parent="Level/Props" instance=ExtResource("p_arch")]
+transform = Transform3D(0.866, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866, 15, 0, -8)
 
-[node name="BannerMerchants" parent="Level/Props" instance=ExtResource("p_banner2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -4)
+[node name="Cargo1" parent="Level/Props" instance=ExtResource("p_barrels")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 3)
 
-[node name="Barrels1" parent="Level/Props" instance=ExtResource("p_barrels")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 16)
+[node name="Cargo2" parent="Level/Props" instance=ExtResource("p_barrels")]
+transform = Transform3D(0.707, 0, -0.707, 0, 1, 0, 0.707, 0, 0.707, 6, 0, 6)
 
-[node name="Barrels2" parent="Level/Props" instance=ExtResource("p_barrels")]
-transform = Transform3D(0.707, 0, -0.707, 0, 1, 0, 0.707, 0, 0.707, 10, 0, 19)
+[node name="SarrosTear" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 1.4, -6)
+script = ExtResource("9_tear")
+color = Color(1.0, 0.75, 0.35, 1)
+ring_radius = 0.8
+intensity = 0.6
 
-[node name="DockBridge" parent="Level/Props" instance=ExtResource("p_bridge")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 6, 0, 26)
-
-[node name="DockWalk" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 27)
-
-[node name="DockWalkCollision" type="CollisionShape3D" parent="Level/DockWalk"]
-shape = SubResource("BoxShape_dock")
-
-[node name="FactionAccord" type="Node3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
+[node name="GlimpseOfCael" type="Node3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, -6)
 script = ExtResource("8_event")
-display_name = "The Faction Accord"
-flag_name = "verath_resolved"
+display_name = "A Figure at the Crane"
+flag_name = "saw_cael"
 xp_amount = 5000
-resolve_text = "Neither side was wrong about everything.
-The docks reopen by evening."
+resolve_text = "Grey coat. Cartographer's case. He watches the water like a
+man reading a ledger, then steps through a tear that closes like a door.
+Liris: \"He knew we were here. He wanted us to see him leave.\""
 
 [node name="WestPortal" type="Node3D" parent="Level"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -19, 0, 10)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -19, 0, 8)
 script = ExtResource("6_portal")
-display_name = "Back to Old Kaveth"
-spawn_id = "verath_west"
-target_plane = "kaveth"
-target_spawn_id = "kaveth_east"
+display_name = "Back to the Docks"
+spawn_id = "seawall_west"
+target_plane = "verath"
+target_spawn_id = "verath_north"
 
 [node name="NorthPortal" type="Node3D" parent="Level"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 19, 0, -14)
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 19, 0, 10)
 script = ExtResource("6_portal")
-display_name = "The Seawall"
-spawn_id = "verath_north"
-target_plane = "verath_seawall"
-target_spawn_id = "seawall_west"
-required_flag = "verath_resolved"
-blocked_hint = "The Between takes only the certain."
+display_name = "The Between Crossing"
+spawn_id = "seawall_north"
+target_plane = "between"
+target_spawn_id = "between_south"
+required_flag = "saw_cael"
+blocked_hint = "Liris: We follow a trail, not a guess. Find where he crossed."
 
 [node name="RestPoint" type="Node3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, 14)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, 12)
 script = ExtResource("7_rest")
-display_name = "Harbor Shrine"
+display_name = "Seawall Shrine"
 
 [node name="Characters" type="Node3D" parent="."]
 
 [node name="Sarro" type="CharacterBody3D" parent="Characters" groups=["players"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 0.9, 10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 0.9, 8)
 script = ExtResource("2_player")
 collision_layer = 1
 collision_mask = 7
@@ -159,7 +142,7 @@ shape = SubResource("CapsuleShape3D_char")
 [node name="Skin" parent="Characters/Sarro" instance=ExtResource("c_sarro")]
 
 [node name="Liris" type="CharacterBody3D" parent="Characters" groups=["companions"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 0.9, 11.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 0.9, 9.5)
 script = ExtResource("3_companion")
 collision_layer = 4
 collision_mask = 3
@@ -172,49 +155,35 @@ shape = SubResource("CapsuleShape3D_char")
 
 [node name="Enemies" type="Node3D" parent="."]
 
-[node name="Blade1" type="CharacterBody3D" parent="Enemies"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.9, 8)
+[node name="SeawallBlade1" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.9, -6)
 script = ExtResource("4_enemy")
 collision_layer = 2
 enemy_type = "dock_blade"
 xp_value = 4000
 aggro_radius = 7.0
+pack_id = "seawall_gang"
 
-[node name="Blade1Collision" type="CollisionShape3D" parent="Enemies/Blade1"]
+[node name="SeawallBlade1Collision" type="CollisionShape3D" parent="Enemies/SeawallBlade1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_char")
 
-[node name="Skin" parent="Enemies/Blade1" instance=ExtResource("c_blade")]
+[node name="Skin" parent="Enemies/SeawallBlade1" instance=ExtResource("c_blade")]
 
-[node name="Blade2" type="CharacterBody3D" parent="Enemies"]
-pack_id = "dock_gang"
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.9, 12)
+[node name="SeawallBlade2" type="CharacterBody3D" parent="Enemies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.9, -3)
 script = ExtResource("4_enemy")
 collision_layer = 2
 enemy_type = "dock_blade"
 xp_value = 4000
 aggro_radius = 7.0
+pack_id = "seawall_gang"
 
-[node name="Blade2Collision" type="CollisionShape3D" parent="Enemies/Blade2"]
+[node name="SeawallBlade2Collision" type="CollisionShape3D" parent="Enemies/SeawallBlade2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_char")
 
-[node name="Skin" parent="Enemies/Blade2" instance=ExtResource("c_blade")]
-
-[node name="Blade3" type="CharacterBody3D" parent="Enemies"]
-pack_id = "dock_gang"
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.9, 16)
-script = ExtResource("4_enemy")
-collision_layer = 2
-enemy_type = "dock_blade"
-xp_value = 4000
-aggro_radius = 7.0
-
-[node name="Blade3Collision" type="CollisionShape3D" parent="Enemies/Blade3"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-shape = SubResource("CapsuleShape3D_char")
-
-[node name="Skin" parent="Enemies/Blade3" instance=ExtResource("c_blade")]
+[node name="Skin" parent="Enemies/SeawallBlade2" instance=ExtResource("c_blade")]
 
 [node name="CameraPivot" type="Node3D" parent="."]
 

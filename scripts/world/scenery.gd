@@ -295,9 +295,17 @@ const RECIPES := {
 ## `ground_mi` sizes the arena from its mesh AABB; `avoid` are prop positions
 ## to keep scatter clear of; `clear_centers` are character positions kept clear
 ## by a wider radius.
+## Split scenes share their plane's recipe (layouts still differ — the seed
+## is the full plane_id).
+const _RECIPE_ALIASES := {
+	"reach_rig": "reach",
+	"kaveth_vault": "kaveth",
+	"verath_seawall": "verath",
+}
+
 static func generate(level: Node3D, ground_mi: MeshInstance3D, avoid: PackedVector3Array,
 		clear_centers: PackedVector3Array, plane_id: String) -> void:
-	var recipe: Dictionary = RECIPES.get(plane_id, _MEADOW_RECIPE)
+	var recipe: Dictionary = RECIPES.get(_RECIPE_ALIASES.get(plane_id, plane_id), _MEADOW_RECIPE)
 	var scenery := Node3D.new()
 	scenery.name = "Scenery"
 	level.add_child(scenery)

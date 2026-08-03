@@ -69,10 +69,17 @@ const PLANES := {
 
 ## Apply the plane's sun and ambient particles to a level. `sun` is the scene's
 ## DirectionalLight3D; `ground_mi` sizes the particle field from its mesh AABB.
+## Split scenes share their plane's atmosphere.
+const _ALIASES := {
+	"reach_rig": "reach",
+	"kaveth_vault": "kaveth",
+	"verath_seawall": "verath",
+}
+
 static func apply(level: Node3D, plane_id: String, sun: DirectionalLight3D,
 		ground_mi: MeshInstance3D) -> void:
 	var spec: Dictionary = _DEFAULT.duplicate()
-	spec.merge(PLANES.get(plane_id, {}), true)
+	spec.merge(PLANES.get(_ALIASES.get(plane_id, plane_id), {}), true)
 
 	if sun != null:
 		sun.rotation_degrees = spec["sun_rot"]

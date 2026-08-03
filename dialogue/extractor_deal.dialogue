@@ -1,0 +1,28 @@
+~ deal
+
+if GameState.has_flag("reach_done")
+	Fence: Rig's east. Told you — gate's open. Don't die where I can see it, it's bad for trade.
+	=> END
+Fence: You walk like a man following somebody. And the only somebody worth following through here went east, toward the rig.
+Fence: I know the gate schedule. I know which pens are counted and which aren't. That's worth something.
+Liris: He sells passage through his own employer's fence.
+Fence: I sell *certainty*, warden. The Extractors sell holes in the world. One of us is honest about it.
+Fence: So. My price: whatever the Menders were paying you to carry. Or walk the long way and count the pens yourself while the harvest runs.
+- Pay him and move fast
+	Sarro: Done. The trail's cold enough already.
+	Fence: Pleasure. East gate, third pen — it's blind after the shift bell.
+	Fence: The one you're following — grey coat, cartographer's case. He didn't haggle either.
+	Liris: (quietly) Every hour that rig runs, something on the other side goes thinner.
+	do GameState.set_flag("reach_done")
+	do GameState.set_flag("fence_deal")
+	do GameState.grant_xp(2500)
+- Refuse — we take the long way [Liris]
+	Liris: We don't fund this place. Not even in passing.
+	Fence: Principles. Expensive things out here.
+	Sarro: We'll manage.
+	Fence: You will, at that. Tell you what — watching the pair of you argue with a fence line will be entertainment enough. Gate's mispatrolled at the far corner. Free of charge.
+	Fence: Grey coat. Cartographer's case. East. Now we're square, and you owe me nothing.
+	do GameState.set_flag("reach_done")
+	do GameState.add_conviction(1)
+	do GameState.grant_xp(2500)
+=> END
