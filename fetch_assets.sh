@@ -14,6 +14,10 @@ DEFAULT_PACKS=(
 	ANIMATION_Base_Locomotion
 	POLYGON_Fantasy_Kingdom
 	POLYGON_NatureBiomes_MeadowForest
+	POLYGON_AncientEgypt
+	POLYGON_Scifi_Space
+	POLYGON_Western_Pack
+	POLYGON_Prototype
 )
 
 PACKS=("${@:-${DEFAULT_PACKS[@]}}")

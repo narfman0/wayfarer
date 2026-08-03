@@ -11,9 +11,8 @@
 ##              the exclusion radius (m) around props,
 ##   ground_color — optional; tints the level's flat ground mesh.
 ## Mesh names are "pack:SM_Name" refs into the PACKS registry, which records
-## each pack's folder, file extension, and authoring unit — packs disagree on
-## all three (MeadowForest is authored in centimetres; a grass clump is ~91
-## units tall — see _raw asset lesson in git history).
+## each pack's folder, file extension, and authoring unit (see the unit-scale
+## history note on PACKS before adding a pack).
 ##
 ## All layers are COLLISION-FREE (parented under a "Scenery" node the level's
 ## prop-collision pass ignores), so nothing blocks movement or click-to-move.
@@ -37,11 +36,38 @@ const _CHAR_CLEAR := 3.0
 # unit: authoring scale → metres. Verify against a known mesh height before
 # adding a pack (load it, check the AABB) — wrong unit = 100x scenery.
 
+# Every current cook (both the .gltf texture pipeline and the .glb batch)
+# bakes the Synty cm→m unit and axis correction onto a child node (0.01 scale +
+# 90° X), so scene roots are metre-scale Y-up and unit is 1.0 across the board.
+# The field stays because pack cooks have disagreed before — the old meadow
+# cook shipped raw centimetres, and the 0.01 that once compensated for it
+# became a 100x-too-small bug when the pack was re-cooked with the correction
+# baked in. Probe a known mesh height before trusting a new pack.
 const PACKS := {
 	"meadow": {
 		"dir": "res://assets/meshes/POLYGON_NatureBiomes_MeadowForest_SourceFiles_v2/Meadow_Source_Files/FBX/",
 		"ext": ".gltf",
-		"unit": 0.01,
+		"unit": 1.0,
+	},
+	"egypt": {
+		"dir": "res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/",
+		"ext": ".glb",
+		"unit": 1.0,
+	},
+	"scifi": {
+		"dir": "res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/",
+		"ext": ".glb",
+		"unit": 1.0,
+	},
+	"western": {
+		"dir": "res://assets/meshes/POLYGON_Western_Pack_Source_Files_v4/SourceFiles/FBX/",
+		"ext": ".glb",
+		"unit": 1.0,
+	},
+	"proto": {
+		"dir": "res://assets/meshes/POLYGON_Prototype_SourceFiles_v4/SourceFiles/FBX/",
+		"ext": ".glb",
+		"unit": 1.0,
 	},
 }
 
@@ -87,8 +113,178 @@ const _MEADOW_RECIPE := {
 	],
 }
 
-## plane_id → recipe. Planes without an entry get the meadow fallback.
-const RECIPES := {}
+# ── Per-plane vocabularies ────────────────────────────────────────────────────
+
+const _SCIFI_CRATES := ["scifi:SM_Prop_Crate_01", "scifi:SM_Prop_Crate_02", "scifi:SM_Prop_Crate_Wide_01"]
+const _SCIFI_HARDWARE := [
+	"scifi:SM_Prop_Detail_Pipes_01", "scifi:SM_Prop_Detail_Pipes_02", "scifi:SM_Prop_Detail_Pipes_03",
+	"scifi:SM_Prop_Wires_01", "scifi:SM_Prop_Wires_02", "scifi:SM_Prop_Wires_03",
+	"scifi:SM_Prop_Wires_04", "scifi:SM_Prop_Wires_05",
+]
+const _SCIFI_DEBRIS := [
+	"scifi:SM_Env_Rubble_Pile_01", "scifi:SM_Env_Rubble_Pile_02", "scifi:SM_Env_Debris_Pipe_01",
+]
+const _SCIFI_WRECKAGE := [
+	"scifi:SM_Env_Debris_Shell_01", "scifi:SM_Env_Debris_Shell_02", "scifi:SM_Env_Debris_Shell_03",
+	"scifi:SM_Env_Debris_Structure_01", "scifi:SM_Env_Debris_Structure_02", "scifi:SM_Env_Debris_Structure_03",
+]
+
+const _EGYPT_STATUES := [
+	"egypt:Props/SM_Prop_Statue_01", "egypt:Props/SM_Prop_Statue_02", "egypt:Props/SM_Prop_Statue_03",
+	"egypt:Props/SM_Prop_Statue_04", "egypt:Props/SM_Prop_Statue_05", "egypt:Props/SM_Prop_Statue_06",
+	"egypt:Props/SM_Prop_Statue_Damaged_01",
+]
+const _EGYPT_PILLARS := [
+	"egypt:Buildings/SM_Bld_Pillar_Ornate_01", "egypt:Buildings/SM_Bld_Pillar_Ornate_02",
+	"egypt:Buildings/SM_Bld_Pillar_Ornate_Damaged_01", "egypt:Buildings/SM_Bld_Pillar_Ornate_Damaged_02",
+]
+const _EGYPT_RUBBLE := [
+	"egypt:Props/SM_Prop_Limestone_Rubble_01", "egypt:Props/SM_Prop_Limestone_Rubble_02",
+	"egypt:Props/SM_Prop_Limestone_Rubble_03", "egypt:Props/SM_Prop_Limestone_Block_01",
+	"egypt:Props/SM_Prop_Limestone_Block_02",
+]
+const _EGYPT_DEAD_BUSHES := [
+	"egypt:Environment/SM_Env_Bush_Dead_01", "egypt:Environment/SM_Env_Bush_Dead_02",
+	"egypt:Environment/SM_Env_Bush_Dead_03", "egypt:Environment/SM_Env_Bush_Dead_04",
+]
+const _EGYPT_GARDEN_TREES := [
+	"egypt:Environment/SM_Env_Tree_Palm_01", "egypt:Environment/SM_Env_Tree_Palm_02",
+	"egypt:Environment/SM_Env_Tree_Palm_03", "egypt:Environment/SM_Env_Tree_01",
+	"egypt:Environment/SM_Env_Tree_02",
+]
+const _EGYPT_FLOWERS := [
+	"egypt:Environment/SM_Env_Flowers_01", "egypt:Environment/SM_Env_Flowers_02",
+	"egypt:Environment/SM_Env_Flowers_03", "egypt:Environment/SM_Env_Flowers_04",
+	"egypt:Environment/SM_Env_Flowers_05", "egypt:Environment/SM_Env_Flowers_06",
+]
+const _EGYPT_BUSHES := [
+	"egypt:Environment/SM_Env_Bush_01", "egypt:Environment/SM_Env_Bush_02",
+	"egypt:Environment/SM_Env_Bush_Group_01", "egypt:Environment/SM_Env_Bush_Group_02",
+	"egypt:Environment/SM_Env_Bush_Group_03",
+]
+const _EGYPT_VESSELS := [
+	"egypt:Props/SM_Prop_Vase_01", "egypt:Props/SM_Prop_Vase_02", "egypt:Props/SM_Prop_Vase_03",
+	"egypt:Props/SM_Prop_Plinth_01", "egypt:Props/SM_Prop_Plinth_02",
+]
+const _EGYPT_BACKDROP := [
+	"egypt:Environment/SM_Env_Rock_Wall_01", "egypt:Environment/SM_Env_Rock_Wall_02",
+	"egypt:Buildings/SM_Bld_Pyramid_Block_Full_01", "egypt:Buildings/SM_Bld_Pyramid_Block_Top_01",
+]
+
+const _WESTERN_CLIFFS := [
+	"western:SM_Env_Cliff_Straight_01", "western:SM_Env_Cliff_Straight_02",
+	"western:SM_Env_Cliff_Curve_01", "western:SM_Env_Cliff_Curve_02", "western:SM_Env_Cliff_Cap_01",
+]
+const _WESTERN_CARGO := [
+	"western:SM_Prop_Barrel_01", "western:SM_Prop_Barrel_02", "western:SM_Prop_Barrel_Half_01",
+	"western:SM_Prop_Crate_01",
+	"western:SM_Prop_Wood_Pile_01", "western:SM_Prop_Wood_Pile_02", "western:SM_Prop_Wood_Pile_03",
+]
+const _WESTERN_ROCKS := [
+	"western:SM_Env_Rock_01", "western:SM_Env_Rock_02", "western:SM_Env_Rock_Round_01",
+	"western:SM_Env_Rock_Round_02", "western:SM_Env_Rocks_01", "western:SM_Env_Rocks_02",
+]
+const _WESTERN_GRASS := ["western:SM_Env_Grass_01", "western:SM_Env_Grass_02", "western:SM_Env_Grass_03"]
+const _WESTERN_LANTERNS := ["western:SM_Prop_Lantern_01", "western:SM_Prop_Lantern_02"]
+
+const _PROTO_BACKDROP := [
+	"proto:SM_Generic_Mountains_Soft_01", "proto:SM_Generic_Mountains_Grass_01",
+	"proto:SM_Generic_Cloud_01", "proto:SM_Generic_Cloud_02", "proto:SM_Generic_Cloud_03",
+]
+const _PROTO_PRIMITIVES := [
+	"proto:SM_Primitive_Cube_01", "proto:SM_Primitive_Cube_02", "proto:SM_Primitive_Cube_03",
+	"proto:SM_Primitive_Sphere_01", "proto:SM_Primitive_Sphere_02",
+	"proto:SM_Primitive_Cone_01", "proto:SM_Primitive_Cone_02",
+	"proto:SM_Primitive_Cylander_01", "proto:SM_Primitive_Cylander_02",
+]
+const _PROTO_TREES := [
+	"proto:SM_Prop_Tree_Square_01", "proto:SM_Prop_Tree_Square_02",
+	"proto:SM_Prop_Tree_Round_01", "proto:SM_Prop_Tree_Round_02", "proto:SM_Prop_Tree_Pine_01",
+]
+const _PROTO_ROCKS := ["proto:SM_Generic_Small_Rocks_01", "proto:SM_Generic_Small_Rocks_02"]
+
+const _SCIFI_ASTEROIDS := [
+	"scifi:SM_Env_Asteroid_01", "scifi:SM_Env_Asteroid_02", "scifi:SM_Env_Asteroid_03",
+	"scifi:SM_Env_Asteroid_04", "scifi:SM_Env_Asteroid_05",
+]
+
+## plane_id → recipe. Planes without an entry get the meadow fallback — the
+## Tamori planes keep it on purpose: the meadow IS their identity.
+const RECIPES := {
+	# Big empty grassland scarred by extraction: sparser meadow growth, with
+	# industrial litter accumulating between the tufts.
+	"reach": {
+		"ground_color": Color(0.35, 0.36, 0.28),
+		"backdrop": {"names": _MEADOW_BACKDROP, "count": 14, "h_min": 10.0, "h_max": 18.0},
+		"layers": [
+			{"names": _MEADOW_GROUNDCOVER, "count": 24, "smin": 0.3, "smax": 0.7, "clear": 1.2},
+			{"names": _MEADOW_GRASS, "count": 50, "smin": 0.4, "smax": 0.9, "clear": 0.7},
+			{"names": _SCIFI_CRATES, "count": 10, "smin": 0.9, "smax": 1.1, "clear": 1.5},
+			{"names": _SCIFI_HARDWARE, "count": 12, "smin": 0.8, "smax": 1.1, "clear": 1.5},
+			{"names": _SCIFI_DEBRIS, "count": 8, "smin": 0.8, "smax": 1.2, "clear": 2.0},
+		],
+	},
+	# Monumental ruins at night, built around the Veil: oversized statues and
+	# pillars, limestone rubble, everything organic long dead.
+	"kaveth": {
+		"ground_color": Color(0.22, 0.2, 0.26),
+		"backdrop": {"names": _EGYPT_BACKDROP, "count": 14, "h_min": 14.0, "h_max": 24.0},
+		"layers": [
+			{"names": _EGYPT_STATUES, "count": 8, "smin": 1.2, "smax": 2.0, "clear": 2.0},
+			{"names": _EGYPT_PILLARS, "count": 10, "smin": 1.0, "smax": 1.5, "clear": 2.0},
+			{"names": _EGYPT_RUBBLE, "count": 16, "smin": 0.8, "smax": 1.3, "clear": 1.2},
+			{"names": _EGYPT_VESSELS, "count": 8, "smin": 0.9, "smax": 1.2, "clear": 1.0},
+			{"names": _EGYPT_DEAD_BUSHES, "count": 14, "smin": 0.8, "smax": 1.2, "clear": 0.8},
+		],
+	},
+	# Frontier port: salt-bleached cargo among sea-cliff rocks and dry tufts.
+	"verath": {
+		"ground_color": Color(0.45, 0.42, 0.36),
+		"backdrop": {"names": _WESTERN_CLIFFS, "count": 14, "h_min": 10.0, "h_max": 16.0},
+		"layers": [
+			{"names": _WESTERN_CARGO, "count": 14, "smin": 0.9, "smax": 1.1, "clear": 1.2},
+			{"names": _WESTERN_ROCKS, "count": 14, "smin": 0.7, "smax": 1.2, "clear": 1.2},
+			{"names": _WESTERN_GRASS, "count": 26, "smin": 0.8, "smax": 1.2, "clear": 0.7},
+			{"names": _WESTERN_LANTERNS, "count": 4, "smin": 1.0, "smax": 1.0, "clear": 2.0},
+		],
+	},
+	# Abstract non-place: graybox AS aesthetic — primitives and placeholder
+	# trees scattered like an unfinished thought, clouds parked at eye level.
+	"between": {
+		"ground_color": Color(0.5, 0.5, 0.55),
+		"backdrop": {"names": _PROTO_BACKDROP, "count": 12, "h_min": 8.0, "h_max": 16.0},
+		"layers": [
+			{"names": _PROTO_PRIMITIVES, "count": 18, "smin": 0.6, "smax": 1.6, "clear": 1.5},
+			{"names": _PROTO_TREES, "count": 8, "smin": 0.8, "smax": 1.2, "clear": 2.0},
+			{"names": _PROTO_ROCKS, "count": 10, "smin": 0.8, "smax": 1.2, "clear": 1.0},
+		],
+	},
+	# Settled golden-hour gardens: the only plane with no enemies, so it gets
+	# the densest growth — palms, flowers, kept vessels.
+	"ashan": {
+		"ground_color": Color(0.5, 0.52, 0.3),
+		"backdrop": {"names": _MEADOW_BACKDROP, "count": 14, "h_min": 10.0, "h_max": 16.0},
+		"layers": [
+			{"names": _EGYPT_GARDEN_TREES, "count": 10, "smin": 0.7, "smax": 1.0, "clear": 2.5},
+			{"names": _EGYPT_FLOWERS, "count": 30, "smin": 0.9, "smax": 1.3, "clear": 0.6},
+			{"names": _EGYPT_BUSHES, "count": 14, "smin": 0.8, "smax": 1.2, "clear": 1.0},
+			{"names": _MEADOW_GRASS, "count": 40, "smin": 0.5, "smax": 1.0, "clear": 0.7},
+			{"names": _EGYPT_VESSELS, "count": 8, "smin": 0.9, "smax": 1.1, "clear": 1.0},
+		],
+	},
+	# Cael's apparatus mid-operation: wreckage and torn structure under an
+	# asteroid horizon; the plane is coming apart at the seams.
+	"convergence": {
+		"ground_color": Color(0.24, 0.18, 0.3),
+		"backdrop": {"names": _SCIFI_ASTEROIDS, "count": 12, "h_min": 14.0, "h_max": 24.0},
+		"layers": [
+			{"names": _SCIFI_WRECKAGE, "count": 12, "smin": 0.8, "smax": 1.2, "clear": 2.0},
+			{"names": _PROTO_PRIMITIVES, "count": 10, "smin": 0.6, "smax": 1.4, "clear": 1.5},
+			{"names": _SCIFI_HARDWARE, "count": 10, "smin": 0.8, "smax": 1.1, "clear": 1.5},
+			{"names": _SCIFI_DEBRIS, "count": 10, "smin": 0.8, "smax": 1.2, "clear": 1.5},
+		],
+	},
+}
 
 # ── Generator ─────────────────────────────────────────────────────────────────
 
@@ -140,15 +336,24 @@ static func _backdrop(parent: Node3D, rng: RandomNumberGenerator, radius: float,
 		inst.position = Vector3(cos(ang) * r, rng.randf_range(-1.5, 0.0), sin(ang) * r)
 		inst.rotation.y = rng.randf_range(0.0, TAU)
 		var target_h := rng.randf_range(spec["h_min"], spec["h_max"])
-		var s := target_h / _raw_height(inst)
+		var s := target_h / _world_height(inst)
 		inst.scale = Vector3(s, s, s)
 
-## World-space height of an instance's first mesh at unit node scale.
-static func _raw_height(inst: Node3D) -> float:
+## World-space height of an instance's first mesh at unit root scale. The mesh
+## AABB is transformed through every node below the root — the .glb cook bakes
+## its unit/axis correction (0.01 scale, 90° X) on a child node, so the raw
+## AABB alone is centimetre Z-up garbage for those packs.
+static func _world_height(inst: Node3D) -> float:
 	var mis: Array = inst.find_children("*", "MeshInstance3D", true, false)
 	if mis.is_empty() or (mis[0] as MeshInstance3D).mesh == null:
 		return 100.0
-	return maxf(0.01, (mis[0] as MeshInstance3D).mesh.get_aabb().size.y)
+	var mi := mis[0] as MeshInstance3D
+	var xf := mi.transform
+	var n: Node = mi.get_parent()
+	while n != null and n != inst and n is Node3D:
+		xf = (n as Node3D).transform * xf
+		n = n.get_parent()
+	return maxf(0.01, (xf * mi.mesh.get_aabb()).size.y)
 
 static func _scatter(parent: Node3D, rng: RandomNumberGenerator, hx: float, hz: float,
 		avoid: PackedVector3Array, clear_centers: PackedVector3Array,
