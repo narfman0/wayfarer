@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://dl5cxl3d22uar"
+path="res://.godot/imported/cael_resolution.dialogue-3f9a6b718a5bdef164f8137b20873fb0.tres"
+
+[deps]
+
+source_file="res://dialogue/cael_resolution.dialogue"
+dest_files=["res://.godot/imported/cael_resolution.dialogue-3f9a6b718a5bdef164f8137b20873fb0.tres"]
+
+[params]
+
+defaults=true

@@ -1,10 +1,17 @@
 # Content Expansion Plan — Levels, Encounters, Aesthetic, Fun
 
-Status: PROPOSED 2026-08-02. Gap analysis of the current build plus a
-phased plan for thicker levels, real encounter variety, per-plane
-aesthetic identity, and combat feel. Companion to `levels.md`,
-`bosses.md`, `gameplay.md`, `progression.md` — this doc is about closing
-the gap between those designs and what's in the scenes today.
+Status: SHIPPED 2026-08-03 — all six phases of the suggested order are
+in main (feel/telegraphs, biome+env+audio, Act 1 slice with the Mender
+Anchor, Act 2 splits with the Extractor Engine, Act 3 with Cael's
+conviction-gated resolution and the final choices). The tuning loop
+(phase 6) is ongoing. Verified by the harnesses in
+`future/tests/harnesses/` (phase1, anchor_fight, act2, act3,
+all_planes, plane_gallery). Original gap analysis kept below for
+reference.
+
+Known placeholder quirks: the Scifi "asteroid" backdrop meshes carry
+station-sign atlas textures (cooker best-guess); crystal adds in the
+Anchor fight are deferred until dynamic enemy spawning exists.
 
 ## Where the build is today
 

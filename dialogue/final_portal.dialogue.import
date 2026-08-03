@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://diogcqbib1r8t"
+path="res://.godot/imported/final_portal.dialogue-f49c70c836a54b8314bdf9e47104135c.tres"
+
+[deps]
+
+source_file="res://dialogue/final_portal.dialogue"
+dest_files=["res://.godot/imported/final_portal.dialogue-f49c70c836a54b8314bdf9e47104135c.tres"]
+
+[params]
+
+defaults=true
