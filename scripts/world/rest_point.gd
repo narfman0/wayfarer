@@ -49,6 +49,7 @@ func _rest() -> void:
 	for c in GameState.party():
 		c.stats.current_hp = c.stats.max_hp
 		c.second_wind_used = false
+		c.action_surge_used = false
 		c.healing_word_charges = 1
 		c.channel_divinity_ready = true
 		c.guiding_bolt_ready = true

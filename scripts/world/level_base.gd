@@ -297,6 +297,8 @@ func _input(event: InputEvent) -> void:
 		_use_channel_divinity()
 	elif event.is_action_pressed("ability_5"):
 		_use_shield_bash()
+	elif event.is_action_pressed("ability_6"):
+		_use_action_surge()
 
 # ── Sarro Abilities ───────────────────────────────────────────────────────────
 
@@ -312,6 +314,24 @@ func _use_second_wind() -> void:
 	c.stats.current_hp = mini(c.stats.max_hp, c.stats.current_hp + heal)
 	_DamageNumber.spawn(self, _player.global_position, "+%d" % heal, Color(0.4, 1.0, 0.5))
 	print("[Combat] Second Wind: +%d HP" % heal)
+
+## [6] Action Surge — Sarro pushes past his limit (unlocked at level 2):
+## attacks land twice as fast for 6 s. Once per rest.
+const _ACTION_SURGE_SECS := 6.0
+
+func _use_action_surge() -> void:
+	var c = GameState.sarro
+	if c == null or c.action_surge_used or _defeated or c.stats.level < 2:
+		return
+	c.action_surge_used = true
+	_attacker.rate_scale = 0.5
+	AudioManager.play_sfx("crit", 0.0)
+	_DamageNumber.spawn(self, _player.global_position + Vector3(0, 2.0, 0),
+		"ACTION SURGE!", Color(1.0, 0.8, 0.2))
+	print("[Combat] Action Surge: attack speed doubled for %.0fs" % _ACTION_SURGE_SECS)
+	get_tree().create_timer(_ACTION_SURGE_SECS).timeout.connect(func():
+		if _attacker != null:
+			_attacker.rate_scale = 1.0)
 
 ## [5] Shield Bash — Sarro's interrupt (unlocked at level 3). Slam the current
 ## target: cancels a channeled cast (long punish stun) or briefly staggers a

@@ -23,6 +23,9 @@ var second_wind_used: bool = false
 
 ## Sarro: Shield Bash cooldown (seconds remaining; ticked by the level).
 var shield_bash_cd: float = 0.0
+
+## Sarro: Action Surge (level 2) — once per rest.
+var action_surge_used: bool = false
 ## Liris: Healing Word — short-rest resource (1 charge, recovers at rest).
 var healing_word_charges: int = 1
 ## Liris: Guiding Bolt — long-rest recharge; marks target for advantage.

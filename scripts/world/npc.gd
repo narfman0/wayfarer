@@ -14,6 +14,14 @@ const _Animator  = preload("res://scripts/world/character_animator.gd")
 ## Ambient one-liners shown when the player wanders close (used when there is
 ## no dialogue, or alongside it as flavor between conversations).
 @export var bark_lines: Array[String] = []
+## Idle stroll between these points (with a pause at each). Empty = stand
+## still. This is what makes a plane read as lived-in rather than staged.
+@export var wander_points: Array[NodePath] = []
+
+const _WALK_SPEED := 1.1
+
+var _wander_idx := 0
+var _pause_left := 2.0
 
 const BARK_COOLDOWN_MS := 9000
 
@@ -47,6 +55,25 @@ func _ready() -> void:
 	add_child(area)
 	area.body_entered.connect(_on_body_entered)
 	area.body_exited.connect(_on_body_exited)
+
+func _process(delta: float) -> void:
+	if wander_points.is_empty() or _talking or _player_near:
+		return
+	if _pause_left > 0.0:
+		_pause_left -= delta
+		return
+	var wp := get_node_or_null(wander_points[_wander_idx])
+	if wp == null:
+		return
+	var to_wp: Vector3 = (wp as Node3D).global_position - global_position
+	to_wp.y = 0.0
+	if to_wp.length() < 0.4:
+		_wander_idx = (_wander_idx + 1) % wander_points.size()
+		_pause_left = randf_range(2.5, 6.0)
+		return
+	var dir := to_wp.normalized()
+	global_position += dir * _WALK_SPEED * delta
+	rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 6.0 * delta)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _player_near and not _talking and event.is_action_pressed("interact"):

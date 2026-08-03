@@ -39,6 +39,15 @@ const SLAM_RATE   := 7.0   # cooldown between slams
 
 const _PHASE_INVULN := 1.8  # seconds of invulnerability during phase transition
 
+# Support: hangs back and channels an interruptible group heal — creates the
+# kill-order/interrupt decision. Assigned per-node via the archetype export
+# (a type-wide mapping would make every zealot a healer).
+const SUPPORT_MIN  := 4.0
+const SUPPORT_MAX  := 8.0
+const SUPPORT_PERIOD := 9.0
+const SUPPORT_CAST := 3.0
+const SUPPORT_RANGE := 10.0
+
 ## Melee counterplay per enemy type. Anything unlisted is a bruiser.
 const _TYPE_ARCHETYPES := {
 	"brute": "heavy",
@@ -59,7 +68,7 @@ const _TYPE_ARCHETYPES := {
 ## Roster key for character_factory.make_enemy (bandit / brute / anchor_warden).
 @export var enemy_type: String = "bandit"
 ## "auto" derives from enemy_type via _TYPE_ARCHETYPES.
-@export_enum("auto", "bruiser", "skirmisher", "heavy") var archetype: String = "auto"
+@export_enum("auto", "bruiser", "skirmisher", "heavy", "support") var archetype: String = "auto"
 ## Enemies sharing a non-empty pack_id aggro together: pulling one guard
 ## pulls the camp, so camp layouts matter.
 @export var pack_id: String = ""
@@ -84,6 +93,7 @@ var _patrol_idx: int = 0
 var _target: CharacterBody3D = null
 var _attack_timer: float = 0.0
 var _ranged_timer: float = 0.0
+var _support_timer: float = 4.0   # first litany shortly after combat starts
 var _slam_timer: float = 2.5   # first slam lands shortly after combat starts
 var _slam_winding: bool = false
 var _knockback: Vector3 = Vector3.ZERO
@@ -217,6 +227,9 @@ func _do_chase(delta: float) -> void:
 	if _arch == "skirmisher":
 		_do_chase_skirmisher(delta)
 		return
+	if _arch == "support":
+		_do_chase_support(delta)
+		return
 	var to_target := _target.global_position - global_position
 	to_target.y   = 0.0
 	var dist := to_target.length()
@@ -339,6 +352,58 @@ func _on_projectile_hit(body: CharacterBody3D) -> void:
 	if _dead or character == null:
 		return
 	_resolve_attack_on(body)
+
+# ── Support (Mending Litany) ──────────────────────────────────────────────────
+
+## Support chase: hold a band behind the front line and channel the litany on
+## a timer. The cast is interruptible — Shield Bash is the counterplay; the
+## other answer is killing the healer first.
+func _do_chase_support(delta: float) -> void:
+	var to_target := _target.global_position - global_position
+	to_target.y = 0.0
+	var dist := to_target.length()
+	if dist > CHASE_DIST:
+		_state = State.PATROL; _target = null; return
+	var dir := to_target.normalized()
+	rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 10.0 * delta)
+
+	if dist < SUPPORT_MIN:        # crowded — back away
+		velocity.x = -dir.x * SPEED * 0.8
+		velocity.z = -dir.z * SPEED * 0.8
+	elif dist <= SUPPORT_MAX:     # in the band — hold
+		velocity.x = 0.0
+		velocity.z = 0.0
+	else:                         # keep up with the fight
+		velocity.x = dir.x * SPEED
+		velocity.z = dir.z * SPEED
+
+	_support_timer -= delta
+	if _support_timer <= 0.0 and not is_casting() and _invuln_timer <= 0.0:
+		_support_timer = SUPPORT_PERIOD
+		start_cast("Mending Litany", SUPPORT_CAST)
+		if not cast_finished.is_connected(_on_support_cast):
+			cast_finished.connect(_on_support_cast)
+
+func _on_support_cast(label: String) -> void:
+	if label != "Mending Litany" or _dead or character == null:
+		return
+	var healed := 0
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not e is EnemyController or e == self:
+			continue
+		var ec := e as EnemyController
+		if ec.character == null or ec._dead:
+			continue
+		if global_position.distance_to(ec.global_position) > SUPPORT_RANGE:
+			continue
+		var amount: int = _Dice.roll(8) + _Dice.roll(8) + 4
+		ec.character.stats.current_hp = mini(ec.character.stats.max_hp,
+			ec.character.stats.current_hp + amount)
+		ec.hp_changed.emit(ec.character.stats.current_hp, ec.character.stats.max_hp)
+		_DamageNumber.spawn(get_tree().current_scene,
+			ec.global_position + Vector3(0, 2.0, 0), "+%d" % amount, Color(0.5, 1.0, 0.6))
+		healed += 1
+	print("[Combat] %s's Mending Litany heals %d allies" % [character.display_name, healed])
 
 # ── Heavy slam ────────────────────────────────────────────────────────────────
 

@@ -13,6 +13,9 @@ const _Juice          = preload("res://scripts/combat/juice.gd")
 const MELEE_RANGE  := 1.6   # metres
 const ATTACK_RATE  := 1.0   # seconds between attacks
 
+## Attack-interval multiplier — Action Surge sets this below 1.0 briefly.
+var rate_scale: float = 1.0
+
 var owner_body: CharacterBody3D = null
 var character = null   # WayfarerCharacter
 
@@ -46,7 +49,7 @@ func _process(delta: float) -> void:
 
 	_timer -= delta
 	if _timer <= 0.0:
-		_timer = ATTACK_RATE
+		_timer = ATTACK_RATE * rate_scale
 		_do_attack()
 
 func _do_attack() -> void:
