@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://c0v3i3pnspask"
+path="res://.godot/imported/warden_ritual.dialogue-ba51f969d937cd90c33bd883eb9c2b63.tres"
+
+[deps]
+
+source_file="res://dialogue/warden_ritual.dialogue"
+dest_files=["res://.godot/imported/warden_ritual.dialogue-ba51f969d937cd90c33bd883eb9c2b63.tres"]
+
+[params]
+
+defaults=true
