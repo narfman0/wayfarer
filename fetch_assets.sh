@@ -150,3 +150,6 @@ size = sum(os.path.getsize(p) for p in closure if os.path.isfile(p))
 print(f"Reference closure: {have}/{len(closure)} files present, {size/1024/1024:.1f} MB.")
 PYEOF
 echo "Done. Run: godot --headless --import"
+
+# Post-process: fix foliage gltf materials (BLEND→MASK, bad texture indices).
+python3 "$(dirname "$0")/tools/patch_gltf_materials.py" 2>/dev/null || true
