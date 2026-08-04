@@ -211,6 +211,7 @@ func _zone_damage(body: Node3D, dmg: int) -> void:
 	var target_char = GameState.sarro if body.is_in_group("players") else GameState.liris
 	if target_char == null or target_char.stats.current_hp <= 0:
 		return
+	dmg = CharacterProgression.modify_party_damage(dmg, target_char, "zone")
 	target_char.stats.current_hp = max(0, target_char.stats.current_hp - dmg)
 	_DamageNumber.hit(self, body.global_position, dmg, false)
 	_Juice.impact_burst(self, body.global_position, Color(0.7, 0.4, 1.0))

@@ -56,11 +56,16 @@ func _test_approach() -> void:
 		return zealot.character.stats.current_hp > 10, 6.0)
 	_check(healed, "Mending Litany heals the wounded packmate")
 
-	# Action Surge doubles Sarro's swing rate
+	# Action Surge doubles Sarro's swing rate (debug parties auto-resolve
+	# to Freeblade, whose Surge Mastery runs on a cooldown instead of
+	# once-per-rest)
 	GameState.sarro.action_surge_used = false
+	GameState.sarro.action_surge_cd = 0.0
 	level._use_action_surge()
-	_check(level._attacker.rate_scale == 0.5 and GameState.sarro.action_surge_used,
-		"Action Surge halves the attack interval, once per rest")
+	var surge_spent: bool = GameState.sarro.action_surge_used \
+		or GameState.sarro.action_surge_cd > 0.0
+	_check(is_equal_approx(level._attacker.rate_scale, 0.5) and surge_spent,
+		"Action Surge halves the attack interval and spends its resource")
 
 	level.queue_free()
 	await get_tree().process_frame

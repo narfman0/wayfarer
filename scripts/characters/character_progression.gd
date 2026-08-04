@@ -246,3 +246,32 @@ static func speed_multiplier(c) -> float:
 ## Base attack-interval multiplier (Action Surge multiplies on top).
 static func base_rate_scale(c) -> float:
 	return 0.9 if c.subclass_key == "threshold_thief" else 1.0
+
+## Subclass defenses, applied wherever the party takes damage.
+## kind: "melee" (enemy weapon hits) or "zone" (telegraphs, Veil discharges).
+## Anchor — Bulwark: Sarro's own incoming −1; Steadying Aura: party −2 from
+## zones. Gatewatch — Bodyguard: Liris −25% while near Sarro. Between-Scout —
+## Uncanny Dodge: crits against Sarro deal half.
+static func modify_party_damage(dmg: int, target_char, kind: String,
+		crit := false, liris_near_sarro := false) -> int:
+	var s = GameState.sarro
+	if s == null or dmg <= 0:
+		return dmg
+	match s.subclass_key:
+		"anchor":
+			if kind == "zone":
+				dmg = maxi(1, dmg - 2)
+			elif target_char == s:
+				dmg = maxi(1, dmg - 1)
+		"gatewatch":
+			if target_char == GameState.liris and liris_near_sarro:
+				dmg = maxi(1, int(dmg * 0.75))
+		"between_scout":
+			if target_char == s and crit:
+				dmg = maxi(1, dmg / 2)
+	return dmg
+
+## Between-Scout Danger Sense: telegraphs aimed at the party linger longer.
+static func telegraph_scale() -> float:
+	var s = GameState.sarro
+	return 1.25 if s != null and s.subclass_key == "between_scout" else 1.0

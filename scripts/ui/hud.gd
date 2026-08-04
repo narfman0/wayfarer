@@ -90,7 +90,12 @@ func _refresh_hotbar() -> void:
 		var sw := "Ready" if not sc.second_wind_used else "Spent"
 		var line := "Sarro — [1] Second Wind: %s" % sw
 		if sc.stats.level >= 2:
-			line += "  [6] Action Surge: %s" % ("Ready" if not sc.action_surge_used else "Spent")
+			var surge: String
+			if sc.subclass_key == "freeblade":
+				surge = "Ready" if sc.action_surge_cd <= 0.0 else "%ds" % ceili(sc.action_surge_cd)
+			else:
+				surge = "Ready" if not sc.action_surge_used else "Spent"
+			line += "  [6] Action Surge: %s" % surge
 		if sc.stats.level >= 3:
 			var sb := "Ready" if sc.shield_bash_cd <= 0.0 else "%ds" % ceili(sc.shield_bash_cd)
 			line += "  [5] Shield Bash: %s" % sb

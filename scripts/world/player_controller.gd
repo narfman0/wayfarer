@@ -5,6 +5,10 @@ class_name PlayerController
 extends CharacterBody3D
 
 const SPEED      := 5.0
+
+## Build-choice speed multiplier (Mobile feat, Skirmisher style) — set by the
+## level after party sync.
+var speed_mult: float = 1.0
 const SPRINT_MUL := 1.8
 const GRAVITY    := 9.8
 const ARRIVE_DIST := 0.35  # metres — stop threshold for click-to-move
@@ -62,7 +66,7 @@ func _read_input() -> Vector2:
 func _move_by_input(stick: Vector2, delta: float) -> void:
 	var cam_basis := _camera_flat_basis()
 	var dir       := (cam_basis * Vector3(stick.x, 0.0, stick.y)).normalized()
-	var speed     := SPEED * (SPRINT_MUL if Input.is_action_pressed("sprint") else 1.0)
+	var speed     := SPEED * speed_mult * (SPRINT_MUL if Input.is_action_pressed("sprint") else 1.0)
 	velocity.x    = dir.x * speed
 	velocity.z    = dir.z * speed
 	rotation.y    = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 12.0 * delta)
@@ -77,8 +81,8 @@ func _move_toward_click(delta: float) -> void:
 		velocity.z = 0.0
 		return
 	var dir    := (flat_tgt - flat_pos).normalized()
-	velocity.x = dir.x * SPEED
-	velocity.z = dir.z * SPEED
+	velocity.x = dir.x * SPEED * speed_mult
+	velocity.z = dir.z * SPEED * speed_mult
 	rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 12.0 * delta)
 
 func _handle_left_click(screen_pos: Vector2) -> void:

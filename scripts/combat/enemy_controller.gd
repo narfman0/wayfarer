@@ -318,6 +318,11 @@ func _resolve_attack_on(body: CharacterBody3D) -> void:
 		_apply_party_damage(target_char, body, dmg, crit)
 	else:
 		_DamageNumber.miss(get_tree().current_scene, body.global_position)
+		# Freeblade: a whiffed swing opens a riposte window.
+		if target_char == GameState.sarro and GameState.sarro.subclass_key == "freeblade":
+			GameState.sarro.riposte_until_ms = Time.get_ticks_msec() + 3000
+			_DamageNumber.spawn(get_tree().current_scene,
+				body.global_position + Vector3(0, 2.2, 0), "Riposte!", Color(1.0, 0.85, 0.4))
 
 	var enemy_name: String = character.display_name
 	var target_name: String = target_char.display_name
@@ -328,6 +333,12 @@ func _resolve_attack_on(body: CharacterBody3D) -> void:
 
 ## Damage + feedback for a party member taking a hit from this enemy.
 func _apply_party_damage(target_char, body: Node3D, dmg: int, crit: bool) -> void:
+	var near_sarro := false
+	if target_char == GameState.liris:
+		for p in get_tree().get_nodes_in_group("players"):
+			if p is Node3D and body.global_position.distance_to((p as Node3D).global_position) <= 6.0:
+				near_sarro = true
+	dmg = CharacterProgression.modify_party_damage(dmg, target_char, "melee", crit, near_sarro)
 	target_char.stats.current_hp = max(0, target_char.stats.current_hp - dmg)
 	var scene := get_tree().current_scene
 	AudioManager.play_sfx("crit" if crit else "hit", -2.0)
@@ -416,8 +427,10 @@ func _tick_slam(delta: float) -> void:
 		return
 	_slam_timer = SLAM_RATE
 	_slam_winding = true
+	# Danger Sense (Between-Scout) stretches telegraphs aimed at the party.
 	var t = _Telegraph.show_circle(get_tree().current_scene,
-		tgt.global_position, SLAM_RADIUS, SLAM_WINDUP)
+		tgt.global_position, SLAM_RADIUS,
+		SLAM_WINDUP * CharacterProgression.telegraph_scale())
 	t.fired.connect(_on_slam_fired.bind(t))
 
 ## Fires on the telegraph the player watched fill — hit iff still inside it.
@@ -464,6 +477,9 @@ func start_cast(label: String, secs: float) -> void:
 
 func is_casting() -> bool:
 	return _cast_left > 0.0
+
+func is_stunned() -> bool:
+	return _stun_left > 0.0
 
 ## Cancel the current cast (Shield Bash). Applies the punish-window stun.
 func interrupt_cast(stun_secs: float = 2.5) -> void:
@@ -648,3 +664,6 @@ func ambush_activate(body: CharacterBody3D) -> void:
 	_Juice.impact_burst(get_tree().current_scene, global_position, Color(0.7, 0.4, 1.0))
 	AudioManager.play_sfx("telegraph", -2.0, 0.2)
 	alerted(body)
+	# Gatewatch (Vigilance): the ambush springs — into a prepared guard.
+	if GameState.sarro != null and GameState.sarro.subclass_key == "gatewatch":
+		stun(1.5)

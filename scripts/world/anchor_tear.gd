@@ -107,7 +107,8 @@ func _on_shard_fired(t) -> void:
 		var target_char = GameState.sarro if body.is_in_group("players") else GameState.liris
 		if target_char == null or target_char.stats.current_hp <= 0:
 			continue
-		var dmg: int = _Dice.roll(8) + _Dice.roll(8)
+		var dmg: int = CharacterProgression.modify_party_damage(
+			_Dice.roll(8) + _Dice.roll(8), target_char, "zone")
 		target_char.stats.current_hp = max(0, target_char.stats.current_hp - dmg)
 		_DamageNumber.hit(self, (body as Node3D).global_position, dmg, false)
 		_Juice.impact_burst(self, (body as Node3D).global_position, Color(0.7, 0.4, 1.0))

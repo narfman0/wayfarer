@@ -20,6 +20,7 @@ func _run() -> void:
 	_test_save_round_trip()
 	_test_old_save_migration()
 	_test_auto_resolve()
+	_test_combat_effects()
 	await _test_creation_wizard()
 	await _test_rest_flow()
 
@@ -173,6 +174,39 @@ func _test_auto_resolve() -> void:
 	_Progression.auto_resolve(c)
 	_check(_Progression.pending_choices(c).is_empty(), "auto_resolve spends everything")
 	_check(c.fighting_style != "" and c.subclass_key != "", "auto_resolve picks style+subclass")
+
+# ── Combat effect spot-checks ─────────────────────────────────────────────────
+
+func _test_combat_effects() -> void:
+	# GWM only applies with a two-handed weapon
+	var c = _fresh()
+	_Progression.apply_choice(c, {"kind": "feat", "level": 1, "feat": "gwm"})
+	_check(c.make_combatant().bonus_attack == 0, "GWM inert with a one-handed longsword")
+	var wd = preload("res://addons/srd/resources/weapon_data.gd")
+	c.equipment.equip_main_hand(wd.make_greatsword())
+	var cb = c.make_combatant()
+	_check(cb.bonus_attack == -5 and cb.bonus_damage >= 10,
+		"GWM with a greatsword: -5 to hit, +10 damage")
+
+	# damage modifiers: Bulwark (Sarro melee −1), Steadying Aura (zone −2),
+	# Uncanny Dodge (crit vs Sarro halved), Bodyguard (Liris near Sarro ×0.75)
+	var old_sarro = GameState.sarro
+	var old_liris = GameState.liris
+	var s = _fresh(3)
+	var l = _Factory.make_liris()
+	GameState.sarro = s
+	GameState.liris = l
+	_Progression.apply_choice(s, {"kind": "subclass", "subclass": "anchor"})
+	_check(_Progression.modify_party_damage(10, s, "melee") == 9, "Bulwark: Sarro melee -1")
+	_check(_Progression.modify_party_damage(10, l, "zone") == 8, "Steadying Aura: zone -2")
+	s.subclass_key = "between_scout"
+	_check(_Progression.modify_party_damage(10, s, "melee", true) == 5,
+		"Uncanny Dodge: crit vs Sarro halved")
+	s.subclass_key = "gatewatch"
+	_check(_Progression.modify_party_damage(12, l, "melee", false, true) == 9,
+		"Bodyguard: Liris near Sarro takes 75%")
+	GameState.sarro = old_sarro
+	GameState.liris = old_liris
 
 # ── Creation wizard builds all six steps without erroring ─────────────────────
 

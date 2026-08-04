@@ -205,6 +205,8 @@ func _process(_delta: float) -> void:
 	_update_target_ring(_delta)
 	if GameState.sarro != null and GameState.sarro.shield_bash_cd > 0.0:
 		GameState.sarro.shield_bash_cd = maxf(0.0, GameState.sarro.shield_bash_cd - _delta)
+	if GameState.sarro != null and GameState.sarro.action_surge_cd > 0.0:
+		GameState.sarro.action_surge_cd = maxf(0.0, GameState.sarro.action_surge_cd - _delta)
 	if not _defeated and GameState.sarro != null and GameState.sarro.stats.current_hp <= 0:
 		_on_party_defeated()
 
@@ -286,6 +288,8 @@ func _setup_combat() -> void:
 	_attacker = _MeleeAttacker.new()
 	_attacker.owner_body = _player
 	_attacker.character  = GameState.sarro
+	_attacker.rate_scale = _Progression.base_rate_scale(GameState.sarro)
+	_player.speed_mult = _Progression.speed_multiplier(GameState.sarro)
 	add_child(_attacker)
 	var liris_attacker = _MeleeAttacker.new()
 	liris_attacker.owner_body = _companion
@@ -389,22 +393,32 @@ func _use_second_wind() -> void:
 	print("[Combat] Second Wind: +%d HP" % heal)
 
 ## [6] Action Surge — Sarro pushes past his limit (unlocked at level 2):
-## attacks land twice as fast for 6 s. Once per rest.
+## attacks land twice as fast for 6 s. Once per rest — unless he's a
+## Freeblade (Surge Mastery): then it recharges on a short cooldown.
 const _ACTION_SURGE_SECS := 6.0
+const _SURGE_MASTERY_CD := 8.0
 
 func _use_action_surge() -> void:
 	var c = GameState.sarro
-	if c == null or c.action_surge_used or _defeated or c.stats.level < 2:
+	if c == null or _defeated or c.stats.level < 2:
 		return
-	c.action_surge_used = true
-	_attacker.rate_scale = 0.5
+	if c.subclass_key == "freeblade":
+		if c.action_surge_cd > 0.0:
+			return
+		c.action_surge_cd = _SURGE_MASTERY_CD + _ACTION_SURGE_SECS
+	else:
+		if c.action_surge_used:
+			return
+		c.action_surge_used = true
+	var base: float = _Progression.base_rate_scale(c)
+	_attacker.rate_scale = base * 0.5
 	AudioManager.play_sfx("crit", 0.0)
 	_DamageNumber.spawn(self, _player.global_position + Vector3(0, 2.0, 0),
 		"ACTION SURGE!", Color(1.0, 0.8, 0.2))
 	print("[Combat] Action Surge: attack speed doubled for %.0fs" % _ACTION_SURGE_SECS)
 	get_tree().create_timer(_ACTION_SURGE_SECS).timeout.connect(func():
-		if _attacker != null:
-			_attacker.rate_scale = 1.0)
+		if _attacker != null and GameState.sarro != null:
+			_attacker.rate_scale = _Progression.base_rate_scale(GameState.sarro))
 
 ## [5] Shield Bash — Sarro's interrupt (unlocked at level 3). Slam the current
 ## target: cancels a channeled cast (long punish stun) or briefly staggers a

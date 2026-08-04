@@ -9,6 +9,7 @@ const _Combatant      = preload("res://addons/srd/systems/combatant.gd")
 const _ArmorData      = preload("res://addons/srd/resources/armor_data.gd")
 const _DamageNumber   = preload("res://scripts/world/damage_number.gd")
 const _Juice          = preload("res://scripts/combat/juice.gd")
+const _Progression    = preload("res://scripts/characters/character_progression.gd")
 
 const MELEE_RANGE  := 1.6   # metres
 const ATTACK_RATE  := 1.0   # seconds between attacks
@@ -59,8 +60,12 @@ func _do_attack() -> void:
 	var attacker = character.make_combatant()
 	var defender = _target.character.make_combatant() if _target.character != null else _make_default_enemy_combatant()
 
-	# Advantage from Guiding Bolt: roll 2d20 take higher.
+	# Advantage: Guiding Bolt mark, or the Freeblade riposte window an
+	# enemy's miss just opened. Roll 2d20 take higher.
 	var advantage: bool = _target.get("guiding_bolt_active") == true
+	if character.riposte_until_ms > 0 and Time.get_ticks_msec() < character.riposte_until_ms:
+		advantage = true
+		character.riposte_until_ms = 0
 	var d20: int
 	if advantage:
 		d20 = maxi(_Dice.roll_d20(), _Dice.roll_d20())
@@ -72,6 +77,14 @@ func _do_attack() -> void:
 	var target_ac: int = defender.armor_class
 
 	var hit: bool  = total_atk >= target_ac
+	# Lucky (feat): the Veil nudges a miss into a second roll.
+	if not hit and character.lucky_points > 0:
+		character.lucky_points -= 1
+		d20 = _Dice.roll_d20()
+		total_atk = d20 + atk_mod
+		hit = total_atk >= target_ac
+		_DamageNumber.spawn(owner_body.get_tree().current_scene,
+			_target.global_position + Vector3(0, 2.2, 0), "Lucky!", Color(0.5, 0.9, 1.0))
 	var crit: bool = d20 >= attacker.crit_threshold
 	var target_name: String = _target.name  # capture before damage — a kill nulls _target via stop()
 
@@ -81,8 +94,15 @@ func _do_attack() -> void:
 	AudioManager.play_sfx("swing")
 	if hit:
 		dmg = attacker.roll_damage(crit)
+		# Threshold Thief: +1d6 against staggered or casting targets.
+		if character.subclass_key == "threshold_thief" \
+				and (_target.is_stunned() or _target.is_casting()):
+			dmg += _Dice.roll(6)
 		_DamageNumber.hit(owner_body.get_tree().current_scene, target_pos, dmg, crit)
 		_target.receive_damage(dmg, owner_body.global_position)
+		# Sentinel (feat): every landed hit staggers for a beat.
+		if _Progression.has_feat(character, "sentinel"):
+			_target.stun(0.4)
 		AudioManager.play_sfx("crit" if crit else "hit")
 		_Juice.hit_stop(owner_body.get_tree(), 0.08 if crit else 0.05)
 		if crit:
