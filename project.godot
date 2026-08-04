@@ -40,13 +40,6 @@ enabled=PackedStringArray("res://addons/srd/plugin.cfg", "res://addons/dialogue_
 
 [importer_defaults]
 
-; Synty POLYGON source glTFs ship every LOD (and separate Branches LODs) as
-; sibling mesh nodes, so Godot renders them all stacked — the LOD3 crossboard
-; billboard ends up as two planes bisecting the full-detail tree. This default
-; runs a post-import step on every scene import that drops _LOD1+ nodes,
-; keeping _LOD0 and letting Godot generate real LODs. Committed here (not in
-; per-file .import files) because assets/meshes/ is gitignored and .import
-; files are regenerated on each machine by `godot --headless --import`.
 scene={
 "import_script/path": "res://scripts/import/strip_lods.gd"
 }
