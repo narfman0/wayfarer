@@ -57,6 +57,17 @@ func _test_camera_zoom() -> void:
 func _test_skirmisher_fires() -> void:
 	var guard := _level.get_node("Enemies/PenGuard1") as CharacterBody3D
 	_teleport_party(guard.global_position + Vector3(6.0, 0, 0))
+
+	# targeting shows the gold ring at the enemy's feet; clearing hides it
+	_player.target_enemy = guard
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_check(_level._target_ring.visible and
+		_level._target_ring.global_position.distance_to(guard.global_position) < 1.0,
+		"target ring appears under the clicked enemy")
+	_player.target_enemy = null
+	await get_tree().process_frame
+	_check(not _level._target_ring.visible, "target ring hides on deselect")
 	var ok := await _wait_for_script_node(_ProjectileScript, 6.0)
 	_check(ok, "skirmisher fired a projectile within 6s")
 

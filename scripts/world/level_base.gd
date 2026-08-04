@@ -39,6 +39,7 @@ var _debug_party := false
 
 var _hud = null       # HUD
 var _attacker = null  # MeleeAttacker
+var _target_ring: MeshInstance3D = null  # gold ring under the clicked enemy
 
 # ── Dialogue camera ───────────────────────────────────────────────────────────
 # The Camera3D sits aimed straight at the pivot origin, so scaling its local
@@ -200,6 +201,7 @@ var _defeated := false
 func _process(_delta: float) -> void:
 	_cam_pivot.global_position = _player.global_position + _cam_focus
 	_check_player_targeting()
+	_update_target_ring(_delta)
 	if GameState.sarro != null and GameState.sarro.shield_bash_cd > 0.0:
 		GameState.sarro.shield_bash_cd = maxf(0.0, GameState.sarro.shield_bash_cd - _delta)
 	if not _defeated and GameState.sarro != null and GameState.sarro.stats.current_hp <= 0:
@@ -245,6 +247,39 @@ func _setup_hud() -> void:
 	if hud_scene:
 		_hud = hud_scene.instantiate()
 		_hud_root.add_child(_hud)
+	_setup_target_ring()
+
+## The in-world half of targeting feedback: a slowly spinning gold ring at
+## the clicked enemy's feet (the HUD row is the other half). Gold, so it
+## never reads as a telegraph (orange) or a rest tear (green).
+func _setup_target_ring() -> void:
+	_target_ring = MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.5
+	torus.outer_radius = 0.62
+	_target_ring.mesh = torus
+	_target_ring.scale.y = 0.18  # flatten onto the ground plane
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(1.0, 0.85, 0.3)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.85, 0.3)
+	mat.emission_energy_multiplier = 1.8
+	_target_ring.material_override = mat
+	_target_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_target_ring.visible = false
+	add_child(_target_ring)
+
+func _update_target_ring(delta: float) -> void:
+	if _target_ring == null:
+		return
+	var tgt = _player.target_enemy
+	if tgt == null or not is_instance_valid(tgt) or not tgt.is_in_group("enemies"):
+		_target_ring.visible = false
+		return
+	_target_ring.visible = true
+	_target_ring.global_position = tgt.global_position + Vector3(0, 0.08, 0)
+	_target_ring.rotation.y += 1.6 * delta
 
 func _setup_combat() -> void:
 	_attacker = _MeleeAttacker.new()
