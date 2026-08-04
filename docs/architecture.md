@@ -84,6 +84,18 @@ energy + one signature CPUParticles field per plane.
 ambients per plane. `veil_tear.gd`/`scar_tissue.gd` — the shared Veil
 motif and Mender-scar dressing.
 
+**Build choices** (`scripts/characters/character_progression.gd`):
+creation picks class, fighting style, ability scores, skills, and a
+starting feat (six-step wizard); level 3 grants a subclass choice
+(3 per class), and class ASI levels grant +2 / +1+1 or a feat — all
+spent at REST POINTS via `level_up_screen.gd` (a HUD hint shows while
+choices are unspent; Liris is story-driven and only announced).
+Choices persist as records (SAVE_VERSION 4) replayed over saved base
+scores; max HP is always recomputed from scratch. Effects flow through
+`make_combatant()` (flat bonuses + crit range) and call-site hooks
+(Lucky/Sentinel/riposte/subclass passives). Old saves are owed their
+choices at the next rest — migration is the pending engine.
+
 **Story**: dialogue files in `dialogue/` (Dialogue Manager syntax) set
 flags and conviction via `do GameState...`. Six choices: Warden's
 Ritual, Extractor Deal, Sarro's Portal, (Mender-You-Understand — not
