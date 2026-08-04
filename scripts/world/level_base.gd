@@ -84,6 +84,7 @@ func _ready() -> void:
 	_setup_combat()
 	_setup_enemies()
 	_setup_prop_collision()
+	_setup_bounds()
 	_setup_animators()
 	_apply_loaded_state()
 	_setup_scenery()  # after _apply_loaded_state so avoid-points use final positions
@@ -131,6 +132,39 @@ func _generated_static_body(mi: Node) -> StaticBody3D:
 		if mi.get_child(i) is StaticBody3D:
 			return mi.get_child(i)
 	return null
+
+## Create invisible wall colliders at each edge of the ground mesh so players
+## can't walk off. Reads the ground's BoxShape3D size so this works for any
+## level that uses the standard Level/Ground/GroundCollision setup.
+func _setup_bounds() -> void:
+	var col_node := get_node_or_null("Level/Ground/GroundCollision") as CollisionShape3D
+	if col_node == null or not col_node.shape is BoxShape3D:
+		return
+	var gs: Vector3 = (col_node.shape as BoxShape3D).size
+	var hx := gs.x * 0.5
+	var hz := gs.z * 0.5
+	const H := 10.0   # wall height — well above any jump
+	const T := 1.0    # wall thickness
+	var level := get_node_or_null("Level")
+	if level == null:
+		return
+	var walls := [
+		[Vector3(0, H * 0.5, -hz - T * 0.5), Vector3(gs.x + T * 2, H, T)],   # north
+		[Vector3(0, H * 0.5,  hz + T * 0.5), Vector3(gs.x + T * 2, H, T)],   # south
+		[Vector3(-hx - T * 0.5, H * 0.5, 0), Vector3(T, H, gs.z + T * 2)],   # west
+		[Vector3( hx + T * 0.5, H * 0.5, 0), Vector3(T, H, gs.z + T * 2)],   # east
+	]
+	for w: Array in walls:
+		var body := StaticBody3D.new()
+		body.collision_layer = 1
+		body.collision_mask  = 0
+		var shape_node := CollisionShape3D.new()
+		var shape := BoxShape3D.new()
+		shape.size = w[1]
+		shape_node.shape = shape
+		shape_node.position = w[0]
+		body.add_child(shape_node)
+		level.add_child(body)
 
 func _setup_scenery() -> void:
 	if not generate_scenery:

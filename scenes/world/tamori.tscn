@@ -42,7 +42,8 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Sorcerer.gltf" id="c_npc_m2"]
 [ext_resource type="Environment" path="res://resources/env_village.tres" id="env_shared"]
 
-[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(80, 0.4, 80)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sarro"]
 height = 1.8
@@ -53,14 +54,16 @@ height = 1.8
 radius = 0.35
 
 [sub_resource type="BoxMesh" id="BoxMesh_ground"]
-size = Vector3(40, 0.2, 40)
+size = Vector3(80, 0.2, 80)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_enemy"]
 height = 1.8
 radius = 0.35
 
 [sub_resource type="StandardMaterial3D" id="Mat_ground"]
-albedo_color = Color(0.34, 0.47, 0.26, 1)
+albedo_color = Color(0.29, 0.44, 0.22, 1)
+roughness = 0.95
+metallic = 0.0
 
 [node name="Tamori" type="Node3D"]
 script = ExtResource("1_tamori")
@@ -84,7 +87,7 @@ mesh = SubResource("BoxMesh_ground")
 surface_material_override/0 = SubResource("Mat_ground")
 
 [node name="GroundCollision" type="CollisionShape3D" parent="Level/Ground"]
-shape = SubResource("WorldBoundaryShape3D_1")
+shape = SubResource("BoxShape3D_ground")
 
 [node name="Props" type="Node3D" parent="Level"]
 
@@ -170,13 +173,13 @@ transform = Transform3D(0.766, 0, 0.6428, 0, 1, 0, -0.6428, 0, 0.766, -3.5, 0.03
 transform = Transform3D(0.342, 0, 0.9397, 0, 1, 0, -0.9397, 0, 0.342, -5, 0.03, -3.5)
 
 [node name="Cliff1" parent="Level/Props" instance=ExtResource("e_cliff3")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -11, 0, -19)
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -20, 0, -37)
 
 [node name="Cliff2" parent="Level/Props" instance=ExtResource("e_cliff4")]
-transform = Transform3D(0.9781, 0, 0.2079, 0, 1, 0, -0.2079, 0, 0.9781, 1, 0, -19.5)
+transform = Transform3D(0.9781, 0, 0.2079, 0, 1, 0, -0.2079, 0, 0.9781, 2, 0, -38)
 
 [node name="Cliff3" parent="Level/Props" instance=ExtResource("e_cliff3")]
-transform = Transform3D(-1, 0, 1.225e-16, 0, 1, 0, -1.225e-16, 0, -1, 12.5, 0, -19)
+transform = Transform3D(-1, 0, 1.225e-16, 0, 1, 0, -1.225e-16, 0, -1, 22, 0, -37)
 
 [node name="BushCluster1" parent="Level/Props" instance=ExtResource("e_bushc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -16.5, 0, -9)
@@ -227,7 +230,7 @@ dialogue_title = "well_keeper"
 [node name="Skin" parent="Level/WellKeeper" instance=ExtResource("c_npc")]
 
 [node name="EastPortal" type="Node3D" parent="Level"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 19, 0, 2)
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 37, 0, 2)
 script = ExtResource("6_portal")
 display_name = "East Road"
 spawn_id = "east_gate"
