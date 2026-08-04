@@ -1,3 +1,4 @@
+@tool
 ## The Veil tear — the game's one recurring motif, so it looks like ONE thing
 ## everywhere: a slowly-turning ring around an inner distortion disc, drifting
 ## motes, a soft light, a low hum. Portals, rest points, story tears, and
@@ -65,7 +66,7 @@ func _ready() -> void:
 	light.omni_range = ring_radius * 4.0
 	add_child(light)
 
-	if hum:
+	if hum and not Engine.is_editor_hint():
 		var stream := load("res://assets/audio/veil_hum.wav")
 		if stream is AudioStreamWAV:
 			(stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD

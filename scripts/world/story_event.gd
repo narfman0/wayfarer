@@ -1,3 +1,4 @@
+@tool
 ## Story beat marker — walk close, press F to resolve the beat: sets a story
 ## flag and grants quest XP, once ever (persisted via GameState flags).
 ## v1 stand-in for full dialogue scenes; a gold ring marks unresolved beats.
@@ -52,7 +53,7 @@ func _ready() -> void:
 	area.body_entered.connect(_on_body_entered)
 	area.body_exited.connect(_on_body_exited)
 
-	if _is_resolved():
+	if not Engine.is_editor_hint() and _is_resolved():
 		_mark_spent()
 
 func _is_resolved() -> bool:
@@ -66,6 +67,8 @@ func _mark_spent() -> void:
 	set_process_unhandled_input(false)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if Engine.is_editor_hint():
+		return
 	if _player_near and event.is_action_pressed("interact") and not _is_resolved():
 		_resolve()
 

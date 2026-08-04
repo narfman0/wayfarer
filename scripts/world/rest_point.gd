@@ -1,3 +1,4 @@
+@tool
 ## Stable tear / shrine — press F to rest: full party heal.
 ## The setting's rest rule (setting-classes.md): recovery happens at
 ## stable tears, welding resource pacing to the world structure.
@@ -44,6 +45,8 @@ func _ready() -> void:
 	area.body_exited.connect(_on_body_exited)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if Engine.is_editor_hint():
+		return
 	if _player_near and event.is_action_pressed("interact"):
 		_rest()
 

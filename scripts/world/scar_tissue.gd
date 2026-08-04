@@ -1,3 +1,4 @@
+@tool
 ## Scar tissue — the rigid, crystalline residue of Mender-stitched Veil.
 ## Reads as visibly WRONG against organic scenery: pale shards jutting at
 ## harsh angles in a rough patch. The Between's reveal (scar tissue vs.

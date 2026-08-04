@@ -1,3 +1,4 @@
+@tool
 ## Talkable villager. Walk close, press F (interact) to start dialogue.
 ## Dialogue conditions/mutations read and write GameState flags — see
 ## dialogue/village.dialogue for the pattern.
@@ -32,7 +33,7 @@ var _last_bark_ms := -BARK_COOLDOWN_MS
 
 func _ready() -> void:
 	var skin := get_node_or_null("Skin")
-	if skin != null:
+	if skin != null and not Engine.is_editor_hint():
 		_Animator.attach(skin, null, "femn" if feminine else "masc")
 
 	_prompt = Label3D.new()
@@ -57,6 +58,8 @@ func _ready() -> void:
 	area.body_exited.connect(_on_body_exited)
 
 func _process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return  # strolling in the editor would dirty saved positions
 	if wander_points.is_empty() or _talking or _player_near:
 		return
 	if _pause_left > 0.0:
@@ -76,6 +79,8 @@ func _process(delta: float) -> void:
 	rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 6.0 * delta)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if Engine.is_editor_hint():
+		return
 	if _player_near and not _talking and event.is_action_pressed("interact"):
 		_talk()
 

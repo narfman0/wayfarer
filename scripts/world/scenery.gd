@@ -418,6 +418,35 @@ static func _scatter(parent: Node3D, rng: RandomNumberGenerator, hx: float, hz: 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+## Prop positions the scatter keeps a small clearance from. Scans the scene
+## tree (not groups) so it works identically in the editor preview, where
+## non-tool _ready group registrations never ran.
+static func avoid_points_for(root: Node) -> PackedVector3Array:
+	var pts := PackedVector3Array()
+	var props := root.get_node_or_null("Level/Props")
+	if props != null:
+		for c in props.get_children():
+			if c is Node3D:
+				pts.append((c as Node3D).global_position)
+	var level := root.get_node_or_null("Level")
+	if level != null:
+		for n in level.find_children("*", "Node3D", true, false):
+			if n.get_script() != null and n.get_script().get_global_name() == "VillageNPC":
+				pts.append((n as Node3D).global_position)
+	return pts
+
+## Character/enemy positions kept clear by a wide radius (party spawn and
+## every hand-placed enemy — all scene children of Characters/ and Enemies/).
+static func clear_centers_for(root: Node) -> PackedVector3Array:
+	var pts := PackedVector3Array()
+	for path in ["Characters", "Enemies"]:
+		var group_node := root.get_node_or_null(path)
+		if group_node != null:
+			for c in group_node.get_children():
+				if c is Node3D:
+					pts.append((c as Node3D).global_position)
+	return pts
+
 static func _tint_ground(ground_mi: MeshInstance3D, color: Color) -> void:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color

@@ -139,37 +139,13 @@ func _setup_scenery() -> void:
 	if level == null:
 		return
 	var ground := get_node_or_null("Level/Ground/GroundMesh") as MeshInstance3D
-	_Scenery.generate(level, ground, _scenery_avoid_points(), _scenery_clear_centers(), plane_id)
+	_Scenery.generate(level, ground, _Scenery.avoid_points_for(self),
+		_Scenery.clear_centers_for(self), plane_id)
 
 func _setup_atmosphere() -> void:
 	var ground := get_node_or_null("Level/Ground/GroundMesh") as MeshInstance3D
 	var sun := get_node_or_null("Sun") as DirectionalLight3D
 	_Atmosphere.apply(self, plane_id, sun, ground)
-
-## Prop positions the scatter keeps a small clearance from (so foliage doesn't
-## sprout inside the well, on an NPC, etc.).
-func _scenery_avoid_points() -> PackedVector3Array:
-	var pts := PackedVector3Array()
-	var props := get_node_or_null("Level/Props")
-	if props != null:
-		for c in props.get_children():
-			if c is Node3D:
-				pts.append((c as Node3D).global_position)
-	for n in get_node("Level").find_children("*", "Node3D", true, false):
-		if n is VillageNPC:
-			pts.append((n as Node3D).global_position)
-	return pts
-
-## Character positions kept clear by a wide radius so foliage never crowds or
-## hides the party (or an enemy you're about to fight).
-func _scenery_clear_centers() -> PackedVector3Array:
-	var pts := PackedVector3Array()
-	pts.append(_player.global_position)
-	pts.append(_companion.global_position)
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if e is Node3D:
-			pts.append((e as Node3D).global_position)
-	return pts
 
 func _setup_animators() -> void:
 	for body in _bodies_with_skins():

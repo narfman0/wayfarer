@@ -1,3 +1,4 @@
+@tool
 ## Veil portal — walk close, press F to travel. Optionally gated on a story
 ## flag; blocked portals show a hint instead of transporting.
 class_name VeilPortal
@@ -54,6 +55,8 @@ func spawn_position() -> Vector3:
 	return global_position - global_transform.basis.z * 1.8
 
 func _unhandled_input(event: InputEvent) -> void:
+	if Engine.is_editor_hint():
+		return
 	if _player_near and event.is_action_pressed("interact"):
 		_try_travel()
 

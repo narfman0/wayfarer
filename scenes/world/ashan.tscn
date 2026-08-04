@@ -1,6 +1,7 @@
-[gd_scene load_steps=25 format=3 uid="uid://ashan"]
+[gd_scene load_steps=26 format=3 uid="uid://ashan"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
 [ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
@@ -221,3 +222,7 @@ current = true
 [node name="HUD" type="Control" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
+
+[node name="EditorPreview" type="Node3D" parent="."]
+script = ExtResource("99_preview")
+plane_id = "ashan"

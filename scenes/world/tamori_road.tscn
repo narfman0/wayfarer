@@ -1,6 +1,7 @@
-[gd_scene load_steps=20 format=3 uid="uid://tamori_road"]
+[gd_scene load_steps=21 format=3 uid="uid://tamori_road"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
+[ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
 [ext_resource type="Script" path="res://scripts/world/story_event.gd" id="8_story"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Wall_Tower_M_01.gltf" id="e_tower"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
@@ -224,3 +225,7 @@ current = true
 [node name="HUD" type="Control" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
+
+[node name="EditorPreview" type="Node3D" parent="."]
+script = ExtResource("99_preview")
+plane_id = "tamori_road"
