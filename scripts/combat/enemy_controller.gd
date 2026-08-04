@@ -310,7 +310,7 @@ func _resolve_attack_on(body: CharacterBody3D) -> void:
 	var target_ac: int = target_char.make_combatant().armor_class
 
 	var hit: bool  = total_atk >= target_ac
-	var crit: bool = d20 == 20
+	var crit: bool = d20 >= attacker.crit_threshold
 	var dmg  := 0
 
 	if hit:

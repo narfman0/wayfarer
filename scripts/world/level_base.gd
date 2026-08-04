@@ -13,6 +13,7 @@ const _Atmosphere    = preload("res://scripts/world/atmosphere.gd")
 const _DamageNumber  = preload("res://scripts/world/damage_number.gd")
 const _Dice          = preload("res://addons/srd/dice.gd")
 const _Experience    = preload("res://addons/srd/systems/experience.gd")
+const _Progression   = preload("res://scripts/characters/character_progression.gd")
 
 ## Key into SceneManager.LEVELS — also stored as GameState.current_plane.
 @export var plane_id: String = "tamori"
@@ -335,6 +336,9 @@ func _sync_party_to_scene() -> void:
 		GameState.set_party(_Factory.make_sarro(), _Factory.make_liris())
 		if debug_party_level > 1:
 			GameState.grant_xp(_Experience.xp_for_level(debug_party_level))
+		# Debug parties spend their build choices deterministically so
+		# isolated scene runs and harnesses never stall on pending state.
+		_Progression.auto_resolve(GameState.sarro)
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):

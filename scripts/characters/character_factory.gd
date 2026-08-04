@@ -10,6 +10,7 @@ const _ArmorData  = preload("res://addons/srd/resources/armor_data.gd")
 const _SRD        = preload("res://addons/srd/srd_enums.gd")
 const _LevelUp    = preload("res://addons/srd/systems/level_up.gd")
 const _Experience = preload("res://addons/srd/systems/experience.gd")
+const _Progression = preload("res://scripts/characters/character_progression.gd")
 
 ## Playable classes. Psion/Warden exist in the SRD addon but stay out of the
 ## game until spellcasting is wired into combat.
@@ -42,6 +43,7 @@ static func make_custom(display_name: String, class_key: String,
 		if int(skill) in cd.skill_options:
 			c.stats.set_skill_proficiency(skill as _SRD.Skill, true)
 	_equip_class_kit(c, class_key)
+	c.base_scores = scores.duplicate()
 	c.stats.max_hp = cd.starting_hp(c.stats.ability_modifier(_SRD.Ability.CONSTITUTION))
 	c.stats.reset()
 	c.setup()
@@ -60,9 +62,13 @@ static func _equip_class_kit(c, class_key: String) -> void:
 ## Serialize a character to a JSON-safe dict. Only creation choices and
 ## mutable state are stored; everything derived is rebuilt on load.
 static func to_save_dict(c) -> Dictionary:
-	var scores: Array[int] = []
-	for i in 6:
-		scores.append(c.stats.get_ability(i as _SRD.Ability))
+	# Base (creation-time) scores, NOT live ones: ASI/feat mutations are
+	# re-applied from `choices` on load — saving live scores would double
+	# them. Pre-choice saves have no base_scores; live scores ARE base then.
+	var scores: Array = c.base_scores.duplicate()
+	if scores.is_empty():
+		for i in 6:
+			scores.append(c.stats.get_ability(i as _SRD.Ability))
 	return {
 		"name": c.display_name,
 		"class_key": c.class_data.class_name_str.to_lower(),
@@ -70,6 +76,7 @@ static func to_save_dict(c) -> Dictionary:
 		"skill_mask": c.stats.skill_proficiency_mask,
 		"current_hp": c.stats.current_hp,
 		"xp": c.stats.xp,
+		"choices": c.level_choices,
 	}
 
 ## Rebuild a character from a to_save_dict() dict (JSON round-trip safe).
@@ -83,6 +90,11 @@ static func make_from_save(d: Dictionary):
 	var target: int = _Experience.level_for_xp(c.stats.xp)
 	while c.stats.level < target and c.stats.level < 20:
 		_LevelUp.level_up(c.stats, c.class_data, c.energy_slots)
+	# Replay recorded build choices on top of base scores + levels, then
+	# derive max HP from scratch (retroactive Tough/CON, idempotent). Saves
+	# from before the choice system simply replay an empty list — the
+	# pending engine owes them everything at their next rest.
+	_Progression.replay_choices(c, d.get("choices", []))
 	c.stats.current_hp = clampi(int(d.get("current_hp", c.stats.max_hp)), 0, c.stats.max_hp)
 	return c
 

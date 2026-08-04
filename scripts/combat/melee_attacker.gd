@@ -72,7 +72,7 @@ func _do_attack() -> void:
 	var target_ac: int = defender.armor_class
 
 	var hit: bool  = total_atk >= target_ac
-	var crit: bool = d20 == 20
+	var crit: bool = d20 >= attacker.crit_threshold
 	var target_name: String = _target.name  # capture before damage — a kill nulls _target via stop()
 
 	var target_pos: Vector3 = _target.global_position

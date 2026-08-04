@@ -19,6 +19,20 @@ const _SRD            = preload("res://addons/srd/srd_enums.gd")
 var energy_slots = null
 
 ## Ability state (session-scoped; refreshed at rest points).
+# ── Build choices (CharacterProgression) ──────────────────────────────────────
+## Persisted source of truth: ordered choice records (JSON-safe dicts).
+var level_choices: Array = []
+# Mirrors, derived from level_choices by CharacterProgression._apply_effect:
+var fighting_style: String = ""
+var subclass_key: String = ""
+var feat_keys: Array = []
+## Ability scores as chosen at creation — saved instead of live scores so
+## ASI/feat mutations replay cleanly on load instead of double-applying.
+var base_scores: Array = []
+# Session state:
+var lucky_points: int = 0          # Lucky feat rerolls; refilled at rest
+var riposte_until_ms: int = 0      # Freeblade: advantage window after enemy miss
+
 var second_wind_used: bool = false
 
 ## Sarro: Shield Bash cooldown (seconds remaining; ticked by the level).
@@ -43,8 +57,20 @@ func setup() -> void:
 		energy_slots = class_data.make_slots(stats.level)
 
 ## Build the Combatant the SRD battle system uses this turn.
+const _Progression = preload("res://scripts/characters/character_progression.gd")
+
+## The single attack-resolution choke point: every combat roll flows through
+## a Combatant built here, so stamping the build bonuses covers offense,
+## AC, crit range, and the creation wizard's stat preview alike.
 func make_combatant():
-	return _Combatant.new(stats, _equipped_weapon(), equipment)
+	var cb = _Combatant.new(stats, _equipped_weapon(), equipment)
+	if class_data != null:
+		var b: Dictionary = _Progression.combat_bonuses(self)
+		cb.bonus_attack = b["attack"]
+		cb.bonus_damage = b["damage"]
+		cb.bonus_ac = b["ac"]
+		cb.crit_threshold = b["crit"]
+	return cb
 
 func roll_initiative() -> int:
 	return _Dice.roll_d20() + stats.ability_modifier(_SRD.Ability.DEXTERITY)

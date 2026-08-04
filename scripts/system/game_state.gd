@@ -8,7 +8,7 @@ const _Factory    = preload("res://scripts/characters/character_factory.gd")
 const _Experience = preload("res://addons/srd/systems/experience.gd")
 const _LevelUp    = preload("res://addons/srd/systems/level_up.gd")
 
-const SAVE_VERSION := 3
+const SAVE_VERSION := 4  # 4: build choices (fighting style / feats / ASI / subclass)
 
 signal party_updated
 signal plane_changed(plane_id: String)
