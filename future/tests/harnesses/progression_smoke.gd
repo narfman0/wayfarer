@@ -20,6 +20,8 @@ func _run() -> void:
 	_test_save_round_trip()
 	_test_old_save_migration()
 	_test_auto_resolve()
+	await _test_creation_wizard()
+	await _test_rest_flow()
 
 	if _failures.is_empty():
 		print("PROGRESSION SMOKE: ALL PASS")
@@ -171,6 +173,104 @@ func _test_auto_resolve() -> void:
 	_Progression.auto_resolve(c)
 	_check(_Progression.pending_choices(c).is_empty(), "auto_resolve spends everything")
 	_check(c.fighting_style != "" and c.subclass_key != "", "auto_resolve picks style+subclass")
+
+# ── Creation wizard builds all six steps without erroring ─────────────────────
+
+func _test_creation_wizard() -> void:
+	var wiz = (load("res://scenes/ui/character_creation.tscn") as PackedScene).instantiate()
+	add_child(wiz)
+	await get_tree().process_frame
+	wiz._style_key = "defense"
+	wiz._feat_key = "lucky"
+	var steps: int = wiz.STEP_TITLES.size()
+	_check(steps == 6, "wizard has six steps (%d)" % steps)
+	var ok := true
+	for i in steps:
+		wiz._step = i
+		wiz._rebuild()
+		await get_tree().process_frame
+	_check(ok, "all wizard steps build")
+	# style gate: clearing the pick disables Next on the STYLE step
+	wiz._style_key = ""
+	wiz._step = wiz.Step.STYLE
+	wiz._rebuild()
+	_check(wiz._next_btn.disabled, "STYLE step blocks Next until picked")
+	wiz.queue_free()
+	await get_tree().process_frame
+
+# ── Scene-level: choices are spent at the rest point ──────────────────────────
+
+func _test_rest_flow() -> void:
+	GameState.sarro = null
+	GameState.liris = null
+	var level: Node3D = (load("res://scenes/world/reach.tscn") as PackedScene).instantiate()
+	add_child(level)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	# debug party auto-resolved at level 5; push to 8 → ASI@6 + ASI@8 pending
+	GameState.grant_xp(_Experience.xp_for_level(8) - GameState.sarro.stats.xp)
+	var pend: int = _Progression.pending_choices(GameState.sarro).size()
+	_check(pend == 2, "leveling 5→8 leaves two ASI choices pending (%d)" % pend)
+	await get_tree().process_frame
+	_check(level._hud._pending_label.visible, "HUD shows the pending-choices hint")
+
+	GameState.sarro.stats.current_hp = 10
+	var rest = level.get_node("Level/RestPoint")
+	rest._rest()  # async: opens the screen, heals after it closes
+
+	# drive the screen: press the first useful button on each page
+	var guard := 0
+	while guard < 12:
+		guard += 1
+		await get_tree().process_frame
+		await get_tree().create_timer(0.1).timeout
+		var screen = _find_screen()
+		if screen == null:
+			break
+		var btn = _first_button(screen)
+		if btn != null:
+			btn.pressed.emit()
+	await get_tree().create_timer(0.3).timeout
+
+	_check(_find_screen() == null, "level-up screen closes after choices")
+	_check(_Progression.pending_choices(GameState.sarro).is_empty(),
+		"rest spends all pending choices")
+	_check(GameState.sarro.stats.current_hp == GameState.sarro.stats.max_hp,
+		"rest still heals to full afterwards")
+	_check(not get_tree().paused, "tree unpaused after the screen closes")
+	await get_tree().process_frame
+	_check(not level._hud._pending_label.visible, "HUD hint hides once spent")
+
+	level.queue_free()
+	await get_tree().process_frame
+
+func _find_screen():
+	for child in get_tree().root.get_children():
+		var found = _find_by_class(child, "LevelUpScreen")
+		if found != null:
+			return found
+	return null
+
+func _find_by_class(node: Node, cls: String):
+	if node.get_script() != null and node.get_script().get_global_name() == cls:
+		return node
+	for child in node.get_children():
+		var found = _find_by_class(child, cls)
+		if found != null:
+			return found
+	return null
+
+## First actionable button on the current page (skips the split-ASI helper).
+func _first_button(root: Node):
+	if root is Button and not root is CheckBox and (root as Button).text != "Apply Split" \
+			and not (root as Button).text.begins_with("—"):
+		return root
+	for child in root.get_children():
+		var found = _first_button(child)
+		if found != null:
+			return found
+	return null
 
 func _check(cond: bool, label: String) -> void:
 	print("  [%s] %s" % ["PASS" if cond else "FAIL", label])

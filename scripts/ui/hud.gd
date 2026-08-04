@@ -8,10 +8,13 @@ extends Control
 @onready var _enemy_bar:  ProgressBar = $EnemyRow/EnemyHP
 @onready var _enemy_name: Label = $EnemyRow/EnemyName
 
+const _Progression = preload("res://scripts/characters/character_progression.gd")
+
 var _tracked_enemy: EnemyController = null
 var _toast: Label
 var _sarro_label: Label   # hotbar row for Sarro
 var _liris_label: Label   # hotbar row for Liris
+var _pending_label: Label # "choices await at a stable tear" hint
 
 func _ready() -> void:
 	_enemy_row.visible = false
@@ -35,6 +38,15 @@ func _ready() -> void:
 	_liris_label.add_theme_font_size_override("font_size", 15)
 	add_child(_liris_label)
 
+	_pending_label = Label.new()
+	_pending_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_pending_label.position.y = 92
+	_pending_label.add_theme_font_size_override("font_size", 16)
+	_pending_label.add_theme_color_override("font_color", Color(0.95, 0.85, 0.45))
+	_pending_label.text = "✦ Choices await — rest at a stable tear"
+	_pending_label.visible = false
+	add_child(_pending_label)
+
 	GameState.xp_gained.connect(_on_xp_gained)
 	GameState.leveled_up.connect(_on_leveled_up)
 
@@ -42,7 +54,13 @@ func _on_xp_gained(amount: int) -> void:
 	_show_toast("+%d XP  (Level %d — %d XP)" % [amount, GameState.sarro.stats.level, GameState.sarro.stats.xp])
 
 func _on_leveled_up(new_level: int) -> void:
-	_show_toast("Level %d!" % new_level)
+	var msg := "Level %d!" % new_level
+	if GameState.sarro != null \
+			and not _Progression.pending_choices(GameState.sarro).is_empty():
+		msg += "  New choices await at a stable tear."
+	elif _Progression.LIRIS_UNLOCKS.has(new_level):
+		msg += "  " + str(_Progression.LIRIS_UNLOCKS[new_level])
+	_show_toast(msg)
 
 func _show_toast(text: String) -> void:
 	_toast.text = text
@@ -61,6 +79,10 @@ func show_toast_text(text: String) -> void:
 func _process(_delta: float) -> void:
 	_refresh_party()
 	_refresh_hotbar()
+	if _pending_label != null:
+		_pending_label.visible = GameState.sarro != null \
+			and _Progression.is_choice_driven(GameState.sarro) \
+			and not _Progression.pending_choices(GameState.sarro).is_empty()
 
 func _refresh_hotbar() -> void:
 	if GameState.sarro != null and _sarro_label != null:

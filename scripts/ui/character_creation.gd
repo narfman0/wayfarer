@@ -1,6 +1,8 @@
-## SRD character creation wizard: Class → Abilities → Skills → Review.
+## SRD character creation wizard:
+## Class → Fighting Style → Abilities → Skills → Feat → Review.
 ## Builds the player character (Sarro) from real SRD rules; Liris joins as a
-## fixed companion.
+## fixed companion. Later choices (subclass at 3, ASI/feat at class ASI
+## levels) are spent at rest points — see CharacterProgression.
 class_name CharacterCreation
 extends Control
 
@@ -8,11 +10,12 @@ const _Factory       = preload("res://scripts/characters/character_factory.gd")
 const _SRD           = preload("res://addons/srd/srd_enums.gd")
 const _AbilityScores = preload("res://addons/srd/systems/ability_scores.gd")
 const _Skills        = preload("res://addons/srd/systems/skills_system.gd")
+const _Progression   = preload("res://scripts/characters/character_progression.gd")
 
-enum Step { CLASS, ABILITIES, SKILLS, REVIEW }
+enum Step { CLASS, STYLE, ABILITIES, SKILLS, FEAT, REVIEW }
 enum Method { POINT_BUY, STANDARD_ARRAY, ROLL }
 
-const STEP_TITLES := ["Class", "Ability Scores", "Skills", "Review"]
+const STEP_TITLES := ["Class", "Fighting Style", "Ability Scores", "Skills", "Feat", "Review"]
 
 @onready var _step_label: Label = $Layout/StepLabel
 @onready var _body: VBoxContainer = $Layout/Content/StepBody
@@ -26,6 +29,8 @@ var _pb_scores: Array[int] = [8, 8, 8, 8, 8, 8]      # point buy, by SRD.Ability
 var _assign: Array[int] = [-1, -1, -1, -1, -1, -1]   # ability → pool index
 var _pool: Array[int] = []                            # array/roll values
 var _skill_picks: Array[int] = []
+var _style_key: String = ""
+var _feat_key: String = ""
 var _char_name: String = "Sarro"
 
 func _ready() -> void:
@@ -52,6 +57,8 @@ func _on_next() -> void:
 
 func _confirm() -> void:
 	var sarro = _Factory.make_custom(_char_name, _class_key, _scores(), _skill_picks)
+	_Progression.apply_choice(sarro, {"kind": "style", "style": _style_key})
+	_Progression.apply_choice(sarro, {"kind": "feat", "level": 1, "feat": _feat_key})
 	GameState.set_party(sarro, _Factory.make_liris())
 	get_tree().change_scene_to_file("res://scenes/world/tamori.tscn")
 
@@ -72,13 +79,19 @@ func _rebuild() -> void:
 		child.queue_free()
 	match _step:
 		Step.CLASS:     _build_class_step()
+		Step.STYLE:     _build_style_step()
 		Step.ABILITIES: _build_abilities_step()
 		Step.SKILLS:    _build_skills_step()
+		Step.FEAT:      _build_feat_step()
 		Step.REVIEW:    _build_review_step()
 	_validate()
 
 func _validate() -> void:
 	match _step:
+		Step.STYLE:
+			_next_btn.disabled = _style_key == ""
+		Step.FEAT:
+			_next_btn.disabled = _feat_key == ""
 		Step.ABILITIES:
 			if _method == Method.POINT_BUY:
 				_next_btn.disabled = not _AbilityScores.point_buy_valid(_pb_scores)
@@ -111,6 +124,8 @@ func _build_class_step() -> void:
 			if on:
 				_class_key = key
 				_skill_picks.clear()  # class change invalidates skill choices
+				if _style_key not in _Progression.styles_for(key):
+					_style_key = ""   # and class-specific fighting styles
 				_rebuild())
 		_body.add_child(btn)
 		var desc := Label.new()
@@ -119,7 +134,45 @@ func _build_class_step() -> void:
 		desc.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
 		_body.add_child(desc)
 
-# ── Step 2: Ability scores ───────────────────────────────────────────────────
+# ── Step 2: Fighting style ───────────────────────────────────────────────────
+
+func _build_style_step() -> void:
+	_add_header("Choose a fighting style — a permanent combat passive.")
+	var group := ButtonGroup.new()
+	for key in _Progression.styles_for(_class_key):
+		var spec: Dictionary = _Progression.FIGHTING_STYLES[key]
+		var btn := CheckBox.new()
+		btn.button_group = group
+		btn.toggle_mode = true
+		btn.text = spec["name"]
+		btn.button_pressed = key == _style_key
+		btn.toggled.connect(func(on: bool):
+			if on:
+				_style_key = key
+				_validate())
+		_body.add_child(btn)
+		_add_desc(spec["desc"])
+
+# ── Step 5: Feat ─────────────────────────────────────────────────────────────
+
+func _build_feat_step() -> void:
+	_add_header("Choose a starting feat. More arrive as you level — spent at stable tears.")
+	var group := ButtonGroup.new()
+	for key in _Progression.FEATS:
+		var spec: Dictionary = _Progression.FEATS[key]
+		var btn := CheckBox.new()
+		btn.button_group = group
+		btn.toggle_mode = true
+		btn.text = spec["name"]
+		btn.button_pressed = key == _feat_key
+		btn.toggled.connect(func(on: bool):
+			if on:
+				_feat_key = key
+				_validate())
+		_body.add_child(btn)
+		_add_desc(spec["desc"])
+
+# ── Step 3: Ability scores ───────────────────────────────────────────────────
 
 func _build_abilities_step() -> void:
 	var cd = _Factory.make_class_data(_class_key)
@@ -279,12 +332,20 @@ func _build_review_step() -> void:
 	var preview = _Factory.make_custom(
 		_char_name if not _char_name.strip_edges().is_empty() else "Sarro",
 		_class_key, _scores(), _skill_picks)
+	if _style_key != "":
+		_Progression.apply_choice(preview, {"kind": "style", "style": _style_key})
+	if _feat_key != "":
+		_Progression.apply_choice(preview, {"kind": "feat", "level": 1, "feat": _feat_key})
 	var combatant = preview.make_combatant()
 	var cd = preview.class_data
 	var scores := _scores()
 
 	var lines: Array[String] = []
 	lines.append("%s — Level 1 %s" % [preview.display_name, cd.class_name_str])
+	if _style_key != "":
+		lines.append("Style: %s    Feat: %s" % [
+			_Progression.FIGHTING_STYLES[_style_key]["name"],
+			_Progression.FEATS[_feat_key]["name"] if _feat_key != "" else "—"])
 	var parts: Array[String] = []
 	for i in 6:
 		parts.append("%s %d (%+d)" % [_SRD.ability_abbrev(i), scores[i], _mod(scores[i])])
@@ -318,6 +379,13 @@ func _add_header(text: String) -> void:
 	lbl.text = text
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_body.add_child(lbl)
+
+func _add_desc(text: String) -> void:
+	var desc := Label.new()
+	desc.text = "    " + text
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
+	_body.add_child(desc)
 
 func _fixed_label(text: String, width: int) -> Label:
 	var lbl := Label.new()

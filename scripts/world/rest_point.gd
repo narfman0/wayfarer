@@ -9,7 +9,9 @@ extends Node3D
 var _player_near := false
 var _prompt: Label3D
 
-const _VeilTear = preload("res://scripts/world/veil_tear.gd")
+const _VeilTear      = preload("res://scripts/world/veil_tear.gd")
+const _Progression   = preload("res://scripts/characters/character_progression.gd")
+const _LevelUpScreen = preload("res://scripts/ui/level_up_screen.gd")
 
 func _ready() -> void:
 	# A stable tear: same motif as every other tear, calm variant.
@@ -46,10 +48,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		_rest()
 
 func _rest() -> void:
+	# Rest is where build choices are SPENT (the docs' "long rest at a
+	# stable tear"): page through anything pending before the heal.
+	var sarro = GameState.sarro
+	if _Progression.is_choice_driven(sarro) \
+			and not _Progression.pending_choices(sarro).is_empty():
+		var screen = _LevelUpScreen.open(get_tree().current_scene)
+		await screen.finished
 	for c in GameState.party():
 		c.stats.current_hp = c.stats.max_hp
 		c.second_wind_used = false
 		c.action_surge_used = false
+		if _Progression.has_feat(c, "lucky"):
+			c.lucky_points = 3
 		c.healing_word_charges = 1
 		c.channel_divinity_ready = true
 		c.guiding_bolt_ready = true
