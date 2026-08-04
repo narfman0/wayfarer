@@ -79,6 +79,8 @@ shadow_enabled = true
 
 [node name="Level" type="Node3D" parent="."]
 
+[node name="Terrain3D" type="Terrain3D" parent="Level"]
+
 [node name="Ground" type="StaticBody3D" parent="Level"]
 
 [node name="GroundMesh" type="MeshInstance3D" parent="Level/Ground"]
