@@ -23,10 +23,10 @@ const _Progression   = preload("res://scripts/characters/character_progression.g
 ## level so late-game planes are actually testable. Ignored in normal play.
 @export_range(1, 20) var debug_party_level: int = 1
 
-## Generate the MeadowForest scenery pass (backdrop ring, ground-cover, grass,
-## bushes, rocks) on load. Turn off per-scene for planes that want a different
-## look. See scripts/world/scenery.gd.
-@export var generate_scenery: bool = true
+## Generate procedural scenery on load (backdrop ring, ground-cover, grass,
+## bushes, rocks). Off by default — place props manually in each scene instead.
+## Set true to re-enable the procedural pass for a specific plane.
+@export var generate_scenery: bool = false
 
 ## True when this run spawned its own debug party — autosave is skipped so an
 ## isolated test never overwrites the real save slot.
