@@ -41,9 +41,7 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_02.gltf" id="c_npc_f"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Sorcerer.gltf" id="c_npc_m2"]
 [ext_resource type="Environment" path="res://resources/env_village.tres" id="env_shared"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
-size = Vector3(80, 0.4, 80)
+[ext_resource type="Script" path="res://scripts/world/terrain_mesh.gd" id="e_terrain"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sarro"]
 height = 1.8
@@ -53,17 +51,9 @@ radius = 0.35
 height = 1.8
 radius = 0.35
 
-[sub_resource type="BoxMesh" id="BoxMesh_ground"]
-size = Vector3(80, 0.2, 80)
-
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_enemy"]
 height = 1.8
 radius = 0.35
-
-[sub_resource type="StandardMaterial3D" id="Mat_ground"]
-albedo_color = Color(0.29, 0.44, 0.22, 1)
-roughness = 0.95
-metallic = 0.0
 
 [node name="Tamori" type="Node3D"]
 script = ExtResource("1_tamori")
@@ -79,17 +69,8 @@ shadow_enabled = true
 
 [node name="Level" type="Node3D" parent="."]
 
-[node name="Terrain3D" type="Terrain3D" parent="Level"]
-
-[node name="Ground" type="StaticBody3D" parent="Level"]
-
-[node name="GroundMesh" type="MeshInstance3D" parent="Level/Ground"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
-mesh = SubResource("BoxMesh_ground")
-surface_material_override/0 = SubResource("Mat_ground")
-
-[node name="GroundCollision" type="CollisionShape3D" parent="Level/Ground"]
-shape = SubResource("BoxShape3D_ground")
+[node name="TiledTerrain" type="Node3D" parent="Level"]
+script = ExtResource("e_terrain")
 
 [node name="Props" type="Node3D" parent="Level"]
 
@@ -174,14 +155,35 @@ transform = Transform3D(0.766, 0, 0.6428, 0, 1, 0, -0.6428, 0, 0.766, -3.5, 0.03
 [node name="Path7" parent="Level/Props" instance=ExtResource("e_path1")]
 transform = Transform3D(0.342, 0, 0.9397, 0, 1, 0, -0.9397, 0, 0.342, -5, 0.03, -3.5)
 
-[node name="Cliff1" parent="Level/Props" instance=ExtResource("e_cliff3")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -20, 0, -37)
+[node name="HillPine1" parent="Level/Props" instance=ExtResource("e_pine")]
+transform = Transform3D(0.866, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866, -34, 2, -18)
 
-[node name="Cliff2" parent="Level/Props" instance=ExtResource("e_cliff4")]
-transform = Transform3D(0.9781, 0, 0.2079, 0, 1, 0, -0.2079, 0, 0.9781, 2, 0, -38)
+[node name="HillPine2" parent="Level/Props" instance=ExtResource("e_pine")]
+transform = Transform3D(-0.5, 0, 0.866, 0, 1, 0, -0.866, 0, -0.5, 34, 2, -18)
 
-[node name="Cliff3" parent="Level/Props" instance=ExtResource("e_cliff3")]
-transform = Transform3D(-1, 0, 1.225e-16, 0, 1, 0, -1.225e-16, 0, -1, 22, 0, -37)
+[node name="HillPine3" parent="Level/Props" instance=ExtResource("e_pine")]
+transform = Transform3D(0.707, 0, -0.707, 0, 1, 0, 0.707, 0, 0.707, -34, 2, 18)
+
+[node name="HillPine4" parent="Level/Props" instance=ExtResource("e_pine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 2, 26)
+
+[node name="HillPine5" parent="Level/Props" instance=ExtResource("e_pine")]
+transform = Transform3D(-0.866, 0, 0.5, 0, 1, 0, -0.5, 0, -0.866, -38, 2, -6)
+
+[node name="HillPine6" parent="Level/Props" instance=ExtResource("e_pine")]
+transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, 38, 2, -10)
+
+[node name="PeakDead1" parent="Level/Props" instance=ExtResource("e_dead")]
+transform = Transform3D(0.707, 0, 0.707, 0, 1, 0, -0.707, 0, 0.707, -14, 4, -38)
+
+[node name="PeakDead2" parent="Level/Props" instance=ExtResource("e_dead")]
+transform = Transform3D(-0.707, 0, 0.707, 0, 1, 0, -0.707, 0, -0.707, 14, 4, -38)
+
+[node name="PeakDead3" parent="Level/Props" instance=ExtResource("e_dead")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 4, -38)
+
+[node name="PeakDead4" parent="Level/Props" instance=ExtResource("e_dead")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 26, 4, -38)
 
 [node name="BushCluster1" parent="Level/Props" instance=ExtResource("e_bushc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -16.5, 0, -9)

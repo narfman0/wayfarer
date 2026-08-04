@@ -18,6 +18,11 @@ const _Progression   = preload("res://scripts/characters/character_progression.g
 ## Key into SceneManager.LEVELS — also stored as GameState.current_plane.
 @export var plane_id: String = "tamori"
 
+## Half-size of the playable area in metres — used by _setup_bounds() to place
+## invisible walls. Auto-detected from Level/Ground/GroundCollision if present
+## (legacy flat BoxMesh levels); set explicitly for TiledTerrain levels.
+@export var bounds_half_size: float = 40.0
+
 ## When this scene is run in isolation (no party in GameState — e.g. "Run
 ## Current Scene" in the editor), the fallback debug party is boosted to this
 ## level so late-game planes are actually testable. Ignored in normal play.
@@ -133,26 +138,27 @@ func _generated_static_body(mi: Node) -> StaticBody3D:
 			return mi.get_child(i)
 	return null
 
-## Create invisible wall colliders at each edge of the ground mesh so players
-## can't walk off. Reads the ground's BoxShape3D size so this works for any
-## level that uses the standard Level/Ground/GroundCollision setup.
+## Create invisible wall colliders at each edge of the playable area.
+## Reads bounds from the old-style Level/Ground/GroundCollision BoxShape3D if
+## present; otherwise falls back to the exported bounds_half_size value.
 func _setup_bounds() -> void:
+	var hx := bounds_half_size
+	var hz := bounds_half_size
 	var col_node := get_node_or_null("Level/Ground/GroundCollision") as CollisionShape3D
-	if col_node == null or not col_node.shape is BoxShape3D:
-		return
-	var gs: Vector3 = (col_node.shape as BoxShape3D).size
-	var hx := gs.x * 0.5
-	var hz := gs.z * 0.5
+	if col_node != null and col_node.shape is BoxShape3D:
+		var gs: Vector3 = (col_node.shape as BoxShape3D).size
+		hx = gs.x * 0.5
+		hz = gs.z * 0.5
 	const H := 10.0   # wall height — well above any jump
 	const T := 1.0    # wall thickness
 	var level := get_node_or_null("Level")
 	if level == null:
 		return
 	var walls := [
-		[Vector3(0, H * 0.5, -hz - T * 0.5), Vector3(gs.x + T * 2, H, T)],   # north
-		[Vector3(0, H * 0.5,  hz + T * 0.5), Vector3(gs.x + T * 2, H, T)],   # south
-		[Vector3(-hx - T * 0.5, H * 0.5, 0), Vector3(T, H, gs.z + T * 2)],   # west
-		[Vector3( hx + T * 0.5, H * 0.5, 0), Vector3(T, H, gs.z + T * 2)],   # east
+		[Vector3(0, H * 0.5, -hz - T * 0.5), Vector3(hx * 2.0 + T * 2.0, H, T)],   # north
+		[Vector3(0, H * 0.5,  hz + T * 0.5), Vector3(hx * 2.0 + T * 2.0, H, T)],   # south
+		[Vector3(-hx - T * 0.5, H * 0.5, 0), Vector3(T, H, hz * 2.0 + T * 2.0)],   # west
+		[Vector3( hx + T * 0.5, H * 0.5, 0), Vector3(T, H, hz * 2.0 + T * 2.0)],   # east
 	]
 	for w: Array in walls:
 		var body := StaticBody3D.new()
