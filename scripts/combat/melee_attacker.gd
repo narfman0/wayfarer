@@ -38,6 +38,16 @@ func stop() -> void:
 func is_attacking(enemy) -> bool:  # enemy: EnemyController
 	return _active and _target == enemy
 
+## One-shot attack roll against target (used for opportunity attacks, etc.)
+## Does not affect the ongoing attack loop.
+func fire_once(target) -> void:
+	var saved := _target
+	var saved_active := _active
+	_target = target
+	_do_attack()
+	_target = saved
+	_active = saved_active
+
 func _process(delta: float) -> void:
 	if not _active or _target == null or owner_body == null:
 		return

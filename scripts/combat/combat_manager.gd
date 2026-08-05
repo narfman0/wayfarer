@@ -9,6 +9,9 @@ signal combat_ended
 signal turn_started(combatant: Node)
 signal turn_ended(combatant: Node)
 signal tb_mode_changed(enabled: bool)
+signal reaction_available(type: String, trigger: Node, reactor: Node)
+signal reaction_resolved
+signal oa_execute(reactor: Node, trigger: Node)
 
 const FEET_PER_METRE := 3.28084
 const RT_ROUND       := 6.0
@@ -22,6 +25,11 @@ var _rt_timer: float = 0.0
 
 # Tracks whose turn it currently is in TB mode.
 var current_combatant: Node = null
+
+# Reaction state
+var _reaction_reactor: Node  = null
+var _reaction_trigger: Node  = null
+var _pending_reaction_used: bool = false
 
 func _process(delta: float) -> void:
 	if in_combat and not tb_mode:
@@ -111,6 +119,35 @@ func has_bonus_action(combatant: Node) -> bool:
 func spend_bonus_action(combatant: Node) -> void:
 	combatant.set_meta("turn_bonus", false)
 
+func has_reaction(combatant: Node) -> bool:
+	return combatant.get_meta("turn_reaction", false)
+
+func spend_reaction(combatant: Node) -> void:
+	combatant.set_meta("turn_reaction", false)
+
+## Called by enemy take_turn() when leaving melee range of a player.
+## Pauses the calling coroutine until the player accepts or skips.
+## Returns true if the player accepted and made an OA.
+func request_oa(trigger: Node, reactor: Node) -> bool:
+	if not tb_mode or not has_reaction(reactor):
+		return false
+	_reaction_trigger = trigger
+	_reaction_reactor = reactor
+	_pending_reaction_used = false
+	reaction_available.emit("opportunity_attack", trigger, reactor)
+	await reaction_resolved
+	return _pending_reaction_used
+
+## Called by CombatHUD Accept/Skip buttons.
+func resolve_reaction(used: bool) -> void:
+	_pending_reaction_used = used
+	if used and _reaction_reactor != null and _reaction_trigger != null:
+		spend_reaction(_reaction_reactor)
+		oa_execute.emit(_reaction_reactor, _reaction_trigger)
+	_reaction_reactor = null
+	_reaction_trigger = null
+	reaction_resolved.emit()
+
 func is_player_turn() -> bool:
 	if not tb_mode or current_combatant == null:
 		return false
@@ -146,9 +183,10 @@ func _reset_turn_data(c: Node) -> void:
 	elif c.has_method("get") and c.get("stats") != null:
 		speed_ft = c.stats.speed
 	var speed_m: float = speed_ft / FEET_PER_METRE
-	c.set_meta("turn_action",   true)
-	c.set_meta("turn_bonus",    true)
-	c.set_meta("turn_movement", speed_m)
+	c.set_meta("turn_action",    true)
+	c.set_meta("turn_bonus",     true)
+	c.set_meta("turn_reaction",  true)
+	c.set_meta("turn_movement",  speed_m)
 	c.set_meta("turn_disengage", false)
 	c.set_meta("turn_dodging",   false)
 	c.set_meta("turn_dashed",    false)

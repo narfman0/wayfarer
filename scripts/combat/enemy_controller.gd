@@ -208,7 +208,9 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-## TB turn: move toward player, attack if in range, then end turn.
+## TB turn: move toward player, check OA, attack if in range, then end turn.
+const OA_TRIGGER_RANGE := 2.0  # metres — proximity that grants OA opportunity
+
 func take_turn() -> void:
 	set_meta("taking_turn", true)
 	_target = _acquire_target()
@@ -216,6 +218,12 @@ func take_turn() -> void:
 		set_meta("taking_turn", false)
 		CombatManager.end_turn()
 		return
+
+	# Record which players are adjacent (could trigger OA if we move away).
+	var oa_candidates: Array = []
+	for p in get_tree().get_nodes_in_group("players"):
+		if global_position.distance_to(p.global_position) <= OA_TRIGGER_RANGE:
+			oa_candidates.append(p)
 
 	# Move up to speed toward the target.
 	var speed_m: float = 9.0
@@ -228,6 +236,15 @@ func take_turn() -> void:
 		_state = State.CHASE
 
 	await get_tree().create_timer(0.9).timeout
+
+	# Opportunity attack: player was adjacent and we moved away.
+	if not _dead:
+		for p in oa_candidates:
+			if global_position.distance_to(p.global_position) > OA_TRIGGER_RANGE:
+				var oa_taken: bool = await CombatManager.request_oa(self, p)
+				if oa_taken:
+					await get_tree().create_timer(0.6).timeout
+				break  # one OA per move
 
 	# Attack if now in range.
 	if not _dead and _target != null:

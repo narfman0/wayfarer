@@ -4,16 +4,29 @@
 class_name CombatHUD
 extends CanvasLayer
 
-var _panel:       PanelContainer
-var _btn_move:    Button
-var _btn_attack:  Button
-var _btn_dash:    Button
+var _panel:         PanelContainer
+var _btn_move:      Button
+var _btn_attack:    Button
+var _btn_dash:      Button
 var _btn_disengage: Button
-var _btn_dodge:   Button
-var _btn_end:     Button
-var _btn_tb:      Button
-var _lbl_move:    Label
-var _lbl_turn:    Label
+var _btn_dodge:     Button
+var _btn_end:       Button
+var _btn_tb:        Button
+var _lbl_move:      Label
+var _lbl_turn:      Label
+
+# Ability row (second row, keybindings 1-6)
+var _btn_second_wind:    Button
+var _btn_guiding_bolt:   Button
+var _btn_healing_word:   Button
+var _btn_channel_div:    Button
+var _btn_shield_bash:    Button
+var _btn_action_surge:   Button
+
+# Reaction prompt overlay
+var _reaction_panel: PanelContainer
+var _reaction_label: Label
+var _reaction_trigger_node: Node = null
 
 # Whether the player has manually activated "move" targeting mode.
 var _move_mode: bool = false
@@ -26,6 +39,7 @@ func _ready() -> void:
 	CombatManager.combat_ended.connect(_on_combat_ended)
 	CombatManager.turn_started.connect(_on_turn_started)
 	CombatManager.tb_mode_changed.connect(_on_tb_mode_changed)
+	CombatManager.reaction_available.connect(_on_reaction_available)
 
 # ── UI build ──────────────────────────────────────────────────────────────────
 
@@ -76,6 +90,83 @@ func _build_ui() -> void:
 
 	_btn_tb = _make_btn("[T] Exit TB", hbox, _on_toggle_tb)
 	_btn_tb.add_theme_color_override("font_color", Color(0.7, 0.7, 1.0))
+
+	# ── Ability row (below main bar) ─────────────────────────────────────────
+	var ability_panel := PanelContainer.new()
+	ability_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	ability_panel.offset_top    = -120
+	ability_panel.offset_bottom = -72
+	ability_panel.offset_left   = 0
+	ability_panel.offset_right  = 0
+	var ab_style := StyleBoxFlat.new()
+	ab_style.bg_color     = Color(0.05, 0.05, 0.07, 0.80)
+	ab_style.border_color = Color(0.4, 0.35, 0.2, 0.8)
+	ab_style.set_border_width_all(1)
+	ability_panel.add_theme_stylebox_override("panel", ab_style)
+
+	var ahbox := HBoxContainer.new()
+	ahbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	ahbox.add_theme_constant_override("separation", 6)
+	ability_panel.add_child(ahbox)
+
+	_btn_second_wind  = _make_btn("[1] 2nd Wind",  ahbox, func(): _trigger_ability("ability_1"))
+	_btn_guiding_bolt = _make_btn("[2] Guiding Bolt", ahbox, func(): _trigger_ability("ability_2"))
+	_btn_healing_word = _make_btn("[3] Heal Word", ahbox, func(): _trigger_ability("ability_3"))
+	_btn_channel_div  = _make_btn("[4] Chan. Div", ahbox, func(): _trigger_ability("ability_4"))
+	_btn_shield_bash  = _make_btn("[5] Shield Bash", ahbox, func(): _trigger_ability("ability_5"))
+	_btn_action_surge = _make_btn("[6] Act. Surge", ahbox, func(): _trigger_ability("ability_6"))
+
+	add_child(ability_panel)
+
+	# ── Reaction prompt overlay ───────────────────────────────────────────────
+	_reaction_panel = PanelContainer.new()
+	_reaction_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_reaction_panel.offset_left  = -160
+	_reaction_panel.offset_right =  160
+	_reaction_panel.offset_top   = -50
+	_reaction_panel.offset_bottom = 50
+	var rp_style := StyleBoxFlat.new()
+	rp_style.bg_color     = Color(0.1, 0.06, 0.18, 0.96)
+	rp_style.border_color = Color(0.7, 0.5, 1.0, 1.0)
+	rp_style.set_border_width_all(2)
+	rp_style.corner_radius_top_left     = 6
+	rp_style.corner_radius_top_right    = 6
+	rp_style.corner_radius_bottom_left  = 6
+	rp_style.corner_radius_bottom_right = 6
+	_reaction_panel.add_theme_stylebox_override("panel", rp_style)
+
+	var rvbox := VBoxContainer.new()
+	rvbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	rvbox.add_theme_constant_override("separation", 8)
+	_reaction_panel.add_child(rvbox)
+
+	_reaction_label = Label.new()
+	_reaction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_reaction_label.add_theme_font_size_override("font_size", 15)
+	_reaction_label.add_theme_color_override("font_color", Color(0.95, 0.85, 1.0))
+	rvbox.add_child(_reaction_label)
+
+	var rbhbox := HBoxContainer.new()
+	rbhbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	rbhbox.add_theme_constant_override("separation", 12)
+	rvbox.add_child(rbhbox)
+
+	var btn_oa_yes := Button.new()
+	btn_oa_yes.text = "Attack!"
+	btn_oa_yes.custom_minimum_size = Vector2(80, 36)
+	btn_oa_yes.add_theme_font_size_override("font_size", 14)
+	btn_oa_yes.pressed.connect(_on_reaction_accept)
+	rbhbox.add_child(btn_oa_yes)
+
+	var btn_oa_no := Button.new()
+	btn_oa_no.text = "Skip"
+	btn_oa_no.custom_minimum_size = Vector2(80, 36)
+	btn_oa_no.add_theme_font_size_override("font_size", 14)
+	btn_oa_no.pressed.connect(_on_reaction_skip)
+	rbhbox.add_child(btn_oa_no)
+
+	_reaction_panel.visible = false
+	add_child(_reaction_panel)
 
 	add_child(_panel)
 
@@ -182,12 +273,35 @@ func _on_toggle_tb() -> void:
 		CombatManager.enter_tb_mode()
 		_btn_tb.text = "[T] Exit TB"
 
+func _trigger_ability(action: String) -> void:
+	# Simulate the keybind so level_base handles it (including TB economy).
+	Input.action_press(action)
+	await get_tree().process_frame
+	Input.action_release(action)
+
+func _on_reaction_available(type: String, trigger: Node, _reactor: Node) -> void:
+	if type == "opportunity_attack":
+		_reaction_trigger_node = trigger
+		_reaction_label.text = "Opportunity Attack\nvs %s?" % trigger.name
+		_reaction_panel.visible = true
+
+func _on_reaction_accept() -> void:
+	_reaction_panel.visible = false
+	CombatManager.resolve_reaction(true)
+	_reaction_trigger_node = null
+
+func _on_reaction_skip() -> void:
+	_reaction_panel.visible = false
+	CombatManager.resolve_reaction(false)
+	_reaction_trigger_node = null
+
 # ── Refresh ───────────────────────────────────────────────────────────────────
 
 func _refresh() -> void:
 	var is_my_turn := CombatManager.is_player_turn()
 	var player := _get_player()
 	var has_act := is_my_turn and player != null and CombatManager.has_action(player)
+	var has_bon := is_my_turn and player != null and CombatManager.has_bonus_action(player)
 	var has_mov := is_my_turn and player != null and CombatManager.movement_left(player) > 0.05
 
 	_btn_move.disabled       = not is_my_turn or not has_mov
@@ -205,6 +319,7 @@ func _refresh() -> void:
 		_lbl_turn.text = ""
 
 	_refresh_move_label()
+	_refresh_ability_buttons(has_act, has_bon)
 
 func _refresh_move_label() -> void:
 	var player := _get_player()
@@ -214,6 +329,26 @@ func _refresh_move_label() -> void:
 		_lbl_move.text = "%dft" % feet
 	else:
 		_lbl_move.text = ""
+
+func _refresh_ability_buttons(has_act: bool, has_bon: bool) -> void:
+	var s := GameState.sarro
+	var l := GameState.liris
+	if _btn_second_wind != null:
+		_btn_second_wind.disabled  = not has_bon or s == null or s.second_wind_used
+	if _btn_guiding_bolt != null:
+		_btn_guiding_bolt.disabled = not has_act or l == null or not l.guiding_bolt_ready
+	if _btn_healing_word != null:
+		_btn_healing_word.disabled = not has_bon or l == null or l.healing_word_charges <= 0
+	if _btn_channel_div != null:
+		_btn_channel_div.disabled  = not has_act or l == null or not l.channel_divinity_ready
+	if _btn_shield_bash != null:
+		_btn_shield_bash.disabled  = not has_act or s == null or s.shield_bash_cd > 0.0 or (s.stats != null and s.stats.level < 3)
+	if _btn_action_surge != null:
+		var surge_rdy := s != null and (
+			(s.subclass_key == "freeblade" and s.action_surge_cd <= 0.0) or
+			(s.subclass_key != "freeblade" and not s.action_surge_used)
+		) and (s.stats == null or s.stats.level >= 2)
+		_btn_action_surge.disabled = not surge_rdy
 
 func _get_player() -> Node:
 	var players := get_tree().get_nodes_in_group("players")

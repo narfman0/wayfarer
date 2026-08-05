@@ -312,6 +312,14 @@ func _setup_combat() -> void:
 	liris_attacker.character  = GameState.liris
 	add_child(liris_attacker)
 	_companion.attacker = liris_attacker
+	CombatManager.oa_execute.connect(_on_oa_execute)
+
+func _on_oa_execute(reactor: Node, target: Node) -> void:
+	if _attacker == null or reactor != _player:
+		return
+	if target == null or not target.has_method("receive_damage"):
+		return
+	_attacker.fire_once(target)
 
 func _setup_enemies() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
@@ -395,13 +403,17 @@ func _adjust_zoom(step: float) -> void:
 
 # ── Sarro Abilities ───────────────────────────────────────────────────────────
 
-## [1] Second Wind: heal 1d10 + level, once per rest.
+## [1] Second Wind: heal 1d10 + level, once per rest. (Bonus action in TB.)
 func _use_second_wind() -> void:
 	var c = GameState.sarro
 	if c == null or c.second_wind_used or _defeated:
 		return
 	if c.stats.current_hp >= c.stats.max_hp or c.stats.current_hp <= 0:
 		return
+	if CombatManager.tb_mode and CombatManager.is_player_turn():
+		if not CombatManager.has_bonus_action(_player):
+			return
+		CombatManager.spend_bonus_action(_player)
 	c.second_wind_used = true
 	var heal: int = _Dice.roll(10) + c.stats.level
 	c.stats.current_hp = mini(c.stats.max_hp, c.stats.current_hp + heal)
@@ -426,6 +438,9 @@ func _use_action_surge() -> void:
 		if c.action_surge_used:
 			return
 		c.action_surge_used = true
+	# In TB: Action Surge grants an extra action this turn.
+	if CombatManager.tb_mode and CombatManager.is_player_turn():
+		_player.set_meta("turn_action", true)
 	var base: float = _Progression.base_rate_scale(c)
 	_attacker.rate_scale = base * 0.5
 	AudioManager.play_sfx("crit", 0.0)
@@ -451,6 +466,10 @@ func _use_shield_bash() -> void:
 		return
 	if _player.global_position.distance_to(tgt.global_position) > _SHIELD_BASH_RANGE:
 		return
+	if CombatManager.tb_mode and CombatManager.is_player_turn():
+		if not CombatManager.has_action(_player):
+			return
+		CombatManager.spend_action(_player)
 	c.shield_bash_cd = _SHIELD_BASH_CD
 	_MeleeAttacker.lunge(_player, tgt.global_position)
 	AudioManager.play_sfx("hit", 1.0)
@@ -466,7 +485,7 @@ func _use_shield_bash() -> void:
 
 # ── Liris Abilities ───────────────────────────────────────────────────────────
 
-## [2] Guiding Bolt: mark the current target so the next attack hits with advantage.
+## [2] Guiding Bolt: mark the current target so the next attack hits with advantage. (Action in TB.)
 func _use_guiding_bolt() -> void:
 	var c = GameState.liris
 	if c == null or not c.guiding_bolt_ready or _defeated:
@@ -474,13 +493,17 @@ func _use_guiding_bolt() -> void:
 	var tgt = _player.target_enemy
 	if tgt == null or not tgt.has_method("receive_damage"):
 		return
+	if CombatManager.tb_mode and CombatManager.is_player_turn():
+		if not CombatManager.has_action(_player):
+			return
+		CombatManager.spend_action(_player)
 	c.guiding_bolt_ready = false
 	tgt.guiding_bolt_active = true
 	_DamageNumber.spawn(self, tgt.global_position + Vector3(0, 1.5, 0),
 		"Guiding Bolt!", Color(0.95, 0.85, 0.3))
 	print("[Spell] Liris: Guiding Bolt on %s" % tgt.name)
 
-## [3] Healing Word: heal Sarro for 1d4 + WIS mod (short-rest charge).
+## [3] Healing Word: heal Sarro for 1d4 + WIS mod (short-rest charge). (Bonus action in TB.)
 func _use_healing_word() -> void:
 	var c = GameState.liris
 	var sarro = GameState.sarro
@@ -488,6 +511,10 @@ func _use_healing_word() -> void:
 		return
 	if sarro.stats.current_hp <= 0:
 		return
+	if CombatManager.tb_mode and CombatManager.is_player_turn():
+		if not CombatManager.has_bonus_action(_player):
+			return
+		CombatManager.spend_bonus_action(_player)
 	c.healing_word_charges -= 1
 	var heal: int = maxi(1, _Dice.roll(4) + c.stats.ability_modifier(4))  # 4 = WIS
 	sarro.stats.current_hp = mini(sarro.stats.max_hp, sarro.stats.current_hp + heal)
@@ -495,12 +522,15 @@ func _use_healing_word() -> void:
 		"+%d HW" % heal, Color(0.4, 1.0, 0.5))
 	print("[Spell] Liris: Healing Word — Sarro +%d HP" % heal)
 
-## [4] Channel Divinity — Sacred Flame burst on all enemies within 8 m of Liris.
-## DEX save (DC = 8 + WIS mod + proficiency) or take 1d8 radiant.
+## [4] Channel Divinity — Sacred Flame burst on all enemies within 8 m of Liris. (Action in TB.)
 func _use_channel_divinity() -> void:
 	var c = GameState.liris
 	if c == null or not c.channel_divinity_ready or _defeated:
 		return
+	if CombatManager.tb_mode and CombatManager.is_player_turn():
+		if not CombatManager.has_action(_player):
+			return
+		CombatManager.spend_action(_player)
 	c.channel_divinity_ready = false
 	var dc: int = 8 + c.stats.ability_modifier(4) + c.stats.proficiency_bonus()
 	var hit_count := 0
