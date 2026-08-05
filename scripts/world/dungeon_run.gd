@@ -20,9 +20,14 @@ const _EnemyController = preload("res://scripts/combat/enemy_controller.gd")
 var _rng := RandomNumberGenerator.new()
 var _rooms: Array = []        # each: {x, y, w, h}
 var _dungeon_map: Array = []  # 20×20 int heights
+## Per-run seed captured after randomize(); drives deterministic loot per position.
+var _dungeon_seed: int = 0
+## Counter so each enemy gets a unique offset from the dungeon seed.
+var _enemy_idx: int = 0
 
 func _on_level_ready() -> void:
 	_rng.randomize()
+	_dungeon_seed = _rng.seed
 	_generate_map()
 	_apply_map_to_terrain()
 	_spawn_enemies()
@@ -148,9 +153,12 @@ func _spawn_enemy_at(pos: Vector3) -> void:
 	var script = load("res://scripts/combat/enemy_controller.gd")
 	if script != null:
 		body.set_script(script)
-		body.enemy_type = enemy_type
-		body.gold_min   = 5
-		body.gold_max   = 18
+		body.enemy_type     = enemy_type
+		body.loot_table_key = "dungeon_basic"
+		# Each enemy gets a unique seed derived from the dungeon seed so the same
+		# dungeon layout always produces the same loot (deterministic runs).
+		body.loot_seed      = _dungeon_seed ^ (_enemy_idx * 0x9e3779b9)
+		_enemy_idx         += 1
 
 	get_node("Enemies").add_child(body)
 

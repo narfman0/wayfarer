@@ -13,7 +13,8 @@ const _CharacterStats = preload("res://addons/srd/resources/character_stats.gd")
 const _DamageNumber   = preload("res://scripts/world/damage_number.gd")
 const _MeleeAttacker  = preload("res://scripts/combat/melee_attacker.gd")
 const _EquipPickup    = preload("res://scripts/world/equipment_pickup.gd")
-const _GoldPickup     = preload("res://scripts/world/gold_pickup.gd")
+const _LootBag        = preload("res://scripts/world/loot_bag.gd")
+const _LootTable      = preload("res://scripts/items/loot_table.gd")
 const _WeaponData     = preload("res://addons/srd/resources/weapon_data.gd")
 const _ArmorData      = preload("res://addons/srd/resources/armor_data.gd")
 const _Telegraph      = preload("res://scripts/combat/telegraph.gd")
@@ -81,9 +82,10 @@ const _TYPE_ARCHETYPES := {
 @export var is_boss: bool = false
 ## Equipment to drop on death: "greatsword", "longsword", "chain_mail", "scale_mail", or "".
 @export var loot_preset: String = ""
-## Gold drop range (0,0 = no gold). A random amount in [gold_min, gold_max] drops on death.
-@export var gold_min: int = 0
-@export var gold_max: int = 0
+## LootTable key to roll from on death ("bandit", "dungeon_basic", etc.; "" = no loot bag).
+@export var loot_table_key: String = ""
+## Seed for the loot roll. 0 = derived from world position at death time.
+@export var loot_seed: int = 0
 
 ## Filled by WayfarerCharacter factory in task 8. Nil = use defaults.
 var character = null  # WayfarerCharacter
@@ -609,8 +611,8 @@ func _die() -> void:
 	AudioManager.play_sfx("death")
 	if loot_preset != "":
 		_spawn_loot()
-	if gold_max > 0:
-		_spawn_gold()
+	if loot_table_key != "":
+		_spawn_loot_bag()
 	died.emit()
 	_Juice.death_collapse(self)
 
@@ -659,17 +661,12 @@ func _spawn_loot() -> void:
 			return  # unknown preset — no drop
 	get_tree().current_scene.add_child(pickup)
 
-func _spawn_gold() -> void:
-	var amount: int = _rng_gold()
-	if amount <= 0:
-		return
-	var pickup = _GoldPickup.new()
-	pickup.gold_amount = amount
-	pickup.position = global_position + Vector3(randf_range(-0.4, 0.4), 0.3, randf_range(-0.4, 0.4))
-	get_tree().current_scene.add_child(pickup)
-
-func _rng_gold() -> int:
-	return randi_range(gold_min, gold_max) if gold_max > gold_min else gold_max
+func _spawn_loot_bag() -> void:
+	var bag: Area3D = _LootBag.new()
+	bag.loot_table_key = loot_table_key
+	bag.loot_seed      = loot_seed if loot_seed != 0 else hash(str(global_position))
+	bag.position       = global_position + Vector3(randf_range(-0.3, 0.3), 0.1, randf_range(-0.3, 0.3))
+	get_tree().current_scene.add_child(bag)
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("players") and _state == State.PATROL and not _ambush_hidden:
