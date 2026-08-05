@@ -1,6 +1,8 @@
 class_name PauseMenu
 extends Control
 
+const _InventoryScreen = preload("res://scripts/ui/inventory_screen.gd")
+
 @onready var _resume_btn: Button  = $Panel/VBox/Resume
 @onready var _save_btn:   Button  = $Panel/VBox/Save
 @onready var _menu_btn:   Button  = $Panel/VBox/MainMenu
@@ -18,7 +20,22 @@ func _ready() -> void:
 	_save_btn.pressed.connect(_save)
 	_menu_btn.pressed.connect(_to_main_menu)
 	_quit_btn.pressed.connect(_quit)
+	_add_inventory_button()
 	_build_queue_section()
+
+func _add_inventory_button() -> void:
+	var vbox: VBoxContainer = $Panel/VBox
+	var inv_btn := Button.new()
+	inv_btn.text = "Inventory  [%dg]" % GameState.gold
+	inv_btn.pressed.connect(_open_inventory)
+	# Insert after Save button (index 2)
+	vbox.add_child(inv_btn)
+	vbox.move_child(inv_btn, 2)
+
+func _open_inventory() -> void:
+	var screen: CanvasLayer = _InventoryScreen.new()
+	get_tree().current_scene.add_child(screen)
+	# Inventory closes over the pause menu — no need to close pause first
 
 func _build_queue_section() -> void:
 	var vbox: VBoxContainer = $Panel/VBox

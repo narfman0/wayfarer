@@ -149,6 +149,8 @@ func _spawn_enemy_at(pos: Vector3) -> void:
 	if script != null:
 		body.set_script(script)
 		body.enemy_type = enemy_type
+		body.gold_min   = 5
+		body.gold_max   = 18
 
 	get_node("Enemies").add_child(body)
 

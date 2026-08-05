@@ -18,6 +18,7 @@ var _pending_label: Label
 var _rest_panel: PanelContainer
 var _btn_short_rest: Button
 var _btn_long_rest: Button
+var _gold_label: Label
 
 func _ready() -> void:
 	_enemy_row.visible = false
@@ -51,9 +52,11 @@ func _ready() -> void:
 	add_child(_pending_label)
 
 	_build_rest_panel()
+	_build_gold_label()
 
 	GameState.xp_gained.connect(_on_xp_gained)
 	GameState.leveled_up.connect(_on_leveled_up)
+	GameState.gold_changed.connect(_on_gold_changed)
 
 func _build_rest_panel() -> void:
 	_rest_panel = PanelContainer.new()
@@ -92,6 +95,23 @@ func _build_rest_panel() -> void:
 	hb.add_child(_btn_long_rest)
 
 	add_child(_rest_panel)
+
+func _build_gold_label() -> void:
+	_gold_label = Label.new()
+	_gold_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_gold_label.offset_left   = -130
+	_gold_label.offset_top    = 56
+	_gold_label.offset_right  = -12
+	_gold_label.offset_bottom = 80
+	_gold_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_gold_label.text = "⬡ %d g" % GameState.gold
+	_gold_label.add_theme_font_size_override("font_size", 15)
+	_gold_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	add_child(_gold_label)
+
+func _on_gold_changed(amount: int) -> void:
+	if _gold_label != null:
+		_gold_label.text = "⬡ %d g" % amount
 
 func _on_short_rest() -> void:
 	if CombatManager.in_combat:

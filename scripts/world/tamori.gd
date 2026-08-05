@@ -3,12 +3,15 @@
 class_name TamoriScene
 extends WayfarerLevel
 
+const _ShopNPC = preload("res://scripts/world/shop_npc.gd")
+
 @export var start_dialogue: String = "tamori_tavern"
 ## Set true in the editor to skip opening dialogue for movement/combat testing.
 @export var skip_opening_dialogue: bool = false
 
 func _on_level_ready() -> void:
 	_add_dungeon_portal()
+	_add_shop_npc()
 	if skip_opening_dialogue or GameState.has_flag("opening_done"):
 		_player.set_control_enabled(true)
 	else:
@@ -29,6 +32,15 @@ func _add_dungeon_portal() -> void:
 	# Place near west edge of the village, away from existing portal.
 	portal.position = Vector3(-8.0, 0.0, 4.0)
 	get_node("Level").add_child(portal)
+
+## Place a general-store merchant near the centre of Tamori village.
+func _add_shop_npc() -> void:
+	var npc: Area3D = _ShopNPC.new()
+	npc.name = "ShopNPC"
+	npc.set("npc_name", "Odo's Goods")
+	npc.set("interact_radius", 2.2)
+	npc.position = Vector3(6.0, 0.0, -4.0)
+	get_node("Level").add_child(npc)
 
 func _start_opening_dialogue() -> void:
 	_player.set_control_enabled(false)

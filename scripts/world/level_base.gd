@@ -226,13 +226,72 @@ func _process(_delta: float) -> void:
 	if not _defeated and GameState.sarro != null and GameState.sarro.stats.current_hp <= 0:
 		_on_party_defeated()
 
-## Sarro at 0 HP: the Veil pulls the party back to the last stable tear.
+## Sarro at 0 HP — show death overlay then let the player choose.
 func _on_party_defeated() -> void:
 	_defeated = true
 	_player.set_control_enabled(false)
 	if _attacker != null:
 		_attacker.stop()
+	CombatManager.exit_combat()
 	print("[Combat] The Veil pulls you back...")
+	_show_death_screen()
+
+func _show_death_screen() -> void:
+	var overlay := CanvasLayer.new()
+	overlay.layer = 300
+	get_tree().current_scene.add_child(overlay)
+
+	var backdrop := ColorRect.new()
+	backdrop.color = Color(0.0, 0.0, 0.0, 0.0)
+	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.add_child(backdrop)
+
+	var tw := get_tree().create_tween()
+	tw.tween_property(backdrop, "color:a", 0.72, 0.8)
+
+	var panel := VBoxContainer.new()
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.alignment = BoxContainer.ALIGNMENT_CENTER
+	panel.add_theme_constant_override("separation", 20)
+	panel.offset_left   = -200
+	panel.offset_top    = -120
+	panel.offset_right  =  200
+	panel.offset_bottom =  120
+	overlay.add_child(panel)
+
+	var title := Label.new()
+	title.text = "You Fell..."
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 42)
+	title.add_theme_color_override("font_color", Color(0.85, 0.3, 0.25))
+	panel.add_child(title)
+
+	var sub := Label.new()
+	sub.text = "The Veil pulls you back."
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.add_theme_font_size_override("font_size", 16)
+	sub.add_theme_color_override("font_color", Color(0.65, 0.55, 0.65))
+	panel.add_child(sub)
+
+	panel.add_child(HSeparator.new())
+
+	var btn_retry := Button.new()
+	btn_retry.text = "Try Again"
+	btn_retry.custom_minimum_size = Vector2(180, 44)
+	btn_retry.pressed.connect(func():
+		overlay.queue_free()
+		_respawn_party())
+	panel.add_child(btn_retry)
+
+	var btn_menu := Button.new()
+	btn_menu.text = "Main Menu"
+	btn_menu.custom_minimum_size = Vector2(180, 44)
+	btn_menu.pressed.connect(func():
+		get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn"))
+	panel.add_child(btn_menu)
+
+func _respawn_party() -> void:
 	GameState.sarro.stats.current_hp = GameState.sarro.stats.max_hp
 	if GameState.liris != null:
 		GameState.liris.stats.current_hp = GameState.liris.stats.max_hp
