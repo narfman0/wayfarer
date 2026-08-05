@@ -168,6 +168,13 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 
+	# In TB mode, only move when it is explicitly this enemy's turn.
+	if CombatManager.tb_mode and not get_meta("taking_turn", false):
+		velocity.x = move_toward(velocity.x, 0.0, SPEED * 8.0 * delta)
+		velocity.z = move_toward(velocity.z, 0.0, SPEED * 8.0 * delta)
+		move_and_slide()
+		return
+
 	if _invuln_timer > 0.0:
 		_invuln_timer -= delta
 
@@ -200,6 +207,41 @@ func _physics_process(delta: float) -> void:
 	_knockback = _knockback.move_toward(Vector3.ZERO, 18.0 * delta)
 
 	move_and_slide()
+
+## TB turn: move toward player, attack if in range, then end turn.
+func take_turn() -> void:
+	set_meta("taking_turn", true)
+	_target = _acquire_target()
+	if _target == null or _dead:
+		set_meta("taking_turn", false)
+		CombatManager.end_turn()
+		return
+
+	# Move up to speed toward the target.
+	var speed_m: float = 9.0
+	if character != null and character.stats != null:
+		speed_m = character.stats.speed / CombatManager.FEET_PER_METRE
+	var to_target := _target.global_position - global_position
+	to_target.y = 0.0
+	var dist := to_target.length()
+	if dist > MELEE_DIST and dist <= speed_m + MELEE_DIST:
+		_state = State.CHASE
+
+	await get_tree().create_timer(0.9).timeout
+
+	# Attack if now in range.
+	if not _dead and _target != null:
+		var d2 := global_position.distance_to(_target.global_position)
+		if d2 <= MELEE_DIST * 1.5:
+			_fire_attack()
+			await get_tree().create_timer(0.5).timeout
+
+	set_meta("taking_turn", false)
+	if CombatManager.in_combat:
+		CombatManager.end_turn()
+
+func take_rt_action() -> void:
+	pass  # RT mode: _physics_process AI loop handles everything
 
 func _do_patrol(delta: float) -> void:
 	if patrol_points.is_empty():
@@ -610,6 +652,14 @@ func alerted(body: CharacterBody3D) -> void:
 		return
 	_target = body
 	_state = State.CHASE
+	# Gather all living combatants and hand off to CombatManager.
+	if not CombatManager.in_combat:
+		var combatants: Array = []
+		for p in get_tree().get_nodes_in_group("players"):
+			combatants.append(p)
+		for e in get_tree().get_nodes_in_group("enemies"):
+			combatants.append(e)
+		CombatManager.enter_combat(combatants)
 
 ## Pulling one guard pulls everyone sharing this pack_id.
 func _alert_pack(body: CharacterBody3D) -> void:

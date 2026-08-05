@@ -26,6 +26,7 @@ SceneManager="*res://scripts/system/scene_manager.gd"
 DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 GameState="*res://scripts/system/game_state.gd"
 AudioManager="*res://scripts/system/audio_manager.gd"
+CombatManager="*res://scripts/combat/combat_manager.gd"
 
 [display]
 
