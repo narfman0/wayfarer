@@ -12,14 +12,15 @@ const _LevelUp    = preload("res://addons/srd/systems/level_up.gd")
 const _Experience = preload("res://addons/srd/systems/experience.gd")
 const _Progression = preload("res://scripts/characters/character_progression.gd")
 
-## Playable classes. Psion/Warden exist in the SRD addon but stay out of the
-## game until spellcasting is wired into combat.
-const CLASS_KEYS := ["soldier", "ghost"]
+## All four SRD classes are now playable.
+const CLASS_KEYS := ["soldier", "ghost", "psion", "warden"]
 
 static func make_class_data(class_key: String):
 	match class_key:
 		"soldier": return _ClassData.make_soldier()
 		"ghost":   return _ClassData.make_ghost()
+		"psion":   return _ClassData.make_psion()
+		"warden":  return _ClassData.make_warden()
 	return null
 
 ## Build a level-1 character from SRD creation choices.
@@ -104,10 +105,10 @@ static func make_sarro():
 		[16, 14, 14, 10, 12, 10],
 		[int(_SRD.Skill.ATHLETICS), int(_SRD.Skill.PERCEPTION)])
 
-## Liris fights as a Soldier kit until Warden spellcasting exists in-game.
+## Default Liris — Warden (armored caster), WIS-primary support build.
 static func make_liris():
-	return make_custom("Liris", "soldier",
-		[10, 14, 12, 14, 16, 12],
+	return make_custom("Liris", "warden",
+		[10, 14, 12, 10, 16, 14],
 		[int(_SRD.Skill.INSIGHT), int(_SRD.Skill.PERCEPTION)])
 
 ## Enemy roster. Draft stats + XP values live in docs/design/progression.md.

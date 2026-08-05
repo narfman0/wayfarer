@@ -1,8 +1,7 @@
 ## SRD character creation wizard:
-## Class → Fighting Style → Abilities → Skills → Feat → Review.
-## Builds the player character (Sarro) from real SRD rules; Liris joins as a
-## fixed companion. Later choices (subclass at 3, ASI/feat at class ASI
-## levels) are spent at rest points — see CharacterProgression.
+## Sarro: Class → Fighting Style → Abilities → Skills → Feat → Review
+## Then: "Customize Liris?" → if yes, same flow for Liris (no Style/Feat steps).
+## Both characters can pick from all 4 classes. Defaults apply if skipped.
 class_name CharacterCreation
 extends Control
 
@@ -12,10 +11,11 @@ const _AbilityScores = preload("res://addons/srd/systems/ability_scores.gd")
 const _Skills        = preload("res://addons/srd/systems/skills_system.gd")
 const _Progression   = preload("res://scripts/characters/character_progression.gd")
 
-enum Step { CLASS, STYLE, ABILITIES, SKILLS, FEAT, REVIEW }
+enum Step { CLASS, STYLE, ABILITIES, SKILLS, FEAT, REVIEW, LIRIS_PROMPT, LIRIS_CLASS, LIRIS_ABILITIES, LIRIS_SKILLS }
 enum Method { POINT_BUY, STANDARD_ARRAY, ROLL }
 
-const STEP_TITLES := ["Class", "Fighting Style", "Ability Scores", "Skills", "Feat", "Review"]
+const STEP_TITLES := ["Class", "Fighting Style", "Ability Scores", "Skills", "Feat", "Review",
+	"Companion", "Liris — Class", "Liris — Ability Scores", "Liris — Skills"]
 
 @onready var _step_label: Label = $Layout/StepLabel
 @onready var _body: VBoxContainer = $Layout/Content/StepBody
@@ -33,6 +33,14 @@ var _style_key: String = ""
 var _feat_key: String = ""
 var _char_name: String = "Sarro"
 
+# Liris customisation state (only used when player opts in)
+var _liris_class_key: String = "warden"
+var _liris_pb_scores: Array[int] = [8, 8, 8, 8, 8, 8]
+var _liris_assign: Array[int] = [-1, -1, -1, -1, -1, -1]
+var _liris_pool: Array[int] = []
+var _liris_skill_picks: Array[int] = []
+var _liris_customize: bool = false  # true once player opts in
+
 func _ready() -> void:
 	_back_btn.pressed.connect(_on_back)
 	_next_btn.pressed.connect(_on_next)
@@ -42,24 +50,65 @@ func _ready() -> void:
 # ── Navigation ───────────────────────────────────────────────────────────────
 
 func _on_back() -> void:
-	if _step == Step.CLASS:
-		get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
-		return
-	_step = (_step - 1) as Step
+	match _step:
+		Step.CLASS:
+			get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+			return
+		Step.ABILITIES:
+			# Skip back over Style if the class has none.
+			if _Progression.styles_for(_class_key).is_empty():
+				_step = Step.CLASS
+			else:
+				_step = Step.STYLE
+		Step.LIRIS_PROMPT:
+			_step = Step.REVIEW
+		Step.LIRIS_CLASS:
+			_step = Step.LIRIS_PROMPT
+		Step.LIRIS_ABILITIES:
+			_step = Step.LIRIS_CLASS
+		Step.LIRIS_SKILLS:
+			_step = Step.LIRIS_ABILITIES
+		_:
+			_step = (_step - 1) as Step
 	_rebuild()
 
 func _on_next() -> void:
-	if _step == Step.REVIEW:
-		_confirm()
-		return
-	_step = (_step + 1) as Step
-	_rebuild()
+	match _step:
+		Step.CLASS:
+			# Skip fighting style step if this class has none (Psion, Warden).
+			if _Progression.styles_for(_class_key).is_empty():
+				_style_key = ""
+				_step = Step.ABILITIES
+			else:
+				_step = Step.STYLE
+			_rebuild()
+		Step.REVIEW:
+			# After Sarro's review, go to Liris prompt instead of confirming.
+			_step = Step.LIRIS_PROMPT
+			_rebuild()
+		Step.LIRIS_PROMPT:
+			if _liris_customize:
+				_liris_pool = _AbilityScores.STANDARD_ARRAY.duplicate()
+				_step = Step.LIRIS_CLASS
+				_rebuild()
+			else:
+				_confirm()
+		Step.LIRIS_SKILLS:
+			_confirm()
+		_:
+			_step = (_step + 1) as Step
+			_rebuild()
 
 func _confirm() -> void:
 	var sarro = _Factory.make_custom(_char_name, _class_key, _scores(), _skill_picks)
 	_Progression.apply_choice(sarro, {"kind": "style", "style": _style_key})
 	_Progression.apply_choice(sarro, {"kind": "feat", "level": 1, "feat": _feat_key})
-	GameState.set_party(sarro, _Factory.make_liris())
+	var liris
+	if _liris_customize:
+		liris = _Factory.make_custom("Liris", _liris_class_key, _liris_scores(), _liris_skill_picks)
+	else:
+		liris = _Factory.make_liris()
+	GameState.set_party(sarro, liris)
 	get_tree().change_scene_to_file("res://scenes/world/tamori.tscn")
 
 ## The six chosen scores indexed by SRD.Ability, per the active method.
@@ -71,19 +120,37 @@ func _scores() -> Array:
 		out.append(_pool[_assign[i]] if _assign[i] >= 0 else 8)
 	return out
 
+func _liris_scores() -> Array:
+	var out: Array[int] = []
+	for i in 6:
+		out.append(_liris_pool[_liris_assign[i]] if _liris_assign[i] >= 0 else 8)
+	return out
+
 func _rebuild() -> void:
 	_step_label.text = "Step %d of %d — %s" % [_step + 1, STEP_TITLES.size(), STEP_TITLES[_step]]
 	_back_btn.text = "Main Menu" if _step == Step.CLASS else "Back"
-	_next_btn.text = "Begin" if _step == Step.REVIEW else "Next"
+	match _step:
+		Step.LIRIS_PROMPT:
+			_next_btn.text = "Use Default Liris" if not _liris_customize else "Customize Liris"
+		Step.LIRIS_SKILLS:
+			_next_btn.text = "Begin"
+		Step.REVIEW:
+			_next_btn.text = "Next →"
+		_:
+			_next_btn.text = "Next"
 	for child in _body.get_children():
 		child.queue_free()
 	match _step:
-		Step.CLASS:     _build_class_step()
-		Step.STYLE:     _build_style_step()
-		Step.ABILITIES: _build_abilities_step()
-		Step.SKILLS:    _build_skills_step()
-		Step.FEAT:      _build_feat_step()
-		Step.REVIEW:    _build_review_step()
+		Step.CLASS:          _build_class_step()
+		Step.STYLE:          _build_style_step()
+		Step.ABILITIES:      _build_abilities_step()
+		Step.SKILLS:         _build_skills_step()
+		Step.FEAT:           _build_feat_step()
+		Step.REVIEW:         _build_review_step()
+		Step.LIRIS_PROMPT:   _build_liris_prompt_step()
+		Step.LIRIS_CLASS:    _build_liris_class_step()
+		Step.LIRIS_ABILITIES: _build_liris_abilities_step()
+		Step.LIRIS_SKILLS:   _build_liris_skills_step()
 	_validate()
 
 func _validate() -> void:
@@ -102,6 +169,11 @@ func _validate() -> void:
 			_next_btn.disabled = _skill_picks.size() != cd.skill_choices_count
 		Step.REVIEW:
 			_next_btn.disabled = _char_name.strip_edges().is_empty()
+		Step.LIRIS_ABILITIES:
+			_next_btn.disabled = _liris_assign.count(-1) > 0
+		Step.LIRIS_SKILLS:
+			var lcd = _Factory.make_class_data(_liris_class_key)
+			_next_btn.disabled = _liris_skill_picks.size() != lcd.skill_choices_count
 		_:
 			_next_btn.disabled = false
 
@@ -395,3 +467,105 @@ func _fixed_label(text: String, width: int) -> Label:
 
 static func _mod(score: int) -> int:
 	return (score - 10) / 2 if score >= 10 else (score - 11) / 2
+
+# ── Liris steps ───────────────────────────────────────────────────────────────
+
+func _build_liris_prompt_step() -> void:
+	_add_header("Liris is your companion. She has a default Warden build — or you can customise her class and stats.")
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 10)
+	_body.add_child(vb)
+
+	var default_info := Label.new()
+	default_info.text = "Default Liris: Warden (d8, WIS saves)  —  WIS 16, DEX 14, CON 12"
+	default_info.add_theme_color_override("font_color", Color(0.7, 0.8, 0.7))
+	default_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb.add_child(default_info)
+
+	var grp := ButtonGroup.new()
+	for label_text: String in ["Use default Liris", "Customise Liris"]:
+		var btn := CheckBox.new()
+		btn.button_group = grp
+		btn.toggle_mode = true
+		btn.text = label_text
+		btn.button_pressed = (label_text == "Use default Liris") != _liris_customize
+		var wants_custom: bool = label_text == "Customise Liris"
+		btn.toggled.connect(func(on: bool):
+			if on:
+				_liris_customize = wants_custom
+				_next_btn.text = "Customise Liris" if _liris_customize else "Use Default Liris"
+				_validate())
+		vb.add_child(btn)
+
+func _build_liris_class_step() -> void:
+	_add_header("Choose Liris's class.")
+	var group := ButtonGroup.new()
+	for key in _Factory.CLASS_KEYS:
+		var cd = _Factory.make_class_data(key)
+		var btn := CheckBox.new()
+		btn.button_group = group
+		btn.toggle_mode = true
+		btn.text = "%s  (d%d, saves %s/%s)" % [
+			cd.class_name_str, cd.hit_die,
+			_SRD.ability_abbrev(cd.save_proficiencies[0]),
+			_SRD.ability_abbrev(cd.save_proficiencies[1])]
+		btn.button_pressed = key == _liris_class_key
+		btn.toggled.connect(func(on: bool):
+			if on:
+				_liris_class_key = key
+				_liris_skill_picks.clear())
+		_body.add_child(btn)
+		_add_desc(cd.description)
+
+func _build_liris_abilities_step() -> void:
+	_add_header("Assign the standard array to Liris's ability scores.  [15, 14, 13, 12, 10, 8]")
+	_liris_pool = _AbilityScores.STANDARD_ARRAY.duplicate()
+	var ability_names := ["STR", "DEX", "CON", "INT", "WIS", "CHA"]
+	var used: Array[int] = []
+	for assigned in _liris_assign:
+		if assigned >= 0:
+			used.append(assigned)
+
+	for i in 6:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		_body.add_child(row)
+		row.add_child(_fixed_label(ability_names[i] + ":", 44))
+		var opt := OptionButton.new()
+		opt.custom_minimum_size.x = 80
+		opt.add_item("—", -1)
+		for pi in _liris_pool.size():
+			var val: int = _liris_pool[pi]
+			var taken: bool = pi in used and _liris_assign[i] != pi
+			if not taken:
+				opt.add_item(str(val) + "  (%+d)" % _mod(val), pi)
+		if _liris_assign[i] >= 0:
+			for idx in opt.item_count:
+				if opt.get_item_id(idx) == _liris_assign[i]:
+					opt.select(idx)
+					break
+		var ability_idx := i
+		opt.item_selected.connect(func(idx: int):
+			_liris_assign[ability_idx] = opt.get_item_id(idx)
+			_rebuild())
+		row.add_child(opt)
+
+func _build_liris_skills_step() -> void:
+	var cd = _Factory.make_class_data(_liris_class_key)
+	_add_header("Choose %d skills for Liris." % cd.skill_choices_count)
+	for skill_int in cd.skill_options:
+		var skill := skill_int as _SRD.Skill
+		var chk := CheckBox.new()
+		chk.text = _Skills.skill_name(skill)
+		chk.button_pressed = int(skill) in _liris_skill_picks
+		chk.toggled.connect(func(on: bool):
+			var si := int(skill)
+			if on and si not in _liris_skill_picks:
+				if _liris_skill_picks.size() < cd.skill_choices_count:
+					_liris_skill_picks.append(si)
+				else:
+					chk.set_pressed_no_signal(false)
+			elif not on:
+				_liris_skill_picks.erase(si)
+			_validate())
+		_body.add_child(chk)
