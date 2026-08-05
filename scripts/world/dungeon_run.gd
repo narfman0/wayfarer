@@ -8,7 +8,6 @@ extends WayfarerLevel
 const _VeilPortal = preload("res://scripts/world/portal.gd")
 const _EnemyController = preload("res://scripts/combat/enemy_controller.gd")
 
-@export var plane_id: String = "dungeon_run"
 @export var exit_to: String = "tamori"
 @export var exit_spawn: String = "dungeon_return"
 

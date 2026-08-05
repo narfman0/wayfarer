@@ -637,7 +637,7 @@ func _use_channel_divinity() -> void:
 # ── Spell casting ────────────────────────────────────────────────────────────
 
 func _cast_spell(spell) -> void:
-	var c := GameState.sarro
+	var c = GameState.sarro
 	if c == null or _defeated:
 		return
 	if CombatManager.tb_mode and CombatManager.is_player_turn():

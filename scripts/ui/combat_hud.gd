@@ -330,7 +330,7 @@ func _refresh() -> void:
 		_lbl_turn.text = ""
 
 	_refresh_move_label()
-	_refresh_ability_buttons(has_act, has_bon)
+	_refresh_ability_buttons(has_act, has_bon, is_my_turn)
 
 func _refresh_move_label() -> void:
 	var player := _get_player()
@@ -341,9 +341,9 @@ func _refresh_move_label() -> void:
 	else:
 		_lbl_move.text = ""
 
-func _refresh_ability_buttons(has_act: bool, has_bon: bool) -> void:
-	var s := GameState.sarro
-	var l := GameState.liris
+func _refresh_ability_buttons(has_act: bool, has_bon: bool, is_my_turn: bool) -> void:
+	var s = GameState.sarro
+	var l = GameState.liris
 	if _btn_second_wind != null:
 		_btn_second_wind.disabled  = not has_bon or s == null or s.second_wind_used
 	if _btn_guiding_bolt != null:
@@ -355,7 +355,7 @@ func _refresh_ability_buttons(has_act: bool, has_bon: bool) -> void:
 	if _btn_shield_bash != null:
 		_btn_shield_bash.disabled  = not has_act or s == null or s.shield_bash_cd > 0.0 or (s.stats != null and s.stats.level < 3)
 	if _btn_action_surge != null:
-		var surge_rdy := s != null and (
+		var surge_rdy: bool = s != null and (
 			(s.subclass_key == "freeblade" and s.action_surge_cd <= 0.0) or
 			(s.subclass_key != "freeblade" and not s.action_surge_used)
 		) and (s.stats == null or s.stats.level >= 2)
@@ -412,7 +412,7 @@ func _build_spell_popup() -> void:
 	title.add_theme_color_override("font_color", Color(0.85, 0.75, 1.0))
 	vbox.add_child(title)
 
-	var sarro := GameState.sarro
+	var sarro = GameState.sarro
 	if sarro != null:
 		for sp in sarro.cantrips:
 			vbox.add_child(_spell_btn(sp, false))
@@ -450,7 +450,7 @@ func _spell_btn(sp, disabled: bool) -> Button:
 	return btn
 
 func _can_cast_l1() -> bool:
-	var sarro := GameState.sarro
+	var sarro = GameState.sarro
 	if sarro == null:
 		return false
 	if sarro.energy_slots != null and sarro.energy_slots.has_method("slots_remaining"):

@@ -41,7 +41,7 @@ func is_attacking(enemy) -> bool:  # enemy: EnemyController
 ## One-shot attack roll against target (used for opportunity attacks, etc.)
 ## Does not affect the ongoing attack loop.
 func fire_once(target) -> void:
-	var saved := _target
+	var saved = _target
 	var saved_active := _active
 	_target = target
 	_do_attack()

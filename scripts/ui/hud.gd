@@ -116,8 +116,8 @@ func _on_gold_changed(amount: int) -> void:
 func _on_short_rest() -> void:
 	if CombatManager.in_combat:
 		return
-	var s := GameState.sarro
-	var l := GameState.liris
+	var s = GameState.sarro
+	var l = GameState.liris
 	if s != null:
 		s.second_wind_used = false
 		s.shield_bash_cd   = 0.0
@@ -128,8 +128,8 @@ func _on_short_rest() -> void:
 func _on_long_rest() -> void:
 	if CombatManager.in_combat:
 		return
-	var s := GameState.sarro
-	var l := GameState.liris
+	var s = GameState.sarro
+	var l = GameState.liris
 	if s != null:
 		s.second_wind_used  = false
 		s.action_surge_used = false
