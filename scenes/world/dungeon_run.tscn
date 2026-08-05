@@ -1,0 +1,67 @@
+[gd_scene load_steps=7 format=3 uid="uid://dungeon_run"]
+
+[ext_resource type="Script" path="res://scripts/world/dungeon_run.gd" id="1_dungeon"]
+[ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
+[ext_resource type="Script" path="res://scripts/world/terrain_mesh.gd" id="4_terrain"]
+[ext_resource type="Environment" path="res://resources/env_village.tres" id="5_env"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sarro"]
+height = 1.8
+radius = 0.35
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_liris"]
+height = 1.8
+radius = 0.35
+
+[node name="DungeonRun" type="Node3D"]
+script = ExtResource("1_dungeon")
+plane_id = "dungeon_run"
+bounds_half_size = 40.0
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = ExtResource("5_env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 10, 0)
+light_energy = 0.6
+shadow_enabled = true
+
+[node name="Level" type="Node3D" parent="."]
+
+[node name="TiledTerrain" type="Node3D" parent="Level"]
+script = ExtResource("4_terrain")
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Characters" type="Node3D" parent="."]
+
+[node name="Sarro" type="CharacterBody3D" parent="Characters" groups=["players"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 0.9, 0)
+script = ExtResource("2_player")
+collision_layer = 1
+collision_mask = 7
+
+[node name="SarroCollision" type="CollisionShape3D" parent="Characters/Sarro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_sarro")
+
+[node name="Liris" type="CharacterBody3D" parent="Characters" groups=["companions"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.9, 1.5)
+script = ExtResource("3_companion")
+collision_layer = 4
+collision_mask = 3
+
+[node name="LirisCollision" type="CollisionShape3D" parent="Characters/Liris"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_liris")
+
+[node name="CameraPivot" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.651, 0.759, 0, -0.759, 0.651, 0, 14, 12)
+current = true
+
+[node name="HUD" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0

@@ -47,7 +47,16 @@ const MAP: Array = [
 	[3,3,3,3,3,3,2,2,2,2,2,2,2,3,3,3,3,3,3,3],  # row 19 south hills
 ]
 
+## Optional runtime override — set before _ready() or call rebuild_from().
+var _active_map: Array = []
+
 func _ready() -> void:
+	_build()
+
+## Replace the map at runtime and regenerate geometry + collision.
+## Call this from a level script's _on_level_ready() after setting _active_map.
+func rebuild_from(new_map: Array) -> void:
+	_active_map = new_map
 	_build()
 
 func _build() -> void:
@@ -60,9 +69,11 @@ func _build() -> void:
 	var half_w := COLS * CELL * 0.5  # 40.0
 	var half_h := ROWS * CELL * 0.5  # 40.0
 
+	var active: Array = _active_map if _active_map.size() == ROWS else MAP
+
 	for row in ROWS:
 		for col in COLS:
-			var h: int    = MAP[row][col]
+			var h: int    = active[row][col]
 			var x0 := col * CELL - half_w
 			var z0 := row * CELL - half_h
 			var x1 := x0 + CELL
@@ -77,10 +88,10 @@ func _build() -> void:
 			          Vector3(x1,y,z0), Vector3(x0,y,z0), Vector3.UP, top_c)
 
 			# ── wall faces (one section per height step) ─────────────────────
-			var nh_n: int = MAP[row-1][col] if row > 0        else 0
-			var nh_s: int = MAP[row+1][col] if row < ROWS - 1 else 0
-			var nh_e: int = MAP[row][col+1] if col < COLS - 1 else 0
-			var nh_w: int = MAP[row][col-1] if col > 0        else 0
+			var nh_n: int = active[row-1][col] if row > 0        else 0
+			var nh_s: int = active[row+1][col] if row < ROWS - 1 else 0
+			var nh_e: int = active[row][col+1] if col < COLS - 1 else 0
+			var nh_w: int = active[row][col-1] if col > 0        else 0
 
 			# North wall (z−, normal 0,0,−1)
 			if h > nh_n:

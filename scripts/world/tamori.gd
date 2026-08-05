@@ -8,10 +8,27 @@ extends WayfarerLevel
 @export var skip_opening_dialogue: bool = false
 
 func _on_level_ready() -> void:
+	_add_dungeon_portal()
 	if skip_opening_dialogue or GameState.has_flag("opening_done"):
 		_player.set_control_enabled(true)
 	else:
 		_start_opening_dialogue()
+
+## Spawn a veil portal near the village shrine that leads to a dungeon run.
+func _add_dungeon_portal() -> void:
+	var portal_script = load("res://scripts/world/portal.gd")
+	if portal_script == null:
+		return
+	var portal := Node3D.new()
+	portal.name = "DungeonPortal"
+	portal.set_script(portal_script)
+	portal.set("display_name", "The Rift Below")
+	portal.set("spawn_id",       "dungeon_return")
+	portal.set("target_plane",   "dungeon_run")
+	portal.set("target_spawn_id", "dungeon_entry")
+	# Place near west edge of the village, away from existing portal.
+	portal.position = Vector3(-8.0, 0.0, 4.0)
+	get_node("Level").add_child(portal)
 
 func _start_opening_dialogue() -> void:
 	_player.set_control_enabled(false)

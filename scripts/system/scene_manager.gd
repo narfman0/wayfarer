@@ -4,6 +4,7 @@ extends CanvasLayer
 
 const LEVELS := {
 	"tamori": "res://scenes/world/tamori.tscn",
+	"dungeon_run": "res://scenes/world/dungeon_run.tscn",
 	"tamori_road": "res://scenes/world/tamori_road.tscn",
 	"tamori_fields": "res://scenes/world/tamori_fields.tscn",
 	"tamori_anchor": "res://scenes/world/tamori_anchor.tscn",
