@@ -10,19 +10,36 @@ const _SRD           = preload("res://addons/srd/srd_enums.gd")
 const _AbilityScores = preload("res://addons/srd/systems/ability_scores.gd")
 const _Skills        = preload("res://addons/srd/systems/skills_system.gd")
 const _Progression   = preload("res://scripts/characters/character_progression.gd")
+const _SpeciesData   = preload("res://addons/srd/resources/species_data.gd")
+const _BackgroundData = preload("res://addons/srd/resources/background_data.gd")
+const _SpellData     = preload("res://addons/srd/resources/spell_data.gd")
 
-enum Step { CLASS, STYLE, ABILITIES, SKILLS, FEAT, REVIEW, LIRIS_PROMPT, LIRIS_CLASS, LIRIS_ABILITIES, LIRIS_SKILLS }
+enum Step { CLASS, STYLE, ABILITIES, SKILLS, FEAT, REVIEW, LIRIS_PROMPT, LIRIS_CLASS, LIRIS_ABILITIES, LIRIS_SKILLS,
+	SPECIES = 10, BACKGROUND = 11, SPELL_PICK = 12 }
 enum Method { POINT_BUY, STANDARD_ARRAY, ROLL }
 
-const STEP_TITLES := ["Class", "Fighting Style", "Ability Scores", "Skills", "Feat", "Review",
-	"Companion", "Liris — Class", "Liris — Ability Scores", "Liris — Skills"]
+const STEP_TITLES := {
+	Step.SPECIES: "Species",
+	Step.CLASS: "Class",
+	Step.STYLE: "Fighting Style",
+	Step.ABILITIES: "Ability Scores",
+	Step.SKILLS: "Skills",
+	Step.SPELL_PICK: "Spells",
+	Step.BACKGROUND: "Background",
+	Step.FEAT: "Feat",
+	Step.REVIEW: "Review",
+	Step.LIRIS_PROMPT: "Companion",
+	Step.LIRIS_CLASS: "Liris — Class",
+	Step.LIRIS_ABILITIES: "Liris — Ability Scores",
+	Step.LIRIS_SKILLS: "Liris — Skills",
+}
 
 @onready var _step_label: Label = $Layout/StepLabel
 @onready var _body: VBoxContainer = $Layout/Content/StepBody
 @onready var _back_btn: Button = $Layout/Nav/Back
 @onready var _next_btn: Button = $Layout/Nav/Next
 
-var _step: Step = Step.CLASS
+var _step: Step = Step.SPECIES
 var _class_key: String = "soldier"
 var _method: Method = Method.POINT_BUY
 var _pb_scores: Array[int] = [8, 8, 8, 8, 8, 8]      # point buy, by SRD.Ability
@@ -32,6 +49,10 @@ var _skill_picks: Array[int] = []
 var _style_key: String = ""
 var _feat_key: String = ""
 var _char_name: String = "Sarro"
+var _species_pick = null      # SpeciesData or null
+var _background_pick = null   # BackgroundData or null
+var _cantrip_picks: Array = []
+var _sarro_spell_picks: Array = []
 
 # Liris customisation state (only used when player opts in)
 var _liris_class_key: String = "warden"
@@ -51,15 +72,25 @@ func _ready() -> void:
 
 func _on_back() -> void:
 	match _step:
-		Step.CLASS:
+		Step.SPECIES:
 			get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 			return
+		Step.CLASS:
+			_step = Step.SPECIES
 		Step.ABILITIES:
-			# Skip back over Style if the class has none.
 			if _Progression.styles_for(_class_key).is_empty():
 				_step = Step.CLASS
 			else:
 				_step = Step.STYLE
+		Step.SPELL_PICK:
+			_step = Step.SKILLS
+		Step.BACKGROUND:
+			if _is_caster(_class_key):
+				_step = Step.SPELL_PICK
+			else:
+				_step = Step.SKILLS
+		Step.FEAT:
+			_step = Step.BACKGROUND
 		Step.LIRIS_PROMPT:
 			_step = Step.REVIEW
 		Step.LIRIS_CLASS:
@@ -74,16 +105,29 @@ func _on_back() -> void:
 
 func _on_next() -> void:
 	match _step:
+		Step.SPECIES:
+			_step = Step.CLASS
+			_rebuild()
 		Step.CLASS:
-			# Skip fighting style step if this class has none (Psion, Warden).
 			if _Progression.styles_for(_class_key).is_empty():
 				_style_key = ""
 				_step = Step.ABILITIES
 			else:
 				_step = Step.STYLE
 			_rebuild()
+		Step.SKILLS:
+			if _is_caster(_class_key):
+				_step = Step.SPELL_PICK
+			else:
+				_step = Step.BACKGROUND
+			_rebuild()
+		Step.SPELL_PICK:
+			_step = Step.BACKGROUND
+			_rebuild()
+		Step.BACKGROUND:
+			_step = Step.FEAT
+			_rebuild()
 		Step.REVIEW:
-			# After Sarro's review, go to Liris prompt instead of confirming.
 			_step = Step.LIRIS_PROMPT
 			_rebuild()
 		Step.LIRIS_PROMPT:
@@ -100,7 +144,8 @@ func _on_next() -> void:
 			_rebuild()
 
 func _confirm() -> void:
-	var sarro = _Factory.make_custom(_char_name, _class_key, _scores(), _skill_picks)
+	var sarro = _Factory.make_custom(_char_name, _class_key, _scores(), _skill_picks,
+		_species_pick, _background_pick, _cantrip_picks, _sarro_spell_picks)
 	_Progression.apply_choice(sarro, {"kind": "style", "style": _style_key})
 	_Progression.apply_choice(sarro, {"kind": "feat", "level": 1, "feat": _feat_key})
 	var liris
@@ -127,8 +172,9 @@ func _liris_scores() -> Array:
 	return out
 
 func _rebuild() -> void:
-	_step_label.text = "Step %d of %d — %s" % [_step + 1, STEP_TITLES.size(), STEP_TITLES[_step]]
-	_back_btn.text = "Main Menu" if _step == Step.CLASS else "Back"
+	var title: String = STEP_TITLES.get(_step, "...")
+	_step_label.text = title
+	_back_btn.text = "Main Menu" if _step == Step.SPECIES else "Back"
 	match _step:
 		Step.LIRIS_PROMPT:
 			_next_btn.text = "Use Default Liris" if not _liris_customize else "Customize Liris"
@@ -141,10 +187,13 @@ func _rebuild() -> void:
 	for child in _body.get_children():
 		child.queue_free()
 	match _step:
+		Step.SPECIES:        _build_species_step()
 		Step.CLASS:          _build_class_step()
 		Step.STYLE:          _build_style_step()
 		Step.ABILITIES:      _build_abilities_step()
 		Step.SKILLS:         _build_skills_step()
+		Step.SPELL_PICK:     _build_spell_step()
+		Step.BACKGROUND:     _build_background_step()
 		Step.FEAT:           _build_feat_step()
 		Step.REVIEW:         _build_review_step()
 		Step.LIRIS_PROMPT:   _build_liris_prompt_step()
@@ -155,6 +204,8 @@ func _rebuild() -> void:
 
 func _validate() -> void:
 	match _step:
+		Step.SPECIES:
+			_next_btn.disabled = _species_pick == null
 		Step.STYLE:
 			_next_btn.disabled = _style_key == ""
 		Step.FEAT:
@@ -167,6 +218,10 @@ func _validate() -> void:
 		Step.SKILLS:
 			var cd = _Factory.make_class_data(_class_key)
 			_next_btn.disabled = _skill_picks.size() != cd.skill_choices_count
+		Step.SPELL_PICK:
+			_next_btn.disabled = false  # spells optional at creation
+		Step.BACKGROUND:
+			_next_btn.disabled = _background_pick == null
 		Step.REVIEW:
 			_next_btn.disabled = _char_name.strip_edges().is_empty()
 		Step.LIRIS_ABILITIES:
@@ -568,4 +623,122 @@ func _build_liris_skills_step() -> void:
 			elif not on:
 				_liris_skill_picks.erase(si)
 			_validate())
+		_body.add_child(chk)
+
+# ── New steps: Species, Background, Spells ───────────────────────────────────
+
+static func _is_caster(class_key: String) -> bool:
+	return class_key == "psion" or class_key == "warden"
+
+func _build_species_step() -> void:
+	_add_header("Choose your species. Each grants ability score bonuses and unique traits.")
+	var group := ButtonGroup.new()
+	var desc_lbl := Label.new()
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_lbl.add_theme_color_override("font_color", Color(0.7, 0.85, 0.7))
+	desc_lbl.text = ""
+
+	for sp in _SpeciesData.all_species():
+		var btn := CheckBox.new()
+		btn.button_group = group
+		btn.toggle_mode = true
+		var asi_parts: Array[String] = []
+		var ab_abbrev := ["STR","DEX","CON","INT","WIS","CHA"]
+		for ab in sp.asi:
+			asi_parts.append("%s+%d" % [ab_abbrev[ab], sp.asi[ab]])
+		var speed_str: String = " · Speed %dft" % sp.speed if sp.speed != 30 else ""
+		var dv_str: String = " · Darkvision %dft" % sp.darkvision if sp.darkvision > 0 else ""
+		btn.text = "%s  (%s%s%s)" % [sp.species_name, ", ".join(asi_parts), speed_str, dv_str]
+		btn.button_pressed = _species_pick != null and _species_pick.species_name == sp.species_name
+		var sp_ref = sp
+		btn.toggled.connect(func(on: bool):
+			if on:
+				_species_pick = sp_ref
+				desc_lbl.text = "Traits: " + ", ".join(sp_ref.traits)
+				_validate())
+		_body.add_child(btn)
+
+	_body.add_child(desc_lbl)
+
+func _build_background_step() -> void:
+	_add_header("Choose a background. Each grants 2 skill proficiencies and a narrative feature.")
+	var group := ButtonGroup.new()
+	var feat_lbl := Label.new()
+	feat_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	feat_lbl.add_theme_color_override("font_color", Color(0.7, 0.8, 0.85))
+	feat_lbl.text = ""
+
+	for bg in _BackgroundData.all_backgrounds():
+		var btn := CheckBox.new()
+		btn.button_group = group
+		btn.toggle_mode = true
+		var sk_names: Array[String] = []
+		for sk_int in bg.skill_proficiencies:
+			sk_names.append(_Skills.skill_name(sk_int as _SRD.Skill))
+		btn.text = "%s  (%s)" % [bg.background_name, ", ".join(sk_names)]
+		btn.button_pressed = _background_pick != null and _background_pick.background_name == bg.background_name
+		var bg_ref = bg
+		btn.toggled.connect(func(on: bool):
+			if on:
+				_background_pick = bg_ref
+				feat_lbl.text = "%s: %s" % [bg_ref.feature_name, bg_ref.feature_desc]
+				_validate())
+		_body.add_child(btn)
+
+	_body.add_child(feat_lbl)
+
+func _build_spell_step() -> void:
+	const CANTRIP_LIMIT := 3
+	const SPELL_LIMIT := 2
+	var all_cantrips: Array = _SpellData.psion_cantrips() if _class_key == "psion" \
+		else _SpellData.warden_cantrips()
+	var all_spells: Array = _SpellData.psion_l1_spells() if _class_key == "psion" \
+		else _SpellData.warden_l1_spells()
+
+	_add_header("Choose %d cantrips and %d level-1 spells." % [CANTRIP_LIMIT, SPELL_LIMIT])
+
+	var c_header := Label.new()
+	c_header.text = "── Cantrips ──"
+	c_header.add_theme_font_size_override("font_size", 14)
+	_body.add_child(c_header)
+
+	for sp in all_cantrips:
+		var chk := CheckBox.new()
+		chk.text = "%s — %s" % [sp.spell_name, sp.description]
+		chk.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		chk.button_pressed = _cantrip_picks.any(func(s): return s.spell_name == sp.spell_name)
+		chk.disabled = not chk.button_pressed and _cantrip_picks.size() >= CANTRIP_LIMIT
+		var sp_ref = sp
+		chk.toggled.connect(func(on: bool):
+			if on and not _cantrip_picks.any(func(s): return s.spell_name == sp_ref.spell_name):
+				if _cantrip_picks.size() < CANTRIP_LIMIT:
+					_cantrip_picks.append(sp_ref)
+				else:
+					chk.set_pressed_no_signal(false)
+			elif not on:
+				_cantrip_picks = _cantrip_picks.filter(func(s): return s.spell_name != sp_ref.spell_name)
+			_rebuild())
+		_body.add_child(chk)
+
+	var s_header := Label.new()
+	s_header.text = "── Level 1 Spells ──"
+	s_header.add_theme_font_size_override("font_size", 14)
+	_body.add_child(s_header)
+
+	for sp in all_spells:
+		var chk := CheckBox.new()
+		chk.text = "%s — %s" % [sp.spell_name, sp.description]
+		chk.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		chk.button_pressed = _sarro_spell_picks.any(func(s): return s.spell_name == sp.spell_name)
+		chk.disabled = not chk.button_pressed and _sarro_spell_picks.size() >= SPELL_LIMIT
+		var sp_ref = sp
+		chk.toggled.connect(func(on: bool):
+			if on and not _sarro_spell_picks.any(func(s): return s.spell_name == sp_ref.spell_name):
+				if _sarro_spell_picks.size() < SPELL_LIMIT:
+					_sarro_spell_picks.append(sp_ref)
+				else:
+					chk.set_pressed_no_signal(false)
+			elif not on:
+				_sarro_spell_picks = _sarro_spell_picks.filter(func(s): return s.spell_name != sp_ref.spell_name)
+			_rebuild())
 		_body.add_child(chk)

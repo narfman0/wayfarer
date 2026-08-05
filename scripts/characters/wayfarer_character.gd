@@ -18,6 +18,11 @@ const _SRD            = preload("res://addons/srd/srd_enums.gd")
 
 var energy_slots = null
 
+var species = null       # SpeciesData or null
+var background = null    # BackgroundData or null
+var known_spells: Array = []   # Array of SpellData (level 1+)
+var cantrips: Array = []       # Array of SpellData (level 0)
+
 ## Ability state (session-scoped; refreshed at rest points).
 # ── Build choices (CharacterProgression) ──────────────────────────────────────
 ## Persisted source of truth: ordered choice records (JSON-safe dicts).

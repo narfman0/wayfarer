@@ -26,8 +26,13 @@ static func make_class_data(class_key: String):
 ## Build a level-1 character from SRD creation choices.
 ## scores: 6-element Array[int] indexed by SRD.Ability.
 ## skill_picks: Array of SRD.Skill ints (validated against class skill_options).
+## species_data: SpeciesData resource or null.
+## background_data: BackgroundData resource or null.
+## p_cantrips / p_spells: Arrays of SpellData chosen at creation.
 static func make_custom(display_name: String, class_key: String,
-		scores: Array, skill_picks: Array):
+		scores: Array, skill_picks: Array,
+		species_data = null, background_data = null,
+		p_cantrips: Array = [], p_spells: Array = []):
 	var c = _WC.new()
 	var cd = make_class_data(class_key)
 	assert(cd != null, "Unknown class key: " + class_key)
@@ -44,6 +49,15 @@ static func make_custom(display_name: String, class_key: String,
 		if int(skill) in cd.skill_options:
 			c.stats.set_skill_proficiency(skill as _SRD.Skill, true)
 	_equip_class_kit(c, class_key)
+	if species_data != null:
+		species_data.apply_to_stats(c.stats)
+		c.species = species_data
+	if background_data != null:
+		c.background = background_data
+		for sk in background_data.skill_proficiencies:
+			c.stats.set_skill_proficiency(sk as _SRD.Skill, true)
+	c.cantrips = p_cantrips.duplicate()
+	c.known_spells = p_spells.duplicate()
 	c.base_scores = scores.duplicate()
 	c.stats.max_hp = cd.starting_hp(c.stats.ability_modifier(_SRD.Ability.CONSTITUTION))
 	c.stats.reset()
