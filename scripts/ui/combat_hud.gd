@@ -4,6 +4,8 @@
 class_name CombatHUD
 extends CanvasLayer
 
+signal spell_requested(spell_data)
+
 var _panel:         PanelContainer
 var _btn_move:      Button
 var _btn_attack:    Button
@@ -22,6 +24,10 @@ var _btn_healing_word:   Button
 var _btn_channel_div:    Button
 var _btn_shield_bash:    Button
 var _btn_action_surge:   Button
+var _btn_spells:         Button
+
+# Spell popup
+var _spell_popup: PanelContainer = null
 
 # Reaction prompt overlay
 var _reaction_panel: PanelContainer
@@ -115,6 +121,11 @@ func _build_ui() -> void:
 	_btn_channel_div  = _make_btn("[4] Chan. Div", ahbox, func(): _trigger_ability("ability_4"))
 	_btn_shield_bash  = _make_btn("[5] Shield Bash", ahbox, func(): _trigger_ability("ability_5"))
 	_btn_action_surge = _make_btn("[6] Act. Surge", ahbox, func(): _trigger_ability("ability_6"))
+
+	var sep3 := VSeparator.new()
+	ahbox.add_child(sep3)
+	_btn_spells = _make_btn("Spells", ahbox, _on_spells)
+	_btn_spells.add_theme_color_override("font_color", Color(0.7, 0.8, 1.0))
 
 	add_child(ability_panel)
 
@@ -349,10 +360,102 @@ func _refresh_ability_buttons(has_act: bool, has_bon: bool) -> void:
 			(s.subclass_key != "freeblade" and not s.action_surge_used)
 		) and (s.stats == null or s.stats.level >= 2)
 		_btn_action_surge.disabled = not surge_rdy
+	if _btn_spells != null:
+		var has_spells: bool = s != null and (s.cantrips.size() > 0 or s.known_spells.size() > 0)
+		_btn_spells.disabled = not is_my_turn or not has_spells
 
 func _get_player() -> Node:
 	var players := get_tree().get_nodes_in_group("players")
 	return players[0] if players.size() > 0 else null
+
+# ── Spell popup ───────────────────────────────────────────────────────────────
+
+func _on_spells() -> void:
+	if not CombatManager.is_player_turn():
+		return
+	if _spell_popup != null and _spell_popup.visible:
+		_spell_popup.queue_free()
+		_spell_popup = null
+		return
+	_build_spell_popup()
+
+func _build_spell_popup() -> void:
+	if _spell_popup != null:
+		_spell_popup.queue_free()
+	_spell_popup = PanelContainer.new()
+	_spell_popup.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	_spell_popup.offset_top    = -340
+	_spell_popup.offset_bottom = -122
+	_spell_popup.offset_left   = 200
+	_spell_popup.offset_right  = -200
+	var style := StyleBoxFlat.new()
+	style.bg_color     = Color(0.07, 0.06, 0.14, 0.96)
+	style.border_color = Color(0.5, 0.4, 0.9, 1.0)
+	style.set_border_width_all(2)
+	style.corner_radius_top_left    = 6
+	style.corner_radius_top_right   = 6
+	style.corner_radius_bottom_left = 6
+	style.corner_radius_bottom_right = 6
+	_spell_popup.add_theme_stylebox_override("panel", style)
+
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(0, 180)
+	_spell_popup.add_child(scroll)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	scroll.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "── Cantrips ──"
+	title.add_theme_font_size_override("font_size", 14)
+	title.add_theme_color_override("font_color", Color(0.85, 0.75, 1.0))
+	vbox.add_child(title)
+
+	var sarro := GameState.sarro
+	if sarro != null:
+		for sp in sarro.cantrips:
+			vbox.add_child(_spell_btn(sp, false))
+
+		var lvl_title := Label.new()
+		lvl_title.text = "── Level 1 Spells ──"
+		lvl_title.add_theme_font_size_override("font_size", 14)
+		lvl_title.add_theme_color_override("font_color", Color(0.85, 0.75, 1.0))
+		vbox.add_child(lvl_title)
+
+		for sp in sarro.known_spells:
+			var can_cast: bool = _can_cast_l1()
+			vbox.add_child(_spell_btn(sp, not can_cast))
+
+	var close_btn := Button.new()
+	close_btn.text = "Close"
+	close_btn.pressed.connect(func():
+		if _spell_popup != null: _spell_popup.queue_free(); _spell_popup = null)
+	vbox.add_child(close_btn)
+
+	add_child(_spell_popup)
+
+func _spell_btn(sp, disabled: bool) -> Button:
+	var btn := Button.new()
+	var cost_str := " [bonus]" if sp.is_bonus_action else " [action]"
+	btn.text = "%s%s — %s" % [sp.spell_name, cost_str, sp.description]
+	btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn.custom_minimum_size = Vector2(0, 36)
+	btn.add_theme_font_size_override("font_size", 12)
+	btn.disabled = disabled
+	var sp_ref = sp
+	btn.pressed.connect(func():
+		if _spell_popup != null: _spell_popup.queue_free(); _spell_popup = null
+		spell_requested.emit(sp_ref))
+	return btn
+
+func _can_cast_l1() -> bool:
+	var sarro := GameState.sarro
+	if sarro == null:
+		return false
+	if sarro.energy_slots != null and sarro.energy_slots.has_method("slots_remaining"):
+		return sarro.energy_slots.slots_remaining(1) > 0
+	return true   # fallback: allow cast if no slot tracker
 
 # ── Keyboard shortcut ─────────────────────────────────────────────────────────
 

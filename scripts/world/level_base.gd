@@ -266,6 +266,11 @@ func _setup_hud() -> void:
 	if hud_scene:
 		_hud = hud_scene.instantiate()
 		_hud_root.add_child(_hud)
+	# Connect spell_requested from CombatHUD (lives as child of HUD CanvasLayer)
+	if _hud != null:
+		var combat_hud = _hud.get_node_or_null("CombatHUD")
+		if combat_hud != null:
+			combat_hud.spell_requested.connect(_cast_spell)
 	_setup_target_ring()
 
 ## The in-world half of targeting feedback: a slowly spinning gold ring at
@@ -352,6 +357,24 @@ func _on_enemy_died(ec) -> void:
 	if _hud != null:
 		_hud.track_enemy(null)
 	print("[Combat] Enemy defeated!")
+	# Check if all enemies are now dead
+	var remaining := get_tree().get_nodes_in_group("enemies").filter(
+		func(e): return e.has_method("receive_damage") and (e.character == null or e.character.stats.current_hp > 0))
+	if remaining.is_empty() and CombatManager.in_combat:
+		_on_encounter_won()
+
+func _on_encounter_won() -> void:
+	CombatManager.exit_combat()
+	if _hud != null:
+		_hud.show_encounter_result(true)
+	# Grant XP for the encounter (sum of enemy XP values)
+	var total_xp := 0
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if enemy.has_method("receive_damage") and enemy.character != null:
+			total_xp += _Experience.xp_for_level(enemy.character.stats.level) / 4
+	if total_xp > 0:
+		GameState.grant_xp(total_xp)
+	print("[Combat] Encounter won! +%d XP" % total_xp)
 
 func _on_boss_phase(phase: int, _ec) -> void:
 	if _hud != null:
@@ -551,6 +574,67 @@ func _use_channel_divinity() -> void:
 	_DamageNumber.spawn(self, _companion.global_position + Vector3(0, 2.0, 0),
 		"Sacred Flame ×%d" % hit_count, Color(0.95, 0.85, 0.3))
 	print("[Spell] Liris: Channel Divinity — %d enemies hit (DC %d)" % [hit_count, dc])
+
+# ── Spell casting ────────────────────────────────────────────────────────────
+
+func _cast_spell(spell) -> void:
+	var c := GameState.sarro
+	if c == null or _defeated:
+		return
+	if CombatManager.tb_mode and CombatManager.is_player_turn():
+		if spell.is_bonus_action:
+			if not CombatManager.has_bonus_action(_player):
+				return
+			CombatManager.spend_bonus_action(_player)
+		else:
+			if not CombatManager.has_action(_player):
+				return
+			CombatManager.spend_action(_player)
+
+	# Damage spell — needs a target
+	if spell.damage_dice > 0:
+		var tgt = _player.target_enemy
+		if tgt == null or not tgt.has_method("receive_damage"):
+			_DamageNumber.spawn(self, _player.global_position + Vector3(0, 2, 0),
+				"Select a target first!", Color(1.0, 0.5, 0.3))
+			# Refund action economy if no target
+			if CombatManager.tb_mode:
+				if spell.is_bonus_action:
+					_player.set_meta("turn_bonus", true)
+				else:
+					_player.set_meta("turn_action", true)
+			return
+		var dmg: int = 0
+		for _i in spell.damage_count:
+			dmg += _Dice.roll(spell.damage_dice)
+		tgt.receive_damage(dmg)
+		_DamageNumber.hit(self, tgt.global_position, dmg, false)
+		_DamageNumber.spawn(self, tgt.global_position + Vector3(0, 2.0, 0),
+			spell.spell_name, Color(0.7, 0.7, 1.0))
+		print("[Spell] %s → %s: %d dmg" % [spell.spell_name, tgt.name, dmg])
+
+	# Heal spell
+	elif spell.heal_dice > 0:
+		var heal: int = 0
+		for _i in spell.heal_count:
+			heal += _Dice.roll(spell.heal_dice)
+		if c.stats.wisdom_modifier != null:
+			heal += c.stats.ability_modifier(4)  # WIS
+		c.stats.current_hp = mini(c.stats.max_hp, c.stats.current_hp + heal)
+		_DamageNumber.spawn(self, _player.global_position + Vector3(0, 1.5, 0),
+			"+%d %s" % [heal, spell.spell_name], Color(0.4, 1.0, 0.5))
+		print("[Spell] %s: +%d HP" % [spell.spell_name, heal])
+
+	# Buff / utility — just announce it
+	else:
+		_DamageNumber.spawn(self, _player.global_position + Vector3(0, 2.0, 0),
+			spell.spell_name, Color(0.85, 0.75, 1.0))
+		print("[Spell] %s cast" % spell.spell_name)
+
+	# Spend a L1 slot if it's not a cantrip
+	if spell.spell_level > 0 and c.energy_slots != null \
+			and c.energy_slots.has_method("spend"):
+		c.energy_slots.spend(spell.spell_level)
 
 # ── Pause / queue ─────────────────────────────────────────────────────────────
 
