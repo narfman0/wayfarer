@@ -137,16 +137,25 @@ func _spawn_enemy_at(pos: Vector3) -> void:
 	col.position = Vector3(0, 0.9, 0)
 	body.add_child(col)
 
-	# Placeholder mesh (magenta capsule — swappable for a character skin later).
-	var mi := MeshInstance3D.new()
-	var mesh := CapsuleMesh.new()
-	mesh.height = 1.8; mesh.radius = 0.35
-	mi.mesh = mesh
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.9, 0.2, 0.6)
-	mi.material_override = mat
-	mi.position = Vector3(0, 0.9, 0)
-	body.add_child(mi)
+	var _skin_map := {
+		"skeleton": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Skeleton_01.glb",
+		"skeleton_armored": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Skeleton_HeavyArmor_01.glb",
+		"skeleton_ranger": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Skeleton_Ranger_01.glb",
+		"hunter": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Hunter_Male_01.glb",
+	}
+	var skin_path: String = _skin_map.get(enemy_type, _skin_map["skeleton"])
+	var skin_scene = load(skin_path) if ResourceLoader.exists(skin_path) else null
+	if skin_scene != null:
+		var mi: Node3D = skin_scene.instantiate()
+		mi.position = Vector3(0, 0, 0)
+		body.add_child(mi)
+	else:
+		var mi := MeshInstance3D.new()
+		var mesh := CapsuleMesh.new()
+		mesh.height = 1.8; mesh.radius = 0.35
+		mi.mesh = mesh
+		mi.position = Vector3(0, 0.9, 0)
+		body.add_child(mi)
 
 	# Attach EnemyController script.
 	var script = load("res://scripts/combat/enemy_controller.gd")

@@ -33,16 +33,18 @@ func _ready() -> void:
 	_label.visible   = false
 	add_child(_label)
 
-	# Simple NPC placeholder mesh (tan cylinder)
-	var mi := MeshInstance3D.new()
-	var cap := CapsuleMesh.new()
-	cap.height = 1.8; cap.radius = 0.35
-	mi.mesh = cap
-	mi.position = Vector3(0, 0.9, 0)
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.75, 0.62, 0.45)
-	mi.material_override = mat
-	add_child(mi)
+	const _NPC_SKIN := "res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/Unreal_Characters/SK_Chr_Female_Gypsy.gltf"
+	var skin_scene = load(_NPC_SKIN) if ResourceLoader.exists(_NPC_SKIN) else null
+	if skin_scene != null:
+		var mi: Node3D = skin_scene.instantiate()
+		add_child(mi)
+	else:
+		var mi := MeshInstance3D.new()
+		var cap := CapsuleMesh.new()
+		cap.height = 1.8; cap.radius = 0.35
+		mi.mesh = cap
+		mi.position = Vector3(0, 0.9, 0)
+		add_child(mi)
 
 	body_entered.connect(_on_body_in)
 	body_exited.connect(_on_body_out)

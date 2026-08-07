@@ -69,6 +69,16 @@ const PACKS := {
 		"ext": ".gltf",
 		"unit": 1.0,
 	},
+	"samurai": {
+		"dir": "res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/",
+		"ext": ".glb",
+		"unit": 1.0,
+	},
+	"darkfantasy": {
+		"dir": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/",
+		"ext": ".glb",
+		"unit": 1.0,
+	},
 }
 
 # ── Meadow vocabulary (shared by several recipes) ─────────────────────────────
@@ -206,6 +216,30 @@ const _PROTO_TREES := [
 ]
 const _PROTO_ROCKS := ["proto:SM_Generic_Small_Rocks_01", "proto:SM_Generic_Small_Rocks_02"]
 
+const _SAMURAI_TREES := [
+	"samurai:SM_Env_Tree_Cherry_Blossom_01", "samurai:SM_Env_Tree_Cherry_Blossom_02",
+	"samurai:SM_Env_Tree_Cherry_Blossom_03",
+	"samurai:SM_Env_Tree_Maple_01", "samurai:SM_Env_Tree_Maple_02",
+	"samurai:SM_Env_Tree_Ginko_01",
+	"samurai:SM_Env_Tree_Pine_01", "samurai:SM_Env_Tree_Pine_02",
+]
+const _SAMURAI_BAMBOO := [
+	"samurai:SM_Env_Bamboo_01", "samurai:SM_Env_Bamboo_02",
+	"samurai:SM_Env_Bamboo_03", "samurai:SM_Env_Bamboo_04",
+	"samurai:SM_Env_Bamboo_Wall_01", "samurai:SM_Env_Bamboo_Wall_02",
+]
+const _SAMURAI_ROCKS := [
+	"samurai:SM_Env_Rock_01", "samurai:SM_Env_Rock_02", "samurai:SM_Env_Rock_03",
+	"samurai:SM_Env_Rock_04", "samurai:SM_Env_Rock_05", "samurai:SM_Env_Rock_06",
+	"samurai:SM_Env_Rock_Basalt_01", "samurai:SM_Env_Rock_Basalt_02",
+	"samurai:SM_Env_Rock_Basalt_03", "samurai:SM_Env_Rock_Basalt_04",
+]
+const _SAMURAI_BACKDROP := [
+	"samurai:SM_Env_Rock_Cliff_01", "samurai:SM_Env_Rock_Cliff_02",
+	"samurai:SM_Env_Rock_Cliff_03", "samurai:SM_Env_Rock_Cliff_04",
+	"samurai:SM_Env_Rock_Cliff_Arch_01",
+]
+
 const _SCIFI_ASTEROIDS := [
 	"scifi:SM_Env_Asteroid_01", "scifi:SM_Env_Asteroid_02", "scifi:SM_Env_Asteroid_03",
 	"scifi:SM_Env_Asteroid_04", "scifi:SM_Env_Asteroid_05",
@@ -275,6 +309,16 @@ const RECIPES := {
 			{"names": _EGYPT_VESSELS, "count": 8, "smin": 0.9, "smax": 1.1, "clear": 1.0},
 		],
 	},
+	# Feudal Japanese market town: cherry blossoms, bamboo groves, basalt rocks.
+	"tamori": {
+		"ground_color": Color(0.38, 0.40, 0.28),
+		"backdrop": {"names": _SAMURAI_BACKDROP, "count": 14, "h_min": 10.0, "h_max": 18.0},
+		"layers": [
+			{"names": _SAMURAI_TREES, "count": 12, "smin": 0.7, "smax": 1.1, "clear": 2.5},
+			{"names": _SAMURAI_BAMBOO, "count": 16, "smin": 0.8, "smax": 1.2, "clear": 1.5},
+			{"names": _SAMURAI_ROCKS, "count": 14, "smin": 0.4, "smax": 1.0, "clear": 1.2},
+		],
+	},
 	# Cael's apparatus mid-operation: wreckage and torn structure under an
 	# asteroid horizon; the plane is coming apart at the seams.
 	"convergence": {
@@ -302,6 +346,9 @@ const _RECIPE_ALIASES := {
 	"kaveth_vault": "kaveth",
 	"verath_seawall": "verath",
 	"convergence_approach": "convergence",
+	"tamori_anchor": "tamori",
+	"tamori_fields": "tamori",
+	"tamori_road": "tamori",
 }
 
 static func generate(level: Node3D, ground_mi: MeshInstance3D, avoid: PackedVector3Array,
