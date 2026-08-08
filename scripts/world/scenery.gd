@@ -515,7 +515,10 @@ static func _too_close(pos: Vector3, points: PackedVector3Array, dist: float) ->
 static func _load_scene(ref: String) -> PackedScene:
 	var parts := ref.split(":")
 	var pack: Dictionary = PACKS[parts[0]]
-	return load(str(pack["dir"], parts[1], pack["ext"])) as PackedScene
+	var path := str(pack["dir"], parts[1], pack["ext"])
+	if not FileAccess.file_exists(path + ".import"):
+		return null
+	return load(path) as PackedScene
 
 static func _pack_unit(ref: String) -> float:
 	return PACKS[ref.split(":")[0]]["unit"]
