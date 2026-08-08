@@ -34,7 +34,7 @@ func _ready() -> void:
 	add_child(_label)
 
 	const _NPC_SKIN := "res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/Unreal_Characters/SK_Chr_Female_Gypsy.gltf"
-	var skin_scene = load(_NPC_SKIN) if ResourceLoader.exists(_NPC_SKIN) else null
+	var skin_scene = load(_NPC_SKIN) if FileAccess.file_exists(_NPC_SKIN + ".import") else null
 	if skin_scene != null:
 		var mi: Node3D = skin_scene.instantiate()
 		add_child(mi)

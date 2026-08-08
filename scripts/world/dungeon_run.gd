@@ -144,7 +144,7 @@ func _spawn_enemy_at(pos: Vector3) -> void:
 		"hunter": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Hunter_Male_01.glb",
 	}
 	var skin_path: String = _skin_map.get(enemy_type, _skin_map["skeleton"])
-	var skin_scene = load(skin_path) if ResourceLoader.exists(skin_path) else null
+	var skin_scene = load(skin_path) if FileAccess.file_exists(skin_path + ".import") else null
 	if skin_scene != null:
 		var mi: Node3D = skin_scene.instantiate()
 		mi.position = Vector3(0, 0, 0)
