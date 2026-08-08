@@ -154,7 +154,7 @@ func _scatter_dungeon_props() -> void:
 				Vector3(cx + 0.8, 0.0, cz + 0.8))
 
 		# Pillars at room corners (inset one unit from wall).
-		var pillar := _PILLAR_MESHES[i % _PILLAR_MESHES.size()]
+		var pillar: String = _PILLAR_MESHES[i % _PILLAR_MESHES.size()]
 		for dx in [-1.0, 1.0]:
 			for dz in [-1.0, 1.0]:
 				_place_prop(props_node, _DUNGEON_DIR + pillar,
@@ -162,7 +162,7 @@ func _scatter_dungeon_props() -> void:
 
 		# Rubble in non-entry combat rooms.
 		if i > 0:
-			var rubble := _RUBBLE_MESHES[i % _RUBBLE_MESHES.size()]
+			var rubble: String = _RUBBLE_MESHES[i % _RUBBLE_MESHES.size()]
 			_place_prop(props_node, _DUNGEON_DIR + rubble,
 					Vector3(cx - hw * 0.4, 0.0, cz + hh * 0.3))
 
@@ -214,6 +214,7 @@ func _spawn_enemy_at(pos: Vector3) -> void:
 	var skin_scene = load(skin_path) if FileAccess.file_exists(skin_path + ".import") else null
 	if skin_scene != null:
 		var mi: Node3D = skin_scene.instantiate()
+		mi.name = "Skin"
 		mi.position = Vector3(0, 0, 0)
 		body.add_child(mi)
 	else:

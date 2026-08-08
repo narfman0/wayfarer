@@ -11,6 +11,7 @@ const MELEE_DIST  := 1.5
 
 const _Dice = preload("res://addons/srd/dice.gd")
 const _DamageNumber = preload("res://scripts/world/damage_number.gd")
+const _CharAnim = preload("res://scripts/world/character_animator.gd")
 
 @export var follow_target: CharacterBody3D
 
@@ -19,6 +20,11 @@ var attacker = null
 
 var _down := false
 var _heal_cooldown: float = 0.0
+
+func _ready() -> void:
+	var skin := get_node_or_null("Skin")
+	if skin != null:
+		_CharAnim.attach(skin, self, "femn")
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():

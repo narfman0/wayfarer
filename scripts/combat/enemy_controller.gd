@@ -8,6 +8,7 @@
 class_name EnemyController
 extends CharacterBody3D
 
+const _CharAnim       = preload("res://scripts/world/character_animator.gd")
 const _Dice           = preload("res://addons/srd/dice.gd")
 const _CharacterStats = preload("res://addons/srd/resources/character_stats.gd")
 const _DamageNumber   = preload("res://scripts/world/damage_number.gd")
@@ -141,6 +142,10 @@ func _ready() -> void:
 	add_child(aggro_area)
 	aggro_area.body_entered.connect(_on_body_entered)
 	aggro_area.body_exited.connect(_on_body_exited)
+	var skin := get_node_or_null("Skin")
+	if skin != null:
+		var anim_set := "femn" if enemy_type in ["witch", "shade"] else "masc"
+		_CharAnim.attach(skin, self, anim_set)
 
 ## Nearest living party member within chase range, or null.
 func _acquire_target() -> CharacterBody3D:

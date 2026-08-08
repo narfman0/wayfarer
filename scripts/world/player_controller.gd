@@ -4,6 +4,8 @@
 class_name PlayerController
 extends CharacterBody3D
 
+const _CharAnim = preload("res://scripts/world/character_animator.gd")
+
 const SPEED      := 5.0
 
 ## Build-choice speed multiplier (Mobile feat, Skirmisher style) — set by the
@@ -34,6 +36,9 @@ var _move_ring: MeshInstance3D = null
 func _ready() -> void:
 	add_to_group("players")
 	_build_move_ring()
+	var skin := get_node_or_null("Skin")
+	if skin != null:
+		_CharAnim.attach(skin, self, "masc")
 
 func _physics_process(delta: float) -> void:
 	if not _enabled:
