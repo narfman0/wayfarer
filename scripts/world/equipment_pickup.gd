@@ -2,13 +2,22 @@
 class_name EquipmentPickup
 extends Area3D
 
+const _SLOT_SKINS := {
+	"main_hand": "res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/FBX/SM_Prop_SwordOrnate_01.gltf",
+	"armor":     "res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/FBX/SM_Prop_Sceptre_01.gltf",
+}
+const _SLOT_COLORS := {
+	"main_hand": Color(0.95, 0.8, 0.2),
+	"armor":     Color(0.5, 0.65, 0.95),
+}
+
 ## "main_hand" or "armor"
 var slot: String = "main_hand"
 ## WeaponData or ArmorData instance set by the spawner.
 var item = null
 
 var _age: float = 0.0
-var _mesh: MeshInstance3D
+var _visual: Node3D
 
 func _ready() -> void:
 	collision_layer = 0
@@ -20,17 +29,38 @@ func _ready() -> void:
 	shape.shape = sphere
 	add_child(shape)
 
-	_mesh = MeshInstance3D.new()
-	_mesh.mesh = BoxMesh.new()
-	(_mesh.mesh as BoxMesh).size = Vector3(0.25, 0.38, 0.08)
-	_mesh.position.y = 0.55
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.95, 0.8, 0.2) if slot == "main_hand" else Color(0.5, 0.65, 0.95)
-	mat.emission_enabled = true
-	mat.emission = mat.albedo_color * 0.5
-	mat.emission_energy_multiplier = 1.4
-	_mesh.material_override = mat
-	add_child(_mesh)
+	var glow_color: Color = _SLOT_COLORS.get(slot, Color(1, 1, 1))
+	var skin_path: String = _SLOT_SKINS.get(slot, "")
+	var skin_loaded := false
+	if skin_path != "" and FileAccess.file_exists(skin_path + ".import"):
+		var ps := load(skin_path) as PackedScene
+		if ps != null:
+			_visual = ps.instantiate()
+			_visual.position.y = 0.45
+			add_child(_visual)
+			skin_loaded = true
+
+	if not skin_loaded:
+		var mi := MeshInstance3D.new()
+		mi.mesh = BoxMesh.new()
+		(mi.mesh as BoxMesh).size = Vector3(0.25, 0.38, 0.08)
+		mi.position.y = 0.55
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = glow_color
+		mat.emission_enabled = true
+		mat.emission = glow_color * 0.5
+		mat.emission_energy_multiplier = 1.4
+		mi.material_override = mat
+		_visual = mi
+		add_child(_visual)
+
+	# Point light so the pickup reads clearly from a distance.
+	var light := OmniLight3D.new()
+	light.light_color = glow_color
+	light.light_energy = 1.2
+	light.omni_range = 2.5
+	light.position.y = 0.5
+	add_child(light)
 
 	var prompt := Label3D.new()
 	prompt.text = "[Walk over to equip]"
@@ -44,8 +74,8 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_age += delta
-	if _mesh != null:
-		_mesh.rotation.y = _age * 2.2
+	if _visual != null:
+		_visual.rotation.y = _age * 2.2
 
 func _on_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("players") or item == null or GameState.sarro == null:

@@ -7,6 +7,11 @@ extends Area3D
 const _LootTable    = preload("res://scripts/items/loot_table.gd")
 const _BagScreen    = preload("res://scripts/ui/loot_bag_screen.gd")
 
+const _SACK_PATHS := [
+	"res://assets/meshes/POLYGON_Western_Pack_Source_Files_v4/SourceFiles/FBX/SM_Prop_Sack_01.gltf",
+	"res://assets/meshes/POLYGON_Western_Pack_Source_Files_v4/SourceFiles/FBX/SM_Prop_Sack_02.gltf",
+]
+
 ## Pre-populated gold (overridden by loot_table_key if set).
 var gold_amount: int = 0
 ## Pre-populated items (overridden by loot_table_key if set).
@@ -62,31 +67,39 @@ func _build_mesh() -> void:
 	_bob_root = Node3D.new()
 	add_child(_bob_root)
 
-	# Sack body
-	var mi   := MeshInstance3D.new()
-	var box  := BoxMesh.new()
-	box.size  = Vector3(0.34, 0.30, 0.30)
-	mi.mesh   = box
-	mi.position = Vector3(0, 0.32, 0)
-	var mat  := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.52, 0.40, 0.24)
-	mat.roughness    = 0.88
-	mi.material_override = mat
-	_bob_root.add_child(mi)
+	# Try real sack mesh; vary by position hash so not every bag looks identical.
+	var skin_path: String = _SACK_PATHS[hash(str(global_position)) % _SACK_PATHS.size()]
+	var skin_loaded := false
+	if FileAccess.file_exists(skin_path + ".import"):
+		var ps := load(skin_path) as PackedScene
+		if ps != null:
+			var inst := ps.instantiate()
+			_bob_root.add_child(inst)
+			skin_loaded = true
 
-	# Tie-knot (small sphere on top)
-	var knot   := MeshInstance3D.new()
-	var ksph   := SphereMesh.new()
-	ksph.radius   = 0.08
-	ksph.height   = 0.16
-	knot.mesh     = ksph
-	knot.position = Vector3(0, 0.50, 0)
-	var kmat      := StandardMaterial3D.new()
-	kmat.albedo_color = Color(0.35, 0.25, 0.14)
-	knot.material_override = kmat
-	_bob_root.add_child(knot)
+	if not skin_loaded:
+		# Fallback: procedural box + knot sphere
+		var mi   := MeshInstance3D.new()
+		var box  := BoxMesh.new()
+		box.size  = Vector3(0.34, 0.30, 0.30)
+		mi.mesh   = box
+		mi.position = Vector3(0, 0.32, 0)
+		var mat  := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.52, 0.40, 0.24)
+		mat.roughness    = 0.88
+		mi.material_override = mat
+		_bob_root.add_child(mi)
+		var knot   := MeshInstance3D.new()
+		var ksph   := SphereMesh.new()
+		ksph.radius   = 0.08; ksph.height = 0.16
+		knot.mesh     = ksph
+		knot.position = Vector3(0, 0.50, 0)
+		var kmat      := StandardMaterial3D.new()
+		kmat.albedo_color = Color(0.35, 0.25, 0.14)
+		knot.material_override = kmat
+		_bob_root.add_child(knot)
 
-	# Gold glow ring at base
+	# Gold glow ring always — players need to read this as "loot here".
 	var ring_mi  := MeshInstance3D.new()
 	var torus    := TorusMesh.new()
 	torus.inner_radius = 0.22
