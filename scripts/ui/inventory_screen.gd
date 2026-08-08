@@ -24,20 +24,12 @@ func _build_ui() -> void:
 	add_child(backdrop)
 
 	var panel := PanelContainer.new()
+	panel.theme = UITheme.theme
 	panel.set_anchors_preset(Control.PRESET_CENTER)
 	panel.offset_left   = -290
 	panel.offset_top    = -300
 	panel.offset_right  =  290
 	panel.offset_bottom =  300
-	var style := StyleBoxFlat.new()
-	style.bg_color     = Color(0.08, 0.07, 0.12, 0.97)
-	style.border_color = Color(0.55, 0.45, 0.25)
-	style.set_border_width_all(2)
-	style.corner_radius_top_left     = 6
-	style.corner_radius_top_right    = 6
-	style.corner_radius_bottom_left  = 6
-	style.corner_radius_bottom_right = 6
-	panel.add_theme_stylebox_override("panel", style)
 	add_child(panel)
 
 	var outer := VBoxContainer.new()
@@ -49,8 +41,11 @@ func _build_ui() -> void:
 	outer.add_child(title_row)
 	var title := Label.new()
 	title.text = "Inventory"
+	var fnt := UITheme._load_font("res://assets/fonts/Cinzel-Regular.ttf")
+	if fnt != null:
+		title.add_theme_font_override("font", fnt)
 	title.add_theme_font_size_override("font_size", 22)
-	title.add_theme_color_override("font_color", Color(0.95, 0.85, 0.6))
+	title.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_row.add_child(title)
 	var close_btn := Button.new()

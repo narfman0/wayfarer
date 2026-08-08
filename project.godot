@@ -27,6 +27,7 @@ DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 GameState="*res://scripts/system/game_state.gd"
 AudioManager="*res://scripts/system/audio_manager.gd"
 CombatManager="*res://scripts/combat/combat_manager.gd"
+UITheme="*res://scripts/ui/ui_theme.gd"
 
 [display]
 

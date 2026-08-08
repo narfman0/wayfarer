@@ -21,6 +21,7 @@ var _btn_long_rest: Button
 var _gold_label: Label
 
 func _ready() -> void:
+	theme = UITheme.theme
 	_enemy_row.visible = false
 
 	_toast = Label.new()

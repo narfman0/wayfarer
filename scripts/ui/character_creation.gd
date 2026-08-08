@@ -63,6 +63,7 @@ var _liris_skill_picks: Array[int] = []
 var _liris_customize: bool = false  # true once player opts in
 
 func _ready() -> void:
+	theme = UITheme.theme
 	_back_btn.pressed.connect(_on_back)
 	_next_btn.pressed.connect(_on_next)
 	_pool = _AbilityScores.STANDARD_ARRAY.duplicate()

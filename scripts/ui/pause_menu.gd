@@ -16,6 +16,7 @@ var _queued_liris: String = ""
 var _liris_btns: Array = []
 
 func _ready() -> void:
+	theme = UITheme.theme
 	_resume_btn.pressed.connect(_resume)
 	_save_btn.pressed.connect(_save)
 	_menu_btn.pressed.connect(_to_main_menu)
