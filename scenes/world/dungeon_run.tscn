@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
 [ext_resource type="Script" path="res://scripts/world/terrain_mesh.gd" id="4_terrain"]
-[ext_resource type="Environment" path="res://resources/env_village.tres" id="5_env"]
+[ext_resource type="Environment" path="res://resources/env_kaveth.tres" id="5_env"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sarro"]
 height = 1.8
@@ -24,7 +24,7 @@ environment = ExtResource("5_env")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 10, 0)
-light_energy = 0.6
+light_energy = 0.15
 shadow_enabled = true
 
 [node name="Level" type="Node3D" parent="."]

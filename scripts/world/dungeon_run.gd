@@ -106,8 +106,75 @@ func _carve_rect(rx: int, ry: int, rw: int, rh: int, height: int) -> void:
 
 func _apply_map_to_terrain() -> void:
 	var terrain = get_node_or_null("Level/TiledTerrain")
-	if terrain != null and terrain.has_method("rebuild_from"):
+	if terrain == null:
+		return
+	if terrain.has_method("set_palette"):
+		terrain.set_palette([
+			Color(0.08, 0.07, 0.06),  # 0  abyss
+			Color(0.22, 0.20, 0.18),  # 1  dungeon floor (dark stone)
+			Color(0.32, 0.29, 0.25),  # 2  wall stone
+			Color(0.42, 0.38, 0.32),  # 3  upper stone
+		])
+	if terrain.has_method("rebuild_from"):
 		terrain.rebuild_from(_dungeon_map)
+	_scatter_dungeon_props()
+
+# ── Dungeon prop decoration ───────────────────────────────────────────────────
+
+const _DUNGEON_DIR := "res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/"
+
+const _PILLAR_MESHES := [
+	"SM_Bld_Castle_Pillar_Stone_01.gltf",
+	"SM_Bld_Castle_Pillar_Stone_02.gltf",
+	"SM_Bld_Castle_Pillar_Stone_Round_01.gltf",
+]
+const _RUBBLE_MESHES := [
+	"SM_Bld_Castle_DestroyedWall_RubblePile_01.gltf",
+	"SM_Bld_Castle_DestroyedWall_RubbleBlock_01.gltf",
+]
+const _CANDLE_MESH := "FX_Item_Candlestick_01.gltf"
+
+func _scatter_dungeon_props() -> void:
+	var props_node := get_node_or_null("Level/Props")
+	if props_node == null:
+		props_node = Node3D.new()
+		props_node.name = "Props"
+		get_node("Level").add_child(props_node)
+
+	# Each room gets corner pillars and a candle; non-entry rooms get rubble.
+	for i in _rooms.size():
+		var rm = _rooms[i]
+		var cx: float = (rm.x + rm.w * 0.5 - 10.0) * 4.0
+		var cz: float = (rm.y + rm.h * 0.5 - 10.0) * 4.0
+		var hw: float = rm.w * 2.0 - 1.0
+		var hh: float = rm.h * 2.0 - 1.0
+
+		# Candle near the centre of every room.
+		_place_prop(props_node, _DUNGEON_DIR + _CANDLE_MESH,
+				Vector3(cx + 0.8, 0.0, cz + 0.8))
+
+		# Pillars at room corners (inset one unit from wall).
+		var pillar := _PILLAR_MESHES[i % _PILLAR_MESHES.size()]
+		for dx in [-1.0, 1.0]:
+			for dz in [-1.0, 1.0]:
+				_place_prop(props_node, _DUNGEON_DIR + pillar,
+						Vector3(cx + dx * (hw - 1.0), 0.0, cz + dz * (hh - 1.0)))
+
+		# Rubble in non-entry combat rooms.
+		if i > 0:
+			var rubble := _RUBBLE_MESHES[i % _RUBBLE_MESHES.size()]
+			_place_prop(props_node, _DUNGEON_DIR + rubble,
+					Vector3(cx - hw * 0.4, 0.0, cz + hh * 0.3))
+
+func _place_prop(parent: Node3D, path: String, pos: Vector3) -> void:
+	if not FileAccess.file_exists(path + ".import"):
+		return
+	var ps = load(path) as PackedScene
+	if ps == null:
+		return
+	var inst := ps.instantiate()
+	inst.position = pos
+	parent.add_child(inst)
 
 # ── Enemy spawning ────────────────────────────────────────────────────────────
 

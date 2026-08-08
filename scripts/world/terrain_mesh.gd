@@ -18,6 +18,13 @@ const PALETTE := [
 	Color(0.40, 0.35, 0.22),  # 2  raised earth
 	Color(0.50, 0.46, 0.36),  # 3  rocky hilltop
 ]
+
+## Runtime palette override. When non-empty, used instead of PALETTE.
+## Set via set_palette() before _build() / rebuild_from() is called.
+var _palette_override: Array[Color] = []
+
+func set_palette(p: Array[Color]) -> void:
+	_palette_override = p
 const WALL_DARKEN := 0.30  # wall faces are this much darker than the top
 
 ## 20×20 height map for Tamori. Row 0 = north (z=−40), row 19 = south (z=+36).
@@ -70,6 +77,7 @@ func _build() -> void:
 	var half_h := ROWS * CELL * 0.5  # 40.0
 
 	var active: Array = _active_map if _active_map.size() == ROWS else MAP
+	var pal: Array = _palette_override if _palette_override.size() >= 4 else PALETTE
 
 	for row in ROWS:
 		for col in COLS:
@@ -80,7 +88,7 @@ func _build() -> void:
 			var z1 := z0 + CELL
 			var y  := (h - 1) * STEP  # height 1 → y=0
 
-			var top_c: Color  = PALETTE[h]
+			var top_c: Color  = pal[h]
 			var wall_c: Color = top_c.darkened(WALL_DARKEN)
 
 			# ── top face (normal UP) ─────────────────────────────────────────
