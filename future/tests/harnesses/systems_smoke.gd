@@ -1,0 +1,161 @@
+## Headless smoke test for the systems added in the BG3-direction pivot:
+## CombatManager (TB entry, initiative, action economy, boss refusal),
+## LootTable determinism + loot bag drops, gold/inventory, and the
+## AStarGrid2D click-path plumbing.
+## Run: godot --headless res://future/tests/harnesses/systems_smoke.tscn
+extends Node
+
+const _LootTable = preload("res://scripts/items/loot_table.gd")
+const _IslandGrid = preload("res://scripts/world/island_grid.gd")
+
+var _failures: Array[String] = []
+
+func _ready() -> void:
+	_run()
+
+func _run() -> void:
+	_test_loot_and_gold()
+	await _test_tb_combat()
+	await _test_boss_refuses_tb()
+	await _test_pathfinding()
+
+	if _failures.is_empty():
+		print("SYSTEMS SMOKE: ALL PASS")
+	else:
+		for f in _failures:
+			print("SYSTEMS SMOKE FAIL: ", f)
+	get_tree().quit(0 if _failures.is_empty() else 1)
+
+# ── Loot / gold / inventory ───────────────────────────────────────────────────
+
+func _test_loot_and_gold() -> void:
+	var a: Dictionary = _LootTable.roll(_seeded_rng(1234), "dungeon_basic")
+	var b: Dictionary = _LootTable.roll(_seeded_rng(1234), "dungeon_basic")
+	_check(str(a) == str(b), "loot rolls are seed-deterministic")
+	_check(a.has("gold") and a.has("items"), "loot roll returns gold + items")
+
+	GameState.gold = 0
+	GameState.add_gold(75)
+	_check(GameState.gold == 75, "add_gold accumulates")
+	GameState.inventory.clear()
+	GameState.add_item({"name": "Healing Draught", "kind": "consumable"})
+	GameState.add_item({"name": "Healing Draught", "kind": "consumable"})
+	_check(GameState.has_item("Healing Draught"), "inventory stores items")
+
+# ── Turn-based combat ─────────────────────────────────────────────────────────
+
+func _test_tb_combat() -> void:
+	GameState.sarro = null
+	GameState.liris = null
+	var level: Node3D = (load("res://scenes/world/reach.tscn") as PackedScene).instantiate()
+	add_child(level)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	GameState.sarro.stats.max_hp = 900
+	GameState.sarro.stats.current_hp = 900
+	GameState.liris.stats.max_hp = 900
+	GameState.liris.stats.current_hp = 900
+	var player: CharacterBody3D = level.get_node("Characters/Sarro")
+	var guard: EnemyController = level.get_node("Enemies/RoadGuard1")
+
+	# aggro starts combat
+	guard.alerted(player)
+	await get_tree().process_frame
+	_check(CombatManager.in_combat, "aggro enters combat")
+
+	# TB toggles on for a trash fight; initiative queue populated
+	_check(CombatManager.enter_tb_mode(), "TB mode engages for a normal fight")
+	_check(CombatManager.tb_mode, "tb_mode flag set")
+	_check(CombatManager.current_combatant != null, "initiative queue has a current turn")
+
+	# whoever's turn it is has a full action budget
+	var cc: Node = CombatManager.current_combatant
+	_check(cc.get_meta("turn_action", false) == true, "turn starts with an action")
+	_check(cc.get_meta("turn_bonus", false) == true, "turn starts with a bonus action")
+	_check(float(cc.get_meta("turn_movement", 0.0)) > 0.0, "turn starts with movement budget")
+
+	# a few end_turn cycles advance without error
+	for i in 4:
+		CombatManager.end_turn()
+		await get_tree().create_timer(0.3).timeout
+	_check(CombatManager.in_combat, "turn cycling keeps combat alive")
+
+	CombatManager.exit_tb_mode()
+	CombatManager.exit_combat()
+	level.queue_free()
+	await get_tree().process_frame
+
+func _test_boss_refuses_tb() -> void:
+	GameState.sarro = null
+	GameState.liris = null
+	var level: Node3D = (load("res://scenes/world/tamori_anchor.tscn") as PackedScene).instantiate()
+	add_child(level)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	GameState.sarro.stats.max_hp = 900
+	GameState.sarro.stats.current_hp = 900
+	GameState.liris.stats.max_hp = 900
+	GameState.liris.stats.current_hp = 900
+	var player: CharacterBody3D = level.get_node("Characters/Sarro")
+	var boss: EnemyController = level.get_node("Enemies/AnchorWarden")
+
+	boss.alerted(player)
+	await get_tree().process_frame
+	_check(CombatManager.in_combat, "boss aggro enters combat")
+	_check(not CombatManager.enter_tb_mode(), "TB refused while a boss fights")
+	_check(not CombatManager.tb_mode, "still real-time after refusal")
+
+	# TB latched beforehand force-exits when a boss joins
+	CombatManager.exit_combat()
+	CombatManager.tb_mode = true
+	CombatManager.enter_combat([player, boss])
+	_check(not CombatManager.tb_mode, "latched TB force-exits when a boss joins")
+
+	CombatManager.exit_combat()
+	level.queue_free()
+	await get_tree().process_frame
+
+# ── Pathfinding ───────────────────────────────────────────────────────────────
+
+## Pathfinding rides the dungeon's TiledTerrain (the only island level).
+func _test_pathfinding() -> void:
+	GameState.sarro = null
+	GameState.liris = null
+	var level: Node3D = (load("res://scenes/world/dungeon_run.tscn") as PackedScene).instantiate()
+	add_child(level)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var player = level.get_node("Characters/Sarro")
+	_check(player.has_method("rebuild_pathfinding"), "player exposes pathfinding rebuild")
+	var terrain = level.get_node_or_null("Level/TiledTerrain")
+	_check(terrain != null, "dungeon has TiledTerrain")
+	if terrain != null and player.has_method("_plan_path"):
+		# find two adjacent carved tiles and path between them
+		var map: Array = terrain.active_map()
+		var found := false
+		for y in map.size():
+			var row: Array = map[y]
+			for x in row.size() - 1:
+				if int(row[x]) > 0 and int(row[x + 1]) > 0:
+					player.global_position = _IslandGrid.tile_to_world(Vector2i(x, y))
+					var path: Array = player._plan_path(
+						_IslandGrid.tile_to_world(Vector2i(x + 1, y)))
+					_check(path.size() >= 1,
+						"a walkable click yields a path (%d waypoints)" % path.size())
+					found = true
+					break
+			if found:
+				break
+		_check(found, "dungeon map has adjacent carved tiles")
+	level.queue_free()
+	await get_tree().process_frame
+
+func _seeded_rng(seed_val: int) -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_val
+	return rng
+
+func _check(cond: bool, label: String) -> void:
+	print("  [%s] %s" % ["PASS" if cond else "FAIL", label])
+	if not cond:
+		_failures.append(label)

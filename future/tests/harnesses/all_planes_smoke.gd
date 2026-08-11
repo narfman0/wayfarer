@@ -37,24 +37,30 @@ func _run() -> void:
 	get_tree().quit(0 if _failures.is_empty() else 1)
 
 func _check_plane(plane_id: String, level: Node3D) -> void:
+	# Procedural scenery is opt-in per scene now (manual placement is the
+	# default direction): when the flag is on, the pass must produce sane
+	# instances; when off, the node must not exist at all.
 	var scenery := level.get_node_or_null("Level/Scenery")
-	_check(scenery != null and scenery.get_child_count() > 20,
-		"%s: scenery generated (%d instances)" % [plane_id,
-			scenery.get_child_count() if scenery != null else 0])
-	if scenery != null:
-		var min_h := 1e9
-		var max_h := 0.0
-		var measured := 0
-		for inst in scenery.get_children():
-			if not inst is Node3D:
-				continue
-			var h: float = _Scenery._world_height(inst) * (inst as Node3D).scale.y
-			min_h = minf(min_h, h)
-			max_h = maxf(max_h, h)
-			measured += 1
-		_check(measured > 0 and max_h < 45.0 and max_h > 1.0 and min_h > 0.02,
-			"%s: scenery heights sane (min %.3f m, max %.1f m over %d)" %
-				[plane_id, min_h, max_h, measured])
+	if level.get("generate_scenery") == true:
+		_check(scenery != null and scenery.get_child_count() > 20,
+			"%s: scenery generated (%d instances)" % [plane_id,
+				scenery.get_child_count() if scenery != null else 0])
+		if scenery != null:
+			var min_h := 1e9
+			var max_h := 0.0
+			var measured := 0
+			for inst in scenery.get_children():
+				if not inst is Node3D:
+					continue
+				var h: float = _Scenery._world_height(inst) * (inst as Node3D).scale.y
+				min_h = minf(min_h, h)
+				max_h = maxf(max_h, h)
+				measured += 1
+			_check(measured > 0 and max_h < 45.0 and max_h > 1.0 and min_h > 0.02,
+				"%s: scenery heights sane (min %.3f m, max %.1f m over %d)" %
+					[plane_id, min_h, max_h, measured])
+	else:
+		_check(scenery == null, "%s: no scenery node while disabled" % plane_id)
 	_check(level.get_node_or_null("AmbientMotes") != null,
 		"%s: ambient particle field present" % plane_id)
 	_check(AudioManager._ambient_name != "" and AudioManager._ambient_current.playing,

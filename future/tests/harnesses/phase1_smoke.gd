@@ -31,8 +31,8 @@ func _run() -> void:
 	await _test_camera_zoom()
 	await _test_spellcasting()
 	await _test_skirmisher_fires()
-	await _test_heavy_telegraphs()
 	await _test_death_collapse()
+	await _test_heavy_telegraphs()
 	if _failures.is_empty():
 		print("PHASE1 SMOKE: ALL PASS")
 	else:
@@ -40,20 +40,22 @@ func _run() -> void:
 			print("PHASE1 SMOKE FAIL: ", f)
 	get_tree().quit(0 if _failures.is_empty() else 1)
 
+## Zoom is orthographic now: the wheel tweens Camera3D.size between the
+## min/max ortho extents.
 func _test_camera_zoom() -> void:
 	var cam: Camera3D = _level.get_node("CameraPivot/Camera3D")
-	var rest_len: float = cam.position.length()
-	_level._adjust_zoom(-0.09)
+	var rest: float = cam.size
+	_level._adjust_zoom(-2.0)
 	await get_tree().create_timer(0.4).timeout
-	_check(cam.position.length() < rest_len - 0.1, "wheel zoom dollies the camera in")
+	_check(cam.size < rest - 0.5, "wheel zoom narrows the ortho view")
 	for i in 10:
-		_level._adjust_zoom(-0.09)
+		_level._adjust_zoom(-2.0)
 	await get_tree().create_timer(0.4).timeout
-	_check(cam.position.length() >= rest_len * 0.5, "zoom clamps at the close limit")
-	for i in 10:
-		_level._adjust_zoom(0.09)
+	_check(cam.size >= 13.9 and cam.size <= 14.5, "zoom clamps at the close limit")
+	for i in 12:
+		_level._adjust_zoom(2.0)
 	await get_tree().create_timer(0.4).timeout
-	_check(absf(cam.position.length() - rest_len) < 0.1, "zooming out returns to rest distance")
+	_check(cam.size >= 25.5 and cam.size <= 26.1, "zoom clamps at the far limit")
 
 ## Spells cast through the public cast_spell path: damage lands, slots spend,
 ## cantrips don't, heals restore the caster.
@@ -100,7 +102,20 @@ func _test_skirmisher_fires() -> void:
 	var ok := await _wait_for_script_node(_ProjectileScript, 6.0)
 	_check(ok, "skirmisher fired a projectile within 6s")
 
+## Heavies moved to reach_rig in the Act 2 split — swap scenes for this one.
 func _test_heavy_telegraphs() -> void:
+	_level.queue_free()
+	await get_tree().process_frame
+	GameState.sarro = null
+	GameState.liris = null
+	_level = load("res://scenes/world/reach_rig.tscn").instantiate()
+	add_child(_level)
+	await get_tree().process_frame
+	GameState.sarro.stats.max_hp = 900
+	GameState.sarro.stats.current_hp = 900
+	GameState.liris.stats.max_hp = 900
+	GameState.liris.stats.current_hp = 900
+	_player = _level.get_node("Characters/Sarro")
 	var heavy := _level.get_node("Enemies/Enforcer1") as CharacterBody3D
 	_teleport_party(heavy.global_position + Vector3(1.2, 0, 0))
 	var ok := await _wait_for_script_node(_TelegraphScript, 8.0)
