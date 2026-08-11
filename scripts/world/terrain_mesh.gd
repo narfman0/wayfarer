@@ -7,6 +7,7 @@
 ## reads as a chunk of rock floating in the void.
 ## Call rebuild_from(map) to swap the island shape at runtime — collision is
 ## regenerated via create_trimesh_collision().
+@tool
 class_name TiledTerrain
 extends Node3D
 
@@ -32,12 +33,20 @@ const PALETTE := [
 const SKIRT_DARKEN := 0.65  # underside rock is this much darker than the top
 
 ## Noise driving the rocky underside displacement. Seeded per level via
-## set_noise_seed() for variation between islands.
+## set_noise_seed() or the inspector for variation between islands.
 var _noise: FastNoiseLite = null
 
+## Inspector-editable seed. Setting it in the editor re-runs _build() so the
+## rocky underside updates live.
+@export var noise_seed: int = 42:
+	set(v):
+		noise_seed = v
+		if _noise != null:
+			_noise.seed = v
+			_build()
+
 func set_noise_seed(s: int) -> void:
-	if _noise != null:
-		_noise.seed = s
+	noise_seed = s
 
 ## Runtime palette override. When non-empty, used instead of PALETTE.
 ## Set via set_palette() before _build() / rebuild_from() is called.
