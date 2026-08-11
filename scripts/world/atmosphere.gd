@@ -77,10 +77,21 @@ const _ALIASES := {
 	"convergence_approach": "convergence",
 }
 
+## The void sky wrapped around every floating island: deep cosmic blue-purple
+## fading to near-black below the horizon, no sun disk, no fog. Applied over
+## whatever Environment the scene's WorldEnvironment carries (the env_*.tres
+## still own glow/tonemap; background and fog are overridden here so islands
+## read as platforms adrift in a void rather than ground stretching forever).
+const _VOID_SKY_TOP     := Color(0.05, 0.03, 0.12)
+const _VOID_SKY_HORIZON := Color(0.12, 0.10, 0.20)
+const _VOID_SKY_GROUND  := Color(0.02, 0.01, 0.05)
+
 static func apply(level: Node3D, plane_id: String, sun: DirectionalLight3D,
 		ground_mi: MeshInstance3D) -> void:
 	var spec: Dictionary = _DEFAULT.duplicate()
 	spec.merge(PLANES.get(_ALIASES.get(plane_id, plane_id), {}), true)
+
+	_apply_void_sky(level)
 
 	if sun != null:
 		sun.rotation_degrees = spec["sun_rot"]
@@ -94,6 +105,39 @@ static func apply(level: Node3D, plane_id: String, sun: DirectionalLight3D,
 		hx = ab.size.x * 0.5
 		hz = ab.size.z * 0.5
 	level.add_child(_make_field(spec["particles"], hx, hz))
+
+## Replace the level Environment's background with the void sky and kill fog.
+## The scene's env resource is duplicated first — glow/tonemap/adjustments
+## survive; only background, fog, and ambient are overridden. Ambient comes
+## from a fixed soft colour (not the sky) so the near-black void doesn't crush
+## island lighting.
+static func _apply_void_sky(level: Node3D) -> void:
+	var we: WorldEnvironment = null
+	for n in level.find_children("*", "WorldEnvironment", true, false):
+		we = n
+		break
+	if we == null:
+		return
+	var env: Environment = we.environment.duplicate() if we.environment != null \
+			else Environment.new()
+
+	var sky_mat := ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color        = _VOID_SKY_TOP
+	sky_mat.sky_horizon_color    = _VOID_SKY_HORIZON
+	sky_mat.ground_horizon_color = _VOID_SKY_HORIZON
+	sky_mat.ground_bottom_color  = _VOID_SKY_GROUND
+	sky_mat.sun_angle_max = 0.0  # no sun disk in the void
+	var sky := Sky.new()
+	sky.sky_material = sky_mat
+
+	env.background_mode = Environment.BG_SKY
+	env.sky = sky
+	env.fog_enabled = false
+	env.volumetric_fog_enabled = false
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color  = Color(0.45, 0.42, 0.55)
+	env.ambient_light_energy = 0.6
+	we.environment = env
 
 static func _make_field(p: Dictionary, hx: float, hz: float) -> CPUParticles3D:
 	var field := CPUParticles3D.new()
