@@ -29,6 +29,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	await _test_camera_zoom()
+	await _test_spellcasting()
 	await _test_skirmisher_fires()
 	await _test_heavy_telegraphs()
 	await _test_death_collapse()
@@ -53,6 +54,34 @@ func _test_camera_zoom() -> void:
 		_level._adjust_zoom(0.09)
 	await get_tree().create_timer(0.4).timeout
 	_check(absf(cam.position.length() - rest_len) < 0.1, "zooming out returns to rest distance")
+
+## Spells cast through the public cast_spell path: damage lands, slots spend,
+## cantrips don't, heals restore the caster.
+func _test_spellcasting() -> void:
+	var spell_data = preload("res://addons/srd/resources/spell_data.gd")
+	var guard := _level.get_node("Enemies/PenGuard2") as CharacterBody3D
+	var liris = GameState.liris
+
+	# damage spell from Liris (Warden — has slots) at Sarro's target
+	_player.target_enemy = guard
+	var hp_before: int = guard.character.stats.current_hp
+	var slots_before: int = liris.energy_slots.slots_remaining_at(1)
+	_level.cast_spell(spell_data.make_guiding_bolt(), liris)
+	_check(guard.character.stats.current_hp < hp_before, "damage spell hurts the target")
+	_check(liris.energy_slots.slots_remaining_at(1) == slots_before - 1,
+		"L1 spell spends a slot")
+
+	# cantrip: no slot spent
+	slots_before = liris.energy_slots.slots_remaining_at(1)
+	_level.cast_spell(spell_data.make_sacred_flame(), liris)
+	_check(liris.energy_slots.slots_remaining_at(1) == slots_before,
+		"cantrip spends no slot")
+
+	# heal spell restores the caster
+	liris.stats.current_hp = 20
+	_level.cast_spell(spell_data.make_cure_wounds(), liris)
+	_check(liris.stats.current_hp > 20, "heal spell restores the caster")
+	_player.target_enemy = null
 
 func _test_skirmisher_fires() -> void:
 	var guard := _level.get_node("Enemies/PenGuard1") as CharacterBody3D

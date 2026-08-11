@@ -147,8 +147,8 @@ func _on_long_rest() -> void:
 		l.channel_divinity_ready = true
 		if l.stats != null:
 			l.stats.current_hp = l.stats.max_hp
-		if l.energy_slots != null and l.energy_slots.has_method("restore_all"):
-			l.energy_slots.restore_all()
+		if l.energy_slots != null:
+			l.energy_slots.recover_all()  # EnergySlots API
 	_show_toast("Long rest — full recovery.")
 
 ## Called by level scripts to show encounter result banners.

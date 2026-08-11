@@ -89,6 +89,31 @@ func _make_slot(ability: Dictionary) -> Button:
 
 	return btn
 
+## Spell hotkeys: 7 8 9 0 are dispatched here by keybind label (abilities
+## 1-6 flow through real input actions in level_base; spells have none).
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not event is InputEventKey or not event.pressed or event.echo:
+		return
+	var key := (event as InputEventKey).physical_keycode
+	var label := ""
+	match key:
+		KEY_7: label = "7"
+		KEY_8: label = "8"
+		KEY_9: label = "9"
+		KEY_0: label = "0"
+	if label == "":
+		return
+	for ability in _abilities:
+		if String(ability.get("keybind", "")) != label:
+			continue
+		var ready_cb: Callable = ability.get("is_ready", Callable())
+		if ready_cb.is_valid() and not bool(ready_cb.call()):
+			return
+		var cb: Callable = ability.get("activate", Callable())
+		if cb.is_valid():
+			cb.call()
+		return
+
 func _process(_delta: float) -> void:
 	for i in _slots.size():
 		if i >= _abilities.size():

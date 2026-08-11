@@ -131,22 +131,34 @@ static func _channel_divinity(char) -> Dictionary:
 
 static func _spell_entry(char, sp, index: int) -> Dictionary:
 	var cost: String = "bonus_action" if sp.is_bonus_action else "action"
-	var kb: String = "" if index >= 4 else str(7 + index)
+	# Spell hotkeys 7 8 9 0 (dispatched by the skill bar, not input actions)
+	var kb: String = "" if index >= 4 else ("0" if index == 3 else str(7 + index))
 	return {
 		"id": "spell_%s" % String(sp.spell_name).to_lower().replace(" ", "_"),
 		"name": String(sp.spell_name),
 		"description": String(sp.description),
 		"cost": cost,
 		"attack_roll": "",
-		"damage": "",
+		"damage": _spell_damage_text(sp),
 		"icon_color": Color(0.5, 0.4, 0.9),
 		"keybind": kb,
 		"is_ready": func() -> bool:
-			if char.energy_slots != null and char.energy_slots.has_method("slots_remaining"):
-				return char.energy_slots.slots_remaining(1) > 0
-			return true,
-		"activate": _trigger_action("ability_spells"),
+			if sp.spell_level <= 0:
+				return true  # cantrips are always available
+			return char.energy_slots != null and char.energy_slots.has_slot(sp.spell_level),
+		"activate": func() -> void:
+			var tree := Engine.get_main_loop() as SceneTree
+			var lvl = tree.current_scene if tree != null else null
+			if lvl != null and lvl.has_method("cast_spell"):
+				lvl.cast_spell(sp, char),
 	}
+
+static func _spell_damage_text(sp) -> String:
+	if sp.damage_dice > 0:
+		return "%dd%d" % [sp.damage_count, sp.damage_dice]
+	if sp.heal_dice > 0:
+		return "%dd%d healing" % [sp.heal_count, sp.heal_dice]
+	return ""
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 

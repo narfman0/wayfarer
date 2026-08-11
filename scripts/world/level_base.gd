@@ -656,8 +656,14 @@ func _use_channel_divinity() -> void:
 
 # ── Spell casting ────────────────────────────────────────────────────────────
 
-func _cast_spell(spell) -> void:
-	var c = GameState.sarro
+## Public entry point for the skill bar (AbilityRegistry spell slots call
+## this on the current scene). `caster` defaults to Sarro; Liris's known
+## spells pass her explicitly.
+func cast_spell(spell, caster = null) -> void:
+	_cast_spell(spell, caster)
+
+func _cast_spell(spell, caster = null) -> void:
+	var c = caster if caster != null else GameState.sarro
 	if c == null or _defeated:
 		return
 	if CombatManager.tb_mode and CombatManager.is_player_turn():
@@ -692,17 +698,16 @@ func _cast_spell(spell) -> void:
 			spell.spell_name, Color(0.7, 0.7, 1.0))
 		print("[Spell] %s → %s: %d dmg" % [spell.spell_name, tgt.name, dmg])
 
-	# Heal spell
+	# Heal spell — restores the caster
 	elif spell.heal_dice > 0:
 		var heal: int = 0
 		for _i in spell.heal_count:
 			heal += _Dice.roll(spell.heal_dice)
-		if c.stats.wisdom_modifier != null:
-			heal += c.stats.ability_modifier(4)  # WIS
+		heal += c.stats.ability_modifier(4)  # WIS
 		c.stats.current_hp = mini(c.stats.max_hp, c.stats.current_hp + heal)
 		_DamageNumber.spawn(self, _player.global_position + Vector3(0, 1.5, 0),
 			"+%d %s" % [heal, spell.spell_name], Color(0.4, 1.0, 0.5))
-		print("[Spell] %s: +%d HP" % [spell.spell_name, heal])
+		print("[Spell] %s: +%d HP to %s" % [spell.spell_name, heal, c.display_name])
 
 	# Buff / utility — just announce it
 	else:
@@ -710,10 +715,9 @@ func _cast_spell(spell) -> void:
 			spell.spell_name, Color(0.85, 0.75, 1.0))
 		print("[Spell] %s cast" % spell.spell_name)
 
-	# Spend a L1 slot if it's not a cantrip
-	if spell.spell_level > 0 and c.energy_slots != null \
-			and c.energy_slots.has_method("spend"):
-		c.energy_slots.spend(spell.spell_level)
+	# Spend a slot if it's not a cantrip (EnergySlots API is use_slot)
+	if spell.spell_level > 0 and c.energy_slots != null:
+		c.energy_slots.use_slot(spell.spell_level)
 
 # ── Pause / queue ─────────────────────────────────────────────────────────────
 
