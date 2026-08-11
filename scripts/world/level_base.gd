@@ -157,16 +157,23 @@ func _generated_static_body(mi: Node) -> StaticBody3D:
 	return null
 
 ## Create invisible wall colliders at each edge of the playable area.
-## Reads bounds from the old-style Level/Ground/GroundCollision BoxShape3D if
-## present; otherwise falls back to the exported bounds_half_size value.
+## Size detection order: GroundCollision BoxShape3D → GroundMesh AABB (the
+## legacy scenes pair a visual BoxMesh with an infinite WorldBoundaryShape3D,
+## so the MESH is the real arena footprint — 36-56 m, not one default) →
+## the exported bounds_half_size.
 func _setup_bounds() -> void:
 	var hx := bounds_half_size
 	var hz := bounds_half_size
 	var col_node := get_node_or_null("Level/Ground/GroundCollision") as CollisionShape3D
+	var ground_mi := get_node_or_null("Level/Ground/GroundMesh") as MeshInstance3D
 	if col_node != null and col_node.shape is BoxShape3D:
 		var gs: Vector3 = (col_node.shape as BoxShape3D).size
 		hx = gs.x * 0.5
 		hz = gs.z * 0.5
+	elif ground_mi != null and ground_mi.mesh != null:
+		var ab := ground_mi.mesh.get_aabb()
+		hx = ab.size.x * 0.5
+		hz = ab.size.z * 0.5
 	const H := 10.0   # wall height — well above any jump
 	const T := 1.0    # wall thickness
 	var level := get_node_or_null("Level")

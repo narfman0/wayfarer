@@ -63,6 +63,26 @@ func _check_plane(plane_id: String, level: Node3D) -> void:
 		_check(scenery == null, "%s: no scenery node while disabled" % plane_id)
 	_check(level.get_node_or_null("AmbientMotes") != null,
 		"%s: ambient particle field present" % plane_id)
+	_check_bounds(plane_id, level)
+
+## The invisible boundary walls must hug the actual arena footprint —
+## legacy scenes derive it from the GroundMesh AABB now, not a default.
+func _check_bounds(plane_id: String, level: Node3D) -> void:
+	var ground := level.get_node_or_null("Level/Ground/GroundMesh") as MeshInstance3D
+	if ground == null or ground.mesh == null:
+		return  # island levels size explicitly; nothing to cross-check
+	var hx: float = ground.mesh.get_aabb().size.x * 0.5
+	var lvl := level.get_node_or_null("Level")
+	var east_wall_x := 0.0
+	for child in lvl.get_children():
+		if not child is StaticBody3D:
+			continue
+		for sub in child.get_children():
+			if sub is CollisionShape3D and (sub as CollisionShape3D).shape is BoxShape3D:
+				east_wall_x = maxf(east_wall_x, (sub as CollisionShape3D).position.x)
+	_check(east_wall_x > 0.0 and absf(east_wall_x - hx) < 2.0,
+		"%s: boundary walls hug the arena (wall %.1f vs half-width %.1f)" %
+			[plane_id, east_wall_x, hx])
 	_check(AudioManager._ambient_name != "" and AudioManager._ambient_current.playing,
 		"%s: ambient loop playing (%s)" % [plane_id, AudioManager._ambient_name])
 
