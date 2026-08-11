@@ -21,9 +21,17 @@ func _ready() -> void:
 	offset_bottom = 110
 	add_theme_constant_override("separation", 8)
 
+	GameState.party_updated.connect(_on_party_updated)
 	_rebuild_cards()
 
 	# Default selection = first available character.
+	if GameState.sarro != null:
+		_select("sarro")
+	elif GameState.liris != null:
+		_select("liris")
+
+func _on_party_updated() -> void:
+	_rebuild_cards()
 	if GameState.sarro != null:
 		_select("sarro")
 	elif GameState.liris != null:
