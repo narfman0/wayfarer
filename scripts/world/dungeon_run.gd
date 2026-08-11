@@ -1,7 +1,9 @@
-## Procedurally generated dungeon encounter — room+corridor BSP layout.
-## Each run carves 4-6 rooms of random sizes into a 32×32 stone map,
-## connects them with L-shaped corridors, spawns 1-2 enemies per room
-## (skipping the entry room), and places an exit portal in the final room.
+## Procedurally generated dungeon encounter — room+corridor layout.
+## Each run carves 4-6 rooms of random sizes into a 32×32 void map: room
+## floors and connecting corridors are island tiles (1), everything else is
+## void (0) — so the dungeon reads as floating platforms joined by narrow
+## walkways. Spawns 1-2 enemies per room (skipping the entry room) and places
+## an exit portal in the final room.
 class_name DungeonRun
 extends WayfarerLevel
 
@@ -26,7 +28,7 @@ const _ROOM_MAX := 8
 
 var _rng := RandomNumberGenerator.new()
 var _rooms: Array = []        # each: {x, y, w, h}
-var _dungeon_map: Array = []  # 32×32 int heights
+var _dungeon_map: Array = []  # 32×32 ints: 1 = island tile, 0 = void
 ## Per-run seed captured after randomize(); drives deterministic loot per position.
 var _dungeon_seed: int = 0
 ## Counter so each enemy gets a unique offset from the dungeon seed.
@@ -44,13 +46,12 @@ func _on_level_ready() -> void:
 # ── Map generation ────────────────────────────────────────────────────────────
 
 func _generate_map() -> void:
-	# Fill with height-2 stone walls; the outer ring is void (island edge).
+	# Start with pure void; rooms and corridors carve island tiles into it.
 	_dungeon_map = []
-	for r in _N:
+	for _r in _N:
 		var row: Array = []
-		for c in _N:
-			var edge: bool = r == 0 or c == 0 or r == _N - 1 or c == _N - 1
-			row.append(0 if edge else 2)
+		row.resize(_N)
+		row.fill(0)
 		_dungeon_map.append(row)
 
 	# Carve rooms.
@@ -93,7 +94,7 @@ func _try_place_room() -> void:
 	for _attempt in 30:
 		var w: int = _rng.randi_range(_ROOM_MIN, _ROOM_MAX)
 		var h: int = _rng.randi_range(_ROOM_MIN, _ROOM_MAX)
-		# Keep a stone shell between rooms and the void rim (tiles 2.._N-3).
+		# Keep a void margin between rooms and the grid rim (tiles 2.._N-3).
 		var x: int = _rng.randi_range(2, _N - 3 - w)
 		var y: int = _rng.randi_range(2, _N - 3 - h)
 		var overlap := false
@@ -120,10 +121,8 @@ func _apply_map_to_terrain() -> void:
 		return
 	if terrain.has_method("set_palette"):
 		var pal: Array[Color] = [
-			Color(0.08, 0.07, 0.06),  # 0  abyss
-			Color(0.22, 0.20, 0.18),  # 1  dungeon floor (dark stone)
-			Color(0.32, 0.29, 0.25),  # 2  wall stone
-			Color(0.42, 0.38, 0.32),  # 3  upper stone
+			Color(0.08, 0.07, 0.06),  # 0  void (never drawn)
+			Color(0.28, 0.26, 0.23),  # 1  dungeon platform (dark stone)
 		]
 		terrain.set_palette(pal)
 	if terrain.has_method("rebuild_from"):
@@ -297,8 +296,3 @@ func _place_player_at_entry() -> void:
 		player.global_position = Vector3(px, 0.9, pz)
 	if companion != null:
 		companion.global_position = Vector3(px - 1.5, 0.9, pz + 1.0)
-
-# ── Dungeon palette override (stone colours) ──────────────────────────────────
-# Hack: patch terrain palette before _apply_map_to_terrain if TiledTerrain
-# ever exposes a mutable PALETTE. For now the default grass/earth works and
-# the stone heights (2) read as raised earth — close enough until we skin it.
