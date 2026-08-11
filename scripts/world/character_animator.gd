@@ -72,7 +72,10 @@ static func attach(skin: Node, body: CharacterBody3D = null, set_key: String = "
 ## Fire-and-forget combat clip on a body's skin ("attack", "attack_heavy",
 ## "hit", "death"). Returns false when the body has no animator or the clip
 ## didn't load (callers keep their procedural fallback in that case).
-static func oneshot(body: Node, clip_name: String) -> bool:
+## speed: playback multiplier. release_frac: fraction of the (scaled) clip
+## after which locomotion may resume — the cancelable recovery window.
+static func oneshot(body: Node, clip_name: String, speed: float = 1.0,
+		release_frac: float = 1.0) -> bool:
 	if body == null:
 		return false
 	var skin := body.get_node_or_null("Skin")
@@ -81,7 +84,7 @@ static func oneshot(body: Node, clip_name: String) -> bool:
 	var anim := skin.get_meta(_ANIM_META) as CharacterAnimator
 	if anim == null:
 		return false
-	return anim.play_oneshot(clip_name)
+	return anim.play_oneshot(clip_name, speed, release_frac)
 
 ## Synty POLYGON meshes are authored facing +Z, but Godot's facing/movement
 ## convention is -Z forward (see PlayerController's atan2 yaw). Left as-is the
@@ -102,16 +105,19 @@ func _process(_delta: float) -> void:
 
 ## Play a combat clip once, then let locomotion resume. "death" locks the
 ## animator on its final frame forever (the collapse owns what follows).
-func play_oneshot(clip_name: String) -> bool:
+## Locomotion resumes after release_frac of the scaled clip — moving before
+## the follow-through finishes is the ARPG recovery-cancel.
+func play_oneshot(clip_name: String, speed: float = 1.0, release_frac: float = 1.0) -> bool:
 	if _ap == null or not _ap.has_animation(clip_name):
 		return false
-	var length := _ap.get_animation(clip_name).get_length()
+	speed = maxf(speed, 0.05)
+	var length := _ap.get_animation(clip_name).get_length() / speed
 	_current = clip_name
-	_ap.play(clip_name, 0.1)
+	_ap.play(clip_name, 0.1, speed)
 	if clip_name == "death":
 		_oneshot_until_ms = Time.get_ticks_msec() + 3600 * 1000
 	else:
-		_oneshot_until_ms = Time.get_ticks_msec() + int(length * 1000.0) - 80
+		_oneshot_until_ms = Time.get_ticks_msec() + int(length * release_frac * 1000.0)
 	return true
 
 func _play(clip_name: String) -> void:

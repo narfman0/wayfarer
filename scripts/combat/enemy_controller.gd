@@ -40,6 +40,14 @@ const SLAM_RADIUS := 2.4
 const SLAM_WINDUP := 1.1   # telegraph duration — the dodge window
 const SLAM_RATE   := 7.0   # cooldown between slams
 
+## Basic-swing wind-up: the readable beat between the blade going up and
+## damage landing. Deliberately ~3× the player's (contact-frame asymmetry:
+## player attacks feel snappy, enemy attacks are reactable). Stepping out of
+## reach dodges the blow; a stagger during the wind-up interrupts it. This
+## window is also where boss ability/impact-area projection will hook in.
+const MELEE_WINDUP := 0.5
+const MELEE_CLIP_SPEED := 0.8   # slows the 0.87s light clip so contact ≈ wind-up
+
 const _PHASE_INVULN := 1.8  # seconds of invulnerability during phase transition
 
 # Support: hangs back and channels an interruptible group heal — creates the
@@ -294,7 +302,8 @@ func _take_turn_action() -> void:
 				return
 	if dist <= MELEE_DIST * 1.5:
 		_fire_attack()
-		await get_tree().create_timer(0.5).timeout
+		# Hold the turn until the wind-up resolves and the hit lands.
+		await get_tree().create_timer(MELEE_WINDUP + 0.4).timeout
 
 ## Living packmate below max HP within litany range, or null.
 func _most_wounded_ally():
@@ -406,10 +415,25 @@ func _do_attack(delta: float) -> void:
 func _fire_attack() -> void:
 	if character == null or _target == null:
 		return
-	_CharAnim.oneshot(self, "attack")
+	_CharAnim.oneshot(self, "attack", MELEE_CLIP_SPEED, 0.8)
 	_MeleeAttacker.lunge(self, _target.global_position)
 	AudioManager.play_sfx("swing", -3.0)
-	_resolve_attack_on(_target)
+	var tgt := _target
+	get_tree().create_timer(MELEE_WINDUP).timeout.connect(_land_melee.bind(tgt))
+
+## Contact frame of a basic swing. Interrupted by death or a stagger during
+## the wind-up; whiffs (honestly, with a MISS) if the target stepped out of
+## reach — that's the dodge.
+func _land_melee(tgt: CharacterBody3D) -> void:
+	if _dead or character == null or _stun_left > 0.0:
+		return
+	if tgt == null or not is_instance_valid(tgt):
+		return
+	if global_position.distance_to(tgt.global_position) > MELEE_DIST * 1.8:
+		_DamageNumber.miss(get_tree().current_scene, tgt.global_position)
+		print("[Combat] %s's swing whiffs — target moved" % character.display_name)
+		return
+	_resolve_attack_on(tgt)
 
 ## SRD attack roll vs the party character behind `body`; applies damage.
 func _resolve_attack_on(body: CharacterBody3D) -> void:
@@ -458,7 +482,7 @@ func _apply_party_damage(target_char, body: Node3D, dmg: int, crit: bool) -> voi
 	dmg = CharacterProgression.modify_party_damage(dmg, target_char, "melee", crit, near_sarro)
 	target_char.stats.current_hp = max(0, target_char.stats.current_hp - dmg)
 	if target_char.stats.current_hp > 0:
-		_CharAnim.oneshot(body, "hit")
+		_CharAnim.oneshot(body, "hit", 1.5, 0.7)  # brisk flinch — combat stays fluid
 	var scene := get_tree().current_scene
 	AudioManager.play_sfx("crit" if crit else "hit", -2.0)
 	_DamageNumber.hit(scene, body.global_position, dmg, crit)
@@ -640,7 +664,7 @@ func receive_damage(amount: int, from: Vector3 = Vector3.INF) -> void:
 	character.stats.current_hp = max(0, character.stats.current_hp - amount)
 	hp_changed.emit(character.stats.current_hp, character.stats.max_hp)
 	if character.stats.current_hp > 0:
-		_CharAnim.oneshot(self, "hit")
+		_CharAnim.oneshot(self, "hit", 1.5, 0.7)  # brisk flinch — combat stays fluid
 	_Juice.impact_burst(get_tree().current_scene, global_position)
 	if from != Vector3.INF:
 		var away := global_position - from

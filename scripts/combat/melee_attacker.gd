@@ -15,6 +15,15 @@ const _CharAnim       = preload("res://scripts/world/character_animator.gd")
 const MELEE_RANGE  := 1.6   # metres
 const ATTACK_RATE  := 1.0   # seconds between attacks
 
+## Contact-frame timing. Rolls happen at swing start; damage, sound, and
+## numbers land when the blade visually connects. Player wind-ups stay snappy
+## (<0.3s to contact) and the follow-through is cancelable into movement.
+## Native contact sits ~40% into the clips (light 0.87s, heavy 2.10s); these
+## speeds place it at WINDUP seconds.
+const WINDUP     := {"attack": 0.18, "attack_heavy": 0.30}
+const CLIP_SPEED := {"attack": 2.0, "attack_heavy": 3.0}
+const RELEASE_FRAC := 0.65  # recovery cancels after 65% of the scaled clip
+
 ## Attack-interval multiplier — Action Surge sets this below 1.0 briefly.
 var rate_scale: float = 1.0
 
@@ -99,31 +108,17 @@ func _do_attack() -> void:
 	var crit: bool = d20 >= attacker.crit_threshold
 	var target_name: String = _target.name  # capture before damage — a kill nulls _target via stop()
 
-	var target_pos: Vector3 = _target.global_position
-	# Real sword swing where a clip exists; the procedural lunge stays as a
-	# readability accent underneath it.
-	_CharAnim.oneshot(owner_body, "attack_heavy" if crit else "attack")
-	lunge(owner_body, target_pos)
-	var dmg := 0
+	# Swing now, land at the contact frame. The clip choice needs the roll
+	# (crit → heavy), so rolls resolve up front and only the application —
+	# damage, numbers, sound, stun — waits for the blade.
+	var clip: String = "attack_heavy" if crit else "attack"
+	_CharAnim.oneshot(owner_body, clip, CLIP_SPEED[clip], RELEASE_FRAC)
+	lunge(owner_body, _target.global_position)
 	AudioManager.play_sfx("swing")
+
+	var dmg := 0
 	if hit:
 		dmg = attacker.roll_damage(crit)
-		# Threshold Thief: +1d6 against staggered or casting targets.
-		if character.subclass_key == "threshold_thief" \
-				and (_target.is_stunned() or _target.is_casting()):
-			dmg += _Dice.roll(6)
-		_DamageNumber.hit(owner_body.get_tree().current_scene, target_pos, dmg, crit)
-		_target.receive_damage(dmg, owner_body.global_position)
-		# Sentinel (feat): every landed hit staggers for a beat.
-		if _Progression.has_feat(character, "sentinel"):
-			_target.stun(0.4)
-		AudioManager.play_sfx("crit" if crit else "hit")
-		_Juice.hit_stop(owner_body.get_tree(), 0.08 if crit else 0.05)
-		if crit:
-			_Juice.shake(owner_body.get_viewport().get_camera_3d(), 0.16)
-	else:
-		_DamageNumber.miss(owner_body.get_tree().current_scene, target_pos)
-
 	var ev := {
 		"type": "attack",
 		"attacker": character.display_name,
@@ -131,6 +126,41 @@ func _do_attack() -> void:
 		"d20": d20, "attack_mod": atk_mod, "target_ac": target_ac,
 		"hit": hit, "crit": crit, "damage": dmg,
 	}
+	var tgt = _target  # capture — stop()/retarget may null _target mid-swing
+	owner_body.get_tree().create_timer(WINDUP[clip]).timeout.connect(
+		_land_attack.bind(tgt, ev))
+
+## The contact frame: apply the pre-rolled result to the world. The target
+## may have died, despawned, or been felled by Liris during the wind-up —
+## in that case the swing whiffs silently.
+func _land_attack(tgt, ev: Dictionary) -> void:
+	if owner_body == null or not is_instance_valid(owner_body):
+		return
+	if tgt == null or not is_instance_valid(tgt) or tgt.character == null:
+		return
+	var scene: Node = owner_body.get_tree().current_scene
+	var target_pos: Vector3 = tgt.global_position
+	if ev["hit"]:
+		if tgt.character.stats.current_hp <= 0:
+			return  # already down — no double-kill feedback
+		var dmg: int = ev["damage"]
+		# Threshold Thief: +1d6 against staggered or casting targets —
+		# judged at contact, when the opening actually exists.
+		if character != null and character.subclass_key == "threshold_thief" \
+				and (tgt.is_stunned() or tgt.is_casting()):
+			dmg += _Dice.roll(6)
+			ev["damage"] = dmg
+		_DamageNumber.hit(scene, target_pos, dmg, ev["crit"])
+		tgt.receive_damage(dmg, owner_body.global_position)
+		# Sentinel (feat): every landed hit staggers for a beat.
+		if character != null and _Progression.has_feat(character, "sentinel"):
+			tgt.stun(0.4)
+		AudioManager.play_sfx("crit" if ev["crit"] else "hit")
+		_Juice.hit_stop(owner_body.get_tree(), 0.08 if ev["crit"] else 0.05)
+		if ev["crit"]:
+			_Juice.shake(owner_body.get_viewport().get_camera_3d(), 0.16)
+	else:
+		_DamageNumber.miss(scene, target_pos)
 	attack_result.emit(ev)
 	print("[Combat] ", _format(ev))
 
