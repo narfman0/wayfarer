@@ -5,6 +5,7 @@ class_name PlayerController
 extends CharacterBody3D
 
 const _CharAnim = preload("res://scripts/world/character_animator.gd")
+const _IslandGrid = preload("res://scripts/world/island_grid.gd")
 
 const SPEED      := 5.0
 
@@ -25,6 +26,17 @@ var target_enemy: Node3D = null
 
 var _enabled: bool = true
 var _click_target: Vector3 = Vector3.INF  # INF = no active click destination
+
+# ── Click-to-walk pathfinding ────────────────────────────────────────────────
+# AStarGrid2D over the level's IslandGrid tile map. The level (or dungeon
+# generator) calls rebuild_pathfinding(map) whenever the terrain changes.
+# There are no ramps, so a tile is only reachable across tiles of the SAME
+# height — solidity is refreshed per click against the player's current
+# height layer. When no path exists (or no map was provided) clicks fall back
+# to the old straight-line steering.
+var _astar: AStarGrid2D = null
+var _terrain_map: Array = []              # rows of int heights (0 = void)
+var _waypoints: Array[Vector3] = []       # remaining path corners → click target
 
 # TB combat: position where movement began this click (for distance accounting).
 var _tb_move_start: Vector3 = Vector3.INF
@@ -60,6 +72,7 @@ func _physics_process(delta: float) -> void:
 	var stick := _read_input()
 	if stick.length_squared() > 0.01:
 		_click_target = Vector3.INF
+		_waypoints.clear()
 		target_enemy = null
 		_move_by_input(stick, delta)
 	elif _click_target != Vector3.INF:
@@ -83,10 +96,61 @@ func set_control_enabled(v: bool) -> void:
 	if not v:
 		velocity = Vector3.ZERO
 		_click_target = Vector3.INF
+		_waypoints.clear()
 
 ## Called by CombatHUD Attack button to enter click-target-enemy mode.
 func enter_attack_mode() -> void:
 	_attack_mode = true
+
+## (Re)build the pathfinding grid from a terrain height map (rows of ints).
+## Call after terrain generation/regeneration — e.g. DungeonRun's map carve.
+func rebuild_pathfinding(map: Array) -> void:
+	_terrain_map = map
+	_waypoints.clear()
+	if map.is_empty():
+		_astar = null
+		return
+	var rows: int = map.size()
+	var cols: int = map[0].size()
+	_astar = AStarGrid2D.new()
+	_astar.region = Rect2i(0, 0, cols, rows)
+	_astar.cell_size = Vector2(_IslandGrid.TILE_SIZE, _IslandGrid.TILE_SIZE)
+	_astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+	_astar.update()
+
+## Mark tiles solid for the given walk height: void tiles and any tile at a
+## different height are impassable (no ramps exist between height layers).
+func _refresh_astar_solidity(walk_height: int) -> void:
+	var rows: int = _terrain_map.size()
+	for r in rows:
+		for c in _terrain_map[r].size():
+			var h: int = _terrain_map[r][c]
+			_astar.set_point_solid(Vector2i(c, r), h <= 0 or h != walk_height)
+
+## Compute tile-path waypoints from the player to `dest`, or [] when
+## pathfinding can't help (no grid, off-grid click, unreachable target).
+func _plan_path(dest: Vector3) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	if _astar == null:
+		return out
+	var grid_size: int = _terrain_map.size()
+	var from := _IslandGrid.world_to_tile(global_position, grid_size)
+	var to   := _IslandGrid.world_to_tile(dest, grid_size)
+	if not _astar.is_in_boundsv(from) or not _astar.is_in_boundsv(to) or from == to:
+		return out
+	var walk_height: int = _terrain_map[from.y][from.x]
+	if walk_height <= 0:
+		return out
+	_refresh_astar_solidity(walk_height)
+	if _astar.is_point_solid(to):
+		return out
+	var tiles := _astar.get_id_path(from, to)
+	if tiles.size() < 2:
+		return out
+	# Skip the tile we're standing on; the caller appends the exact click pos.
+	for i in range(1, tiles.size()):
+		out.append(_IslandGrid.tile_to_world(tiles[i], walk_height, grid_size))
+	return out
 
 # ── Private ──────────────────────────────────────────────────────────────────
 
@@ -102,9 +166,24 @@ func _move_by_input(stick: Vector2, delta: float) -> void:
 	rotation.y    = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 12.0 * delta)
 
 func _move_toward_click(delta: float) -> void:
+	# Steer toward the next path waypoint when one exists; the final leg (and
+	# any pathless click) steers straight at the click position itself.
+	# TB: refuse to move if no movement budget left.
+	if CombatManager.tb_mode and CombatManager.is_player_turn():
+		var left: float = CombatManager.movement_left(self)
+		if left <= 0.01:
+			_click_target = Vector3.INF
+			_waypoints.clear()
+			return
+	var waypoint: Vector3 = _waypoints[0] if not _waypoints.is_empty() else _click_target
 	var flat_pos := Vector3(global_position.x, 0.0, global_position.z)
-	var flat_tgt := Vector3(_click_target.x, 0.0, _click_target.z)
+	var flat_tgt := Vector3(waypoint.x, 0.0, waypoint.z)
 	var dist     := flat_pos.distance_to(flat_tgt)
+	if not _waypoints.is_empty():
+		if dist <= ARRIVE_DIST * 2.0:  # corners don't need pinpoint arrival
+			_waypoints.pop_front()
+		_steer_toward(flat_pos, flat_tgt, delta)
+		return
 	if dist <= ARRIVE_DIST:
 		# TB: account for the distance actually walked.
 		if CombatManager.tb_mode and _tb_move_start != Vector3.INF:
@@ -115,12 +194,9 @@ func _move_toward_click(delta: float) -> void:
 		velocity.x = 0.0
 		velocity.z = 0.0
 		return
-	# TB: refuse to move if no movement budget left.
-	if CombatManager.tb_mode and CombatManager.is_player_turn():
-		var left: float = CombatManager.movement_left(self)
-		if left <= 0.01:
-			_click_target = Vector3.INF
-			return
+	_steer_toward(flat_pos, flat_tgt, delta)
+
+func _steer_toward(flat_pos: Vector3, flat_tgt: Vector3, delta: float) -> void:
 	var dir    := (flat_tgt - flat_pos).normalized()
 	velocity.x = dir.x * SPEED * speed_mult
 	velocity.z = dir.z * SPEED * speed_mult
@@ -148,6 +224,7 @@ func _handle_left_click(screen_pos: Vector2) -> void:
 				if CombatManager.has_action(self):
 					CombatManager.spend_action(self)
 			_click_target = collider.global_position
+			_waypoints = _plan_path(_click_target)
 		else:
 			_attack_mode = false
 			target_enemy = null
@@ -155,6 +232,7 @@ func _handle_left_click(screen_pos: Vector2) -> void:
 			if CombatManager.tb_mode and CombatManager.is_player_turn():
 				_tb_move_start = global_position
 			_click_target = hit["position"]
+			_waypoints = _plan_path(_click_target)
 
 func _get_camera() -> Camera3D:
 	if camera_pivot == null:

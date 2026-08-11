@@ -97,6 +97,10 @@ func rebuild_from(new_map: Array) -> void:
 	_active_map = new_map
 	_build()
 
+## The height map currently driving the mesh — for pathfinding grids etc.
+func active_map() -> Array:
+	return _active_map if _active_map.size() == ROWS else MAP
+
 func _build() -> void:
 	for c in get_children():
 		c.queue_free()

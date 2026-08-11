@@ -98,6 +98,7 @@ func _ready() -> void:
 	_setup_enemies()
 	_setup_prop_collision()
 	_setup_bounds()
+	_setup_pathfinding()
 	_setup_animators()
 	_apply_loaded_state()
 	_setup_scenery()  # after _apply_loaded_state so avoid-points use final positions
@@ -190,6 +191,15 @@ func _setup_bounds() -> void:
 		shape_node.position = w[0]
 		body.add_child(shape_node)
 		level.add_child(body)
+
+## Feed the terrain height map to the player's AStarGrid2D so click-to-walk
+## can route around cliffs and void. Levels that regenerate terrain later
+## (DungeonRun) call _player.rebuild_pathfinding(map) again themselves.
+func _setup_pathfinding() -> void:
+	var terrain = get_node_or_null("Level/TiledTerrain")
+	if terrain != null and terrain.has_method("active_map") \
+			and _player.has_method("rebuild_pathfinding"):
+		_player.rebuild_pathfinding(terrain.active_map())
 
 func _setup_scenery() -> void:
 	if not generate_scenery:
