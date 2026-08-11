@@ -1,5 +1,30 @@
 # Wayfarer — Gameplay Design
 
+AMENDED 2026-08-11 — as-built deviations (see `docs/architecture.md` for
+the authoritative current state):
+
+- **Pause-and-queue was never built.** Its slot is filled by an opt-in
+  **BG3-style turn-based mode**: [T] toggles TB during combat (initiative
+  d20+DEX, action/bonus/reaction/movement economy, opportunity-attack
+  reaction prompts). Real-time remains the default. Bosses refuse TB —
+  their fights are timed telegraph orchestrations and stay real-time.
+- **Camera** is orthographic (not perspective): yaw 45°, pitch −30°,
+  wheel zooms ortho size 14–26 (not FOV).
+- **Abilities**: keys 1–4 are class abilities; keys 7–0 cast prepared
+  spells through the skill bar (slot-gated; cantrips always ready).
+  BG3-style UI — portrait party panel, icon skill bar, gold readout.
+- **Enemy AI** is a plain state machine in `EnemyController`
+  (Patrol → Chase → Attack → Return/leash), not a Beehave tree, with
+  four archetypes: bruiser, skirmisher (ranged kiting), heavy
+  (telegraphed slams), support (interruptible heals). Pack aggro and
+  ambush triggers exist.
+- **Random dungeons shipped** (listed below as "future"): the Rift Below
+  off Tamori is a procedural dungeon with a Diablo-rift-style difficulty
+  pick (Faint/Open/Churning/Screaming) driving a D&D-style CR budget per
+  room. Act content remains fully hand-placed.
+- **Economy exists**: gold, inventory, loot bags, a shop, and a death
+  screen — the original "no inventory mini-game" rule was relaxed.
+
 ## Core feel
 
 Diablo II combat feel with WoW-style hotbar abilities, D&D SRD rules underneath, optional pause.

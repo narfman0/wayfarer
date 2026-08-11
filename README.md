@@ -2,7 +2,7 @@
 
 A cosmic fantasy RPG about two companions wandering between planes of existence.
 
-**Status:** Pre-production — design docs + playable Act 1 prototype
+**Status:** Playable prototype — all three acts start-to-finish (two endings), plus a procedural dungeon side-mode
 
 ## Getting Started
 
@@ -33,10 +33,23 @@ Notes:
 
 ## Docs
 
-- [Setting Bible](docs/setting.md) — world, companions, antagonist, planes
+- [Architecture & current state](docs/architecture.md) — **start here**: what's actually built
+- [Design docs](docs/design/) — gameplay, levels, bosses, progression, classes
+- [Narrative docs](docs/narrative/) — setting bible, act-by-act beats
+
+## Testing
+
+Headless smoke suites live in `future/tests/harnesses/` — each prints
+`ALL PASS` and exits nonzero on failure:
+
+```bash
+godot --headless res://future/tests/harnesses/systems_smoke.tscn   # or any suite
+```
+
+Visual review: `xvfb-run -a godot --rendering-driver opengl3 res://future/tests/harnesses/plane_gallery.tscn` screenshots every plane to `.screenshots/`.
 
 ## Quick Summary
 
-Two companions follow the trail of unintended damage left by an antagonist destabilizing the Veil — a network of portals connecting planes of existence. The game is slow, thoughtful, sword-and-skill combat, no crafting, real-time-with-pause. Tone: *Blade of the Immortal* meets *Planescape*.
+Two companions follow the trail of unintended damage left by well-meaning antagonists destabilizing the Veil — a network of portals connecting planes of existence. Locked isometric camera, sword-and-skill combat that runs real-time by default with an opt-in BG3-style turn-based mode, full D&D-style character building (classes, species, feats, subclasses, spells), and a gold/loot economy. Tone: *Blade of the Immortal* meets *Planescape*.
 
-Engine: Godot 4 | Rules: Custom SRD-compatible space fantasy ruleset
+Engine: Godot 4 | Rules: Custom SRD-compatible fantasy ruleset (git submodule)

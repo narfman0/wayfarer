@@ -22,20 +22,21 @@ Dark Fantasy); audio is synthesized placeholder WAV.
 
 Two terrain styles coexist:
 
-- **Island-grid scenes** (`tamori`, `dungeon_run`): a `TiledTerrain`
+- **Island-grid scene** (`dungeon_run` only): a `TiledTerrain`
   mesh over `IslandGrid` (2 m tiles, 32×32 default, flat top at y=0)
   with noise-displaced craggy undersides floating in a **void sky**;
   click-to-move routes on `AStarGrid2D` (`player_controller.gd`).
-  Tamori's island is 80×80 m.
-- **Legacy flat arenas** (the other 13 scenes): BoxMesh slab over an
+  (Tamori trialed the grid and was reverted upstream to a flat 80×80 m
+  slab.)
+- **Flat arenas** (the other 14 scenes): BoxMesh slab over an
   infinite `WorldBoundaryShape3D`, 36–56 m per side. Invisible boundary
   walls are generated at load, sized from the ground collider or the
   GroundMesh AABB (`level_base._setup_bounds`).
 
 | Scene | plane_id | Content |
 |---|---|---|
-| tamori | tamori | 80 m island: village NPCs, shop, dungeon rift, opening dialogue |
-| dungeon_run | dungeon_run | Procedural: 4–6 rooms carved into the void, corridors, skeletons with seeded loot, exit portal |
+| tamori | tamori | 80 m starting plane: village NPCs, shop, dungeon rift, opening dialogue |
+| dungeon_run | dungeon_run | Procedural: rooms carved into the void, corridors, **CR-budgeted encounter groups** (see below), seeded loot, exit portal |
 | tamori_road / _fields / _anchor | — | Act 1 chain; anchor = Idris + rig boss → Warden's Ritual choice |
 | reach / reach_rig | — | Skirmisher intro + Deal dialogue → Extractor Engine boss |
 | kaveth / kaveth_vault | — | Combat-free night ruins → husk/shade vault, Waking Tear |
@@ -87,6 +88,25 @@ records replayed over saved base scores; max HP recomputes from
 scratch. Spells cast through `level_base.cast_spell` from the skill bar
 (click or keys 7 8 9 0), spending `EnergySlots` (`use_slot`).
 
+**Dungeon (The Rift Below)**: `rift_portal.gd` (extends VeilPortal) asks
+for a difficulty before entry — Faint/Open/Churning/Screaming Rift →
+`dungeon_cr_tier` flag (easy ×0.5 / fair ×1.0 / hard ×1.5 / deadly
+×2.2). `dungeon_run.gd` gives each room a CR budget
+`(1 + party_level × 0.5) × tier_mult` (final room ×1.5) and draws a
+seeded group from the ROSTER (skeleton 1.0 / skeleton_ranger 1.0 /
+skeleton_armored 2.0 / hunter 3.0 — each with statblock, XP 150–600,
+loot table). **Every dynamic spawn goes through
+`level_base.register_enemy()`** — that's what attaches the character
+sheet and death/phase wiring; skipping it yields a blank shell.
+
+**Animation**: `character_animator.gd` retargets Base Locomotion clips
+onto every humanoid and now layers **Sword Combat oneshots** — attack,
+heavy attack (crits), hit react, and death (suppresses the ragdoll-less
+collapse spin) — via `_CharAnim.oneshot(body, clip)` from
+melee_attacker and enemy_controller. Bow Combat clips + bow/arrow
+meshes are confirmed cooked on srv but intentionally unwired (no player
+ranged weapon exists yet).
+
 **Economy**: `GameState.gold`/`inventory` with signals; `LootTable`
 (weighted, seeded tables) → `LootBag` (searchable Area3D on corpses) →
 `loot_bag_screen`; `shop_npc` + `shop_screen` (Odo's Goods in Tamori);
@@ -127,7 +147,7 @@ Base Locomotion, MeadowForest, AncientEgypt, Scifi, Western, Prototype,
 ## Verification
 
 Headless harnesses in `future/tests/harnesses/` (each prints ALL PASS,
-nonzero exit on failure): `phase1_smoke` (feel + spells + zoom),
+nonzero exit on failure): `phase1_smoke` (feel + spells + zoom + combat clips),
 `anchor_fight_smoke`, `act2_smoke`, `act3_smoke`, `progression_smoke`
 (39 build-choice checks), `systems_smoke` (TB, boss refusal, loot,
 gold, pathfinding), `all_planes_smoke` (every plane incl. dungeon_run:
@@ -155,9 +175,13 @@ atmosphere, bounds-vs-mesh, scenery flag honesty). `plane_gallery` and
 - TB enemy turns don't use telegraphs (real-time-only by design);
   boss fights are RT-only.
 - The Between rebuild and the Mender-You-Understand dialogue remain
-  unbuilt; flat legacy scenes await island-grid conversion if the
-  direction continues.
-- Terrain3D was trialed and reverted in favor of `TiledTerrain`.
-- Out of scope by decision: free camera rotation, difficulty modes
-  (dungeon CR select is planned separately), spawn randomization in
-  act content.
+  unbuilt.
+- Dungeon XP (150–600/kill, repeatable) is not reconciled with the act
+  XP curve — tuning-playthrough item.
+- Bow Combat assets are ready on srv but unwired (no ranged player
+  weapon).
+- Terrain3D was trialed and reverted; the island grid now lives only in
+  the dungeon.
+- Out of scope by decision: free camera rotation, difficulty modes in
+  act content (the rift CR select is the challenge dial), spawn
+  randomization outside the dungeon.

@@ -1,16 +1,15 @@
 # Wayfarer — CLAUDE.md
 
-Cosmic fantasy ARPG. Two companions (Sarro + Liris) trace damage left by well-meaning antagonists destabilizing the Veil (planar portal network). Tone: Blade of the Immortal meets Planescape. Pre-production.
+Cosmic fantasy RPG. Two companions (Sarro + Liris) trace damage left by well-meaning antagonists destabilizing the Veil (planar portal network). Tone: Blade of the Immortal meets Planescape. Playable prototype through all three acts. **`docs/architecture.md` is the authoritative as-built reference — read it first.**
 
-## Gameplay pillars
+## Gameplay pillars (as built)
 
-- **Feel**: Diablo II combat, WoW hotbar abilities, D&D SRD rules underneath.
-- **Camera**: fixed isometric overhead (~45° pitch), follows Sarro, mouse-wheel zoom only.
-- **Combat**: real-time with optional pause (Space). Click-to-move + click-to-attack. Abilities on 1–4 / D-pad. SRD attack rolls + AC + saving throws run silently underneath.
-- **World**: hand-crafted levels and enemy placement. No spawn randomization in shipped acts. Replayability comes from feat/build choices, not RNG. Random dungeons are a future optional add-on.
-- **Levels**: acts composed of hand-crafted scenes connected by portals. Portal triggers are narrative, boss-gated, or exploration-based.
-- **Enemy aggro**: proximity cylinder + optional LOS check → Patrol → Chase → Attack (plain state machine in EnemyController).
-- **Progression**: no XP levels. Story milestone feats + equipment drops + Liris conviction arc.
+- **Feel**: sword-and-skill combat over hidden D&D SRD rules; BG3-style UI (portrait party panel, icon skill bar).
+- **Camera**: locked orthographic isometric (yaw 45°, pitch −30°), follows Sarro; wheel zooms ortho size 14–26.
+- **Combat**: real-time by default; **[T] toggles BG3-style turn-based** (initiative, action economy, opportunity attacks). Bosses refuse TB — their fights are timed orchestrations. Enemy archetypes: bruiser / skirmisher / heavy (telegraphed slams) / support (interruptible heals). Sword Combat animation clips on all humanoids.
+- **World**: hand-authored scenes (13 flat arenas + Tamori's 80 m floating island) plus a **procedural dungeon** (dungeon_run: rooms carved into a void map, CR-budgeted encounters selected at the rift portal). Procedural scenery exists but is opt-in per scene (`generate_scenery`, default off — manual placement preferred).
+- **Enemy aggro**: proximity sphere → Patrol → Chase → Attack (+ Return/leash) state machine; pack aggro via `pack_id`; ambush triggers. Dynamic spawns MUST go through `level_base.register_enemy()` or they have no character sheet.
+- **Progression**: XP levels 1–20 (kills + story beats). Build choices — fighting style, feats, ASI, subclass at 3 — are spent **at rest points**; species/background/spells picked at creation. Liris is story-driven (conviction arc). Gold/inventory/shops/loot bags exist.
 
 Design docs: `docs/design/gameplay.md`, `docs/design/levels.md`, `docs/design/bosses.md`
 Narrative docs: `docs/narrative/overview.md` (start here), `docs/narrative/arc-detailed.md`, `docs/narrative/act-1.md`, `docs/narrative/act-2.md`, `docs/narrative/act-3.md`, `docs/narrative/setting.md`
@@ -58,8 +57,9 @@ Terrain3D can be revisited later if procedural terrain becomes necessary.
 All rules (combat, conditions, saving throws, spells, feats, AI, etc.) live in `addons/srd/`. Import with `git submodule update --init`.
 
 The Wayfarer layer:
-- `WayfarerCharacter` — wraps CharacterStats + ClassData + feats + equipment
-- `CombatManager` — orchestrates CombatOrder, AI turns, SpellResolver, optional pause
+- `WayfarerCharacter` — wraps CharacterStats + ClassData + equipment + build choices (feats/subclass/spells)
+- `CharacterProgression` — build-choice registries, pending-choice engine, combat bonuses
+- `CombatManager` — encounter state + the turn-based engine (autoload)
 
 To update the addon:
 ```bash
@@ -76,15 +76,16 @@ git add vendor/godot-srd-addon && git commit -m "chore: update srd addon"
 
 ## Combat
 
-Real-time ARPG. SRD initiative order drives AI tick rate invisibly. Player clicks to move and attack; abilities on hotbar (4 slots per character). Optional pause lets player queue actions for both companions. CombatManager handles attack rolls, damage, conditions, and death saves.
+`CombatManager` (autoload) owns encounter state: real-time by default (6 s rounds only poll for combat end; the archetype AI runs free), turn-based on toggle (initiative queue, per-turn action/bonus/reaction/movement metadata, OA reaction modal). Attack resolution flows through `WayfarerCharacter.make_combatant()` → SRD `Combatant` (build-choice bonuses + crit range stamped there). Spells cast via `level_base.cast_spell(spell, caster)` from the skill bar.
 
-Override `CombatManager.build_ai_context()` in a scene to wire positional callbacks (is_in_melee_range, can_reach, distance) to actual node positions.
+## Testing
+
+Headless suites in `future/tests/harnesses/` (phase1, anchor_fight, act2, act3, progression, systems, all_planes) — run any with `godot --headless res://future/tests/harnesses/<name>.tscn`; each prints ALL PASS / exits nonzero. Xvfb galleries (`plane_gallery`, `ui_gallery`) screenshot to `.screenshots/`. Run relevant suites before committing; screenshots after visual changes.
 
 ## Key design rules
 
-- No crafting, no inventory mini-game
 - Combat is snappy and meaningful but narrative is the focus
 - Portal transit requires conviction (Liris must earn it; Sarro is exempt)
-- Antagonists (Menders + Extractors) are sympathetic — resolution is convincing them, not defeating them
-- One difficulty; optional pause is the accessibility lever
-- Enemy placement is always authored; never random in act content
+- Antagonists (Menders + Extractors) are sympathetic — resolution is convincing them, not defeating them (conviction ≥ 2 unlocks Cael's dialogue ending)
+- One difficulty in act content; the dungeon rift's CR select is the challenge dial
+- Enemy placement is authored in act content; the dungeon is the sanctioned procedural space

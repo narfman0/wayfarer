@@ -1,5 +1,15 @@
 # Wayfarer — Boss Design
 
+STATUS 2026-08-11: all three boss fights shipped as designed (Warped
+Anchor Warden, the Kaveth Waking Tear guardian, Cael at the Convergence)
+— telegraphs (circle/cone/line/donut), phase transitions with invuln
+windows, casts/interrupts, and per-fight mechanics are live. One
+as-built rule the sections below predate: **bosses refuse turn-based
+mode** — [T] is declined ("The Veil won't wait — not in this fight") and
+a latched TB force-exits when a boss joins, because these fights are
+timed telegraph orchestrations. Phase AI is a plain state machine in
+EnemyController, not a Beehave tree.
+
 ## Design contract
 
 Regular enemies: the player wins by applying DPS and not taking too much damage.

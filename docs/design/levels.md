@@ -6,7 +6,25 @@ Hand-crafted levels, authored encounters. Every enemy is placed intentionally �
 
 Replayability comes from character build choices, not procedural content. Procedural dungeons are a future addition, not a launch feature.
 
-## Structure
+AMENDED 2026-08-11 — the act plan below was the original sketch; the
+as-built structure (see `docs/architecture.md`) is:
+
+```
+Act 1 — Tamori (floating-island farming plane)
+  └─ Village → Sword Road → Fields → Veil Anchor (boss)
+  └─ The Rift Below — procedural dungeon side-mode (RiftPortal picks a
+     CR tier: Faint/Open/Churning/Screaming; rooms carved into a void
+     map, encounter groups drawn against a CR budget)
+Act 2 — the trail of damage
+  └─ Reach (garrison) → Kaveth (drowned archive) → Verath (port) →
+     the Between (transit gone long; Ancestor's Fragment)
+Act 3 — Ashan (reunion, no combat) → Convergence (Cael; two endings)
+```
+
+The procedural dungeon shipped as the one sanctioned exception to the
+hand-authored rule — act content stays fully placed.
+
+Original sketch (superseded):
 
 ```
 Act 1 — Tamori (feudal Japanese plane)

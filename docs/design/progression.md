@@ -4,6 +4,21 @@ Status: EXPERIMENT. Per-kill + quest XP (supersedes gameplay.md's original
 no-levels design — see amendment there). We tune act by act, level by
 level, against this draft rather than redesigning the system.
 
+AMENDED 2026-08-11:
+- **Levels now grant real choices**, not just HP/to-hit: fighting style +
+  starting feat at creation, subclass at 3, ASI-or-feat at class ASI
+  levels — spent at rest points via the level-up screen
+  (`CharacterProgression`). The "what levels grant" section below is
+  stale on this point.
+- **Spells are castable** (skill bar keys 7–0 → `level_base.cast_spell`),
+  so caster levels now mean slots + prepared spells, not just stats.
+- **Dungeon XP exists outside this curve**: the Rift Below awards
+  150–600 XP/kill (roster-flat, repeatable). Not yet reconciled with the
+  act curve — flag for the tuning playthrough.
+- The "current placements" tables predate the act splits (road/fields/
+  anchor scenes and the reach/kaveth sub-scenes) — plane totals still
+  hold; per-scene rows are historical.
+
 ## Model
 
 - **Per-kill XP**: every `EnemyController` has `xp_value`; the whole party

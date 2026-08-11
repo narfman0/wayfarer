@@ -59,9 +59,14 @@ the resource loop to the portal/pacing structure the game already has.
 Four classes, one per answer to the Veil question. Chassis map onto the
 SRD engine (hit die, saves, slot progression) already in the addon.
 Subclasses unlock at level 3 (beat ~1.5 on the progression curve).
-Playable today: Soldier, Ghost (the two no-magic classes — convenient,
-since the ability system isn't built). Warden and Psion return with the
-hotbar/ability track.
+
+AMENDED 2026-08-11: **all four classes are playable in the creation
+wizard** (species, background, and starting spells for casters are picked
+there too). Casting shipped — skill-bar keys 7–0 cast prepared spells
+through EnergySlots. The six Soldier/Ghost subclasses below are built
+(chosen at level 3 at a rest point, two passives each, per
+`CharacterProgression`); Warden/Psion subclasses and the overstitch/scar
+system remain designs.
 
 ### SOLDIER — the ones who refuse the Veil
 *Chassis: fighter. d10, STR/CON saves, all armor, no slots.*
@@ -218,14 +223,15 @@ story's central argument accumulating.
   D&D staples that treat planes as utilities are absent by design — the
   Veil is a character, not a subway.
 
-## Implementation notes (current engine)
+## Implementation notes (current engine, 2026-08-11)
 
-- Chassis exist in ClassData (Soldier/Ghost shipped; Psion/Warden slot
-  tables tested in the addon). Subclasses = ClassData variants + feature
-  flags; unlock at level 3 per progression.md.
-- The ability/hotbar system (gameplay.md) is the prerequisite for
-  Warden/Psion returning to character creation; Soldier/Ghost subclass
-  features can ship earlier as passives on the existing combat loop.
-- Overstitch/scar needs: a per-zone flag store (exists: GameState.flags),
-  an enemy-buff hook (EnemyController), and UI on the cast button — build
-  when casting builds.
+- All four chassis ship in ClassData and the creation wizard. The six
+  Soldier/Ghost subclasses are live in `CharacterProgression.SUBCLASSES`
+  (passives wired into melee_attacker / enemy_controller / level_base);
+  Warden/Psion subclasses are not yet built.
+- Casting is live: `ability_registry` builds spell entries from prepared
+  spells, `level_base.cast_spell(spell, caster)` resolves them, and
+  EnergySlots gate non-cantrips. Long rest at a stable tear recovers all.
+- Overstitch/scar remains unbuilt. Its ingredients now all exist —
+  GameState.flags per-zone, EnemyController buff hooks, a real cast
+  path — so it's purely a content/UI task when we want it.
