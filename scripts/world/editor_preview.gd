@@ -36,9 +36,14 @@ func _regenerate() -> void:
 	if root == null:
 		return
 	var ground := root.get_node_or_null("Level/Ground/GroundMesh") as MeshInstance3D
-	# Scenery parents a "Scenery" node under whatever it's given — give it
-	# this preview node so children stay owner-less (unserialized).
-	_Scenery.generate(self, ground, _Scenery.avoid_points_for(root),
-		_Scenery.clear_centers_for(root), plane_id)
+	# Scenery is opt-in per scene now (generate_scenery, default false) —
+	# only preview it when the scene will actually generate it at runtime,
+	# or the editor would show dressing the game doesn't have. The root's
+	# export is readable via its placeholder script instance.
+	if root.get("generate_scenery") == true:
+		# Scenery parents a "Scenery" node under whatever it's given — give
+		# it this preview node so children stay owner-less (unserialized).
+		_Scenery.generate(self, ground, _Scenery.avoid_points_for(root),
+			_Scenery.clear_centers_for(root), plane_id)
 	var sun := root.get_node_or_null("Sun") as DirectionalLight3D
 	_Atmosphere.apply(self, plane_id, sun, ground)

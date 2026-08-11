@@ -245,8 +245,11 @@ const _SCIFI_ASTEROIDS := [
 	"scifi:SM_Env_Asteroid_04", "scifi:SM_Env_Asteroid_05",
 ]
 
-## plane_id → recipe. Planes without an entry get the meadow fallback — the
-## Tamori planes keep it on purpose: the meadow IS their identity.
+## plane_id → recipe. Planes without an entry get the meadow fallback.
+## NOTE: the whole pass is opt-in per scene now (level_base.generate_scenery
+## defaults to false — manual placement is the preferred direction). These
+## recipes are dormant data until a scene flips the flag; the editor preview
+## honors the same flag.
 const RECIPES := {
 	# Big empty grassland scarred by extraction: sparser meadow growth, with
 	# industrial litter accumulating between the tufts.

@@ -3,7 +3,7 @@
 ## 1 = island tile (solid, rendered, walkable), 0 = void (no geometry, not
 ## walkable). The whole top surface sits at y=0 (player ground level); every
 ## island edge bordering the void (or the grid boundary) grows a noise-displaced
-## curtain of rock down to a ragged keel, closed by a bottom cap, so the level
+## curtain of rock down to a ragged keel, open underneath (the craggy curtain reads as the island underside), so the level
 ## reads as a chunk of rock floating in the void.
 ## Call rebuild_from(map) to swap the island shape at runtime — collision is
 ## regenerated via create_trimesh_collision().
@@ -172,8 +172,7 @@ func _build() -> void:
 
 ## One boundary edge of the rim (a → b, left-to-right when viewed from outside
 ## the island): a curtain of noise-displaced rings from y=0 down to a ragged
-## keel, plus a closing strip back to the rim at cap depth so the underside
-## seams with the per-tile bottom caps.
+## open keel — the underside reads as torn floating rock against the void.
 func _curtain(su: SurfaceTool, a: Vector2, b: Vector2, color: Color) -> void:
 	var last := SKIRT_RINGS.size() - 1
 	for i in last:
@@ -198,8 +197,8 @@ func _rim_vert(p: Vector2, i: int) -> Vector3:
 	# Vertical jitter ±0.3 m per ring.
 	var y: float = ring_y + 0.3 * _noise.get_noise_3d(p.x + 31.7, ring_y, p.y - 17.3)
 	if i == last:
-		# Ragged keel: extra downward-only jitter, kept at or below cap depth
-		# so the closing strip and bottom caps stay watertight.
+		# Ragged keel: extra downward-only jitter so the lowest ring tears
+		# unevenly instead of ending on a straight line.
 		y -= absf(_noise.get_noise_3d(p.x * 1.7, ring_y - 9.0, p.y * 1.7)) * 1.5
 		y = minf(y, ring_y)
 	return Vector3(p.x, y, p.y) + out * h
