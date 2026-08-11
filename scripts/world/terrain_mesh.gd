@@ -1,38 +1,32 @@
-## Procedural tilemap terrain: integer height grid → floating-island mesh + collision.
-## Each cell is IslandGrid.TILE_SIZE (2 m); height steps are IslandGrid.HEIGHT_STEP
-## (1 m). Height 1 = y=0 (player ground level); heights 2–7 are raised.
-## Height 0 is THE VOID: no floor is drawn there, and any solid tile bordering a
-## void tile (or the grid boundary) grows cliff faces that continue down past
-## ground level to the island underside, so the level reads as a floating land
-## mass rather than a flat plane with walls.
-## Wall faces are generated between adjacent cells at different heights.
-## Call _build() from _ready() — collision is created via create_trimesh_collision().
+## Procedural flat-island terrain: a 0/1 tile map → flat top surface + void skirt.
+## Each cell is IslandGrid.TILE_SIZE (2 m). Map values: 1 = island tile (solid,
+## rendered, walkable), 0 = void (no geometry, not walkable). The whole top
+## surface sits at y=0 (player ground level); every island edge bordering the
+## void (or the grid boundary) grows a single skirt quad down to SKIRT_Y so the
+## level reads as a flat platform floating in the void.
+## Call rebuild_from(map) to swap the island shape at runtime — collision is
+## regenerated via create_trimesh_collision().
 class_name TiledTerrain
 extends Node3D
 
 const _IslandGrid = preload("res://scripts/world/island_grid.gd")
 
 const CELL  := _IslandGrid.TILE_SIZE          # metres per grid cell (2.0)
-const STEP  := _IslandGrid.HEIGHT_STEP        # metres per height level (1.0)
 const COLS  := _IslandGrid.DEFAULT_GRID_SIZE  # 32
 const ROWS  := _IslandGrid.DEFAULT_GRID_SIZE  # 32
 
-## Cliffs bordering the void continue down to this world y — the island underside.
-const UNDERSIDE_Y := -3.0
+## Skirt quads drop from the surface (y=0) to this world y — the island bottom.
+const SKIRT_Y := -3.5
 
-## Flat colours per height level 0–7. Index 0 (void) is never drawn as a top
-## face but kept so custom 4-colour palettes (e.g. the dungeon's) still index
-## cleanly; heights past the palette clamp to the last entry.
+## Default surface / skirt colours. Index 0 is unused (void), index 1 is the
+## island top; kept as an array so set_palette() overrides (e.g. the dungeon's
+## stone palette) can still index by tile value.
 const PALETTE := [
-	Color(0.14, 0.25, 0.12),  # 0  void (unused for tops)
-	Color(0.27, 0.49, 0.20),  # 1  main grass
-	Color(0.40, 0.35, 0.22),  # 2  raised earth
-	Color(0.50, 0.46, 0.36),  # 3  rocky hilltop
-	Color(0.55, 0.52, 0.44),  # 4  high stone
-	Color(0.60, 0.58, 0.52),  # 5  higher stone
-	Color(0.72, 0.72, 0.70),  # 6  scree / snowline
-	Color(0.88, 0.90, 0.92),  # 7  snow cap
+	Color(0.14, 0.25, 0.12),  # 0  void (never drawn)
+	Color(0.75, 0.70, 0.60),  # 1  island surface (sandy stone)
 ]
+
+const SKIRT_DARKEN := 0.45  # skirt faces are this much darker than the top
 
 ## Runtime palette override. When non-empty, used instead of PALETTE.
 ## Set via set_palette() before _build() / rebuild_from() is called.
@@ -40,50 +34,19 @@ var _palette_override: Array[Color] = []
 
 func set_palette(p: Array[Color]) -> void:
 	_palette_override = p
-const WALL_DARKEN      := 0.30  # wall faces are this much darker than the top
-const UNDERSIDE_DARKEN := 0.55  # below-ground cliff faces darker still
 
-## 32×32 height map for Tamori. Row 0 = north (z=−32), row 31 = south (z=+30).
-## Col 0 = west (x=−32), col 31 = east (x=+30).
-## AUTHORING CONVENTION: tiles on the grid boundary should be height 0 (void)
-## and heights should taper toward the edges (…3,2,1,0) so every island always
-## falls away into the void — this is not enforced in code, keep it by hand.
-## Centre village (rows 11–20, cols 3–28) is height-1 ground (y=0); a height-1
-## arm on rows 15–16 runs to the east rim for the portal.
-const MAP: Array = [
-	[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],  # row 0
-	[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],  # row 1
-	[0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0],  # row 2
-	[0,1,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,1,0],  # row 3
-	[0,1,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,1,0],  # row 4
-	[0,1,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,1,0],  # row 5
-	[0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0],  # row 6
-	[0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0],  # row 7
-	[0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0],  # row 8
-	[0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0],  # row 9
-	[0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0],  # row 10
-	[0,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,0],  # row 11
-	[0,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,0],  # row 12
-	[0,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,0],  # row 13
-	[0,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,0],  # row 14
-	[0,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],  # row 15
-	[0,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],  # row 16
-	[0,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,0],  # row 17
-	[0,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,0],  # row 18
-	[0,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,0],  # row 19
-	[0,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,0],  # row 20
-	[0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0],  # row 21
-	[0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0],  # row 22
-	[0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0],  # row 23
-	[0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0],  # row 24
-	[0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0],  # row 25
-	[0,1,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,1,0],  # row 26
-	[0,1,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,1,0],  # row 27
-	[0,1,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,1,0],  # row 28
-	[0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0],  # row 29
-	[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],  # row 30
-	[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],  # row 31
-]
+## Default island shape: full 32×32 square (all 1s). Levels override with
+## irregular shapes via rebuild_from() — 1 = island tile, 0 = void.
+var _default_map: Array = []
+
+static func _full_square_map() -> Array:
+	var m: Array = []
+	for _r in ROWS:
+		var row: Array = []
+		row.resize(COLS)
+		row.fill(1)
+		m.append(row)
+	return m
 
 ## Optional runtime override — set before _ready() or call rebuild_from().
 var _active_map: Array = []
@@ -97,9 +60,13 @@ func rebuild_from(new_map: Array) -> void:
 	_active_map = new_map
 	_build()
 
-## The height map currently driving the mesh — for pathfinding grids etc.
+## The tile map currently driving the mesh — for pathfinding grids etc.
 func active_map() -> Array:
-	return _active_map if _active_map.size() == ROWS else MAP
+	if _active_map.size() == ROWS:
+		return _active_map
+	if _default_map.is_empty():
+		_default_map = _full_square_map()
+	return _default_map
 
 func _build() -> void:
 	for c in get_children():
@@ -111,63 +78,47 @@ func _build() -> void:
 	var half_w := COLS * CELL * 0.5  # 32.0
 	var half_h := ROWS * CELL * 0.5  # 32.0
 
-	var active: Array = _active_map if _active_map.size() == ROWS else MAP
-	var pal: Array = _palette_override if _palette_override.size() >= 4 else PALETTE
+	var active: Array = active_map()
+	var pal: Array = _palette_override if _palette_override.size() >= 2 else PALETTE
+
+	var top_c: Color   = pal[1]
+	var skirt_c: Color = top_c.darkened(SKIRT_DARKEN)
 
 	for row in ROWS:
 		for col in COLS:
-			var h: int = active[row][col]
-			if h <= 0:
-				continue  # void — no floor; neighbours grow cliffs into it
+			if int(active[row][col]) <= 0:
+				continue  # void — no geometry
 			var x0 := col * CELL - half_w
 			var z0 := row * CELL - half_h
 			var x1 := x0 + CELL
 			var z1 := z0 + CELL
-			var y  := (h - 1) * STEP  # height 1 → y=0
 
-			var top_c: Color   = pal[mini(h, pal.size() - 1)]
-			var wall_c: Color  = top_c.darkened(WALL_DARKEN)
-			var under_c: Color = top_c.darkened(UNDERSIDE_DARKEN)
+			# ── top face (normal UP, y=0) ────────────────────────────────────
+			_quad(st, Vector3(x0,0,z1), Vector3(x1,0,z1),
+			          Vector3(x1,0,z0), Vector3(x0,0,z0), Vector3.UP, top_c)
 
-			# ── top face (normal UP) ─────────────────────────────────────────
-			_quad(st, Vector3(x0,y,z1), Vector3(x1,y,z1),
-			          Vector3(x1,y,z0), Vector3(x0,y,z0), Vector3.UP, top_c)
+			# ── skirt faces where a neighbour is void (off-grid counts) ──────
+			var void_n: bool = row == 0        or int(active[row-1][col]) <= 0
+			var void_s: bool = row == ROWS - 1 or int(active[row+1][col]) <= 0
+			var void_e: bool = col == COLS - 1 or int(active[row][col+1]) <= 0
+			var void_w: bool = col == 0        or int(active[row][col-1]) <= 0
 
-			# ── wall faces ───────────────────────────────────────────────────
-			# Off-grid neighbours count as void (0): boundary tiles always
-			# grow cliffs, and void-facing cliffs continue down to UNDERSIDE_Y.
-			var nh_n: int = active[row-1][col] if row > 0        else 0
-			var nh_s: int = active[row+1][col] if row < ROWS - 1 else 0
-			var nh_e: int = active[row][col+1] if col < COLS - 1 else 0
-			var nh_w: int = active[row][col-1] if col > 0        else 0
-
-			# North wall (z−, normal 0,0,−1)
-			if h > nh_n:
-				var yl: float = UNDERSIDE_Y if nh_n <= 0 else (nh_n - 1) * STEP
-				_quad(st, Vector3(x1,y,z0), Vector3(x0,y,z0),
-				          Vector3(x0,yl,z0), Vector3(x1,yl,z0),
-				          Vector3(0,0,-1), under_c if nh_n <= 0 else wall_c)
-
-			# South wall (z+, normal 0,0,+1)
-			if h > nh_s:
-				var yl: float = UNDERSIDE_Y if nh_s <= 0 else (nh_s - 1) * STEP
-				_quad(st, Vector3(x0,y,z1), Vector3(x1,y,z1),
-				          Vector3(x1,yl,z1), Vector3(x0,yl,z1),
-				          Vector3(0,0,1), under_c if nh_s <= 0 else wall_c)
-
-			# East wall (x+, normal +1,0,0)
-			if h > nh_e:
-				var yl: float = UNDERSIDE_Y if nh_e <= 0 else (nh_e - 1) * STEP
-				_quad(st, Vector3(x1,y,z0), Vector3(x1,y,z1),
-				          Vector3(x1,yl,z1), Vector3(x1,yl,z0),
-				          Vector3(1,0,0), under_c if nh_e <= 0 else wall_c)
-
-			# West wall (x−, normal −1,0,0)
-			if h > nh_w:
-				var yl: float = UNDERSIDE_Y if nh_w <= 0 else (nh_w - 1) * STEP
-				_quad(st, Vector3(x0,y,z1), Vector3(x0,y,z0),
-				          Vector3(x0,yl,z0), Vector3(x0,yl,z1),
-				          Vector3(-1,0,0), under_c if nh_w <= 0 else wall_c)
+			if void_n:  # z−, normal 0,0,−1
+				_quad(st, Vector3(x1,0,z0), Vector3(x0,0,z0),
+				          Vector3(x0,SKIRT_Y,z0), Vector3(x1,SKIRT_Y,z0),
+				          Vector3(0,0,-1), skirt_c)
+			if void_s:  # z+, normal 0,0,+1
+				_quad(st, Vector3(x0,0,z1), Vector3(x1,0,z1),
+				          Vector3(x1,SKIRT_Y,z1), Vector3(x0,SKIRT_Y,z1),
+				          Vector3(0,0,1), skirt_c)
+			if void_e:  # x+, normal +1,0,0
+				_quad(st, Vector3(x1,0,z0), Vector3(x1,0,z1),
+				          Vector3(x1,SKIRT_Y,z1), Vector3(x1,SKIRT_Y,z0),
+				          Vector3(1,0,0), skirt_c)
+			if void_w:  # x−, normal −1,0,0
+				_quad(st, Vector3(x0,0,z1), Vector3(x0,0,z0),
+				          Vector3(x0,SKIRT_Y,z0), Vector3(x0,SKIRT_Y,z1),
+				          Vector3(-1,0,0), skirt_c)
 
 	var mesh := st.commit()
 
