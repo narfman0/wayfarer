@@ -23,8 +23,23 @@ const _ROOM_MAX := 8
 
 ## How many rooms to try to place (some may fail overlap check).
 @export_range(3, 8) var target_rooms: int = 5
-## Enemy type string from CharacterFactory.make_enemy().
-@export var enemy_type: String = "bandit"
+## Fallback enemy type when the roster budget can't fill a room.
+@export var enemy_type: String = "skeleton"
+
+# ── Challenge rating (rift difficulty select) ─────────────────────────────────
+# Each room gets a CR budget ≈ party_level × tier multiplier, spent on a
+# weighted roster draw — so groups vary in size and composition but land
+# proportional to the party and the chosen rift tier (GameState flag
+# "dungeon_cr_tier", set by the rift portal; defaults to "fair").
+const TIER_MULT := {"easy": 0.5, "fair": 1.0, "hard": 1.5, "deadly": 2.2}
+
+## type → {cost: CR budget cost, loot: table key, xp: per-kill}
+const ROSTER := {
+	"skeleton":         {"cost": 1.0, "loot": "dungeon_basic", "xp": 150},
+	"skeleton_ranger":  {"cost": 1.0, "loot": "dungeon_basic", "xp": 150},
+	"skeleton_armored": {"cost": 2.0, "loot": "dungeon_elite", "xp": 350},
+	"hunter":           {"cost": 3.0, "loot": "dungeon_boss",  "xp": 600},
+}
 
 var _rng := RandomNumberGenerator.new()
 var _rooms: Array = []        # each: {x, y, w, h}
@@ -200,18 +215,53 @@ func _place_prop(parent: Node3D, path: String, pos: Vector3) -> void:
 # ── Enemy spawning ────────────────────────────────────────────────────────────
 
 func _spawn_enemies() -> void:
-	# Skip entry room (index 0); spawn 1 enemy per remaining room.
+	# Skip entry room (index 0); fill each remaining room's CR budget with
+	# a seeded roster draw. Same seed + tier → identical encounter groups.
+	var party_level: int = 3
+	if GameState.sarro != null and GameState.sarro.stats != null:
+		party_level = GameState.sarro.stats.level
+	var tier: String = str(GameState.get_flag("dungeon_cr_tier", "fair"))
+	var mult: float = float(TIER_MULT.get(tier, 1.0))
 	for i in range(1, _rooms.size()):
 		var rm = _rooms[i]
+		# 1 + level/2 keeps tiers distinct even for a level-1 party.
+		var budget: float = maxf(1.0, (1.0 + party_level * 0.5) * mult)
+		if i == _rooms.size() - 1:
+			budget *= 1.5  # the final room is the payoff fight
+		var group := _draw_group(budget)
 		var center := _room_center(rm)
-		_spawn_enemy_at(Vector3(center.x, 0.9, center.z))
-		# Two enemies in the last room.
-		if i == _rooms.size() - 1 and _rooms.size() > 2:
-			_spawn_enemy_at(Vector3(center.x + 2.0, 0.9, center.z - 1.5))
+		var slot := 0
+		for etype in group:
+			var offset := Vector3(
+				(slot % 3 - 1) * 2.0, 0.0, (slot / 3 - 1) * 2.0)
+			_spawn_enemy_at(Vector3(center.x, 0.9, center.z) + offset, etype)
+			slot += 1
+	print("[Dungeon] tier=%s party_level=%d rooms=%d" % [tier, party_level, _rooms.size()])
 
-func _spawn_enemy_at(pos: Vector3) -> void:
+## Spend a CR budget on roster picks (seeded): prefer variety, always afford
+## at least one of the cheapest so no room is ever empty.
+func _draw_group(budget: float) -> Array:
+	var group: Array = []
+	var keys: Array = ROSTER.keys()
+	var guard := 0
+	while budget >= 1.0 and guard < 12:
+		guard += 1
+		var affordable: Array = keys.filter(func(k): return ROSTER[k]["cost"] <= budget)
+		if affordable.is_empty():
+			break
+		var pick: String = affordable[_rng.randi() % affordable.size()]
+		group.append(pick)
+		budget -= float(ROSTER[pick]["cost"])
+	if group.is_empty():
+		group.append(enemy_type)
+	return group
+
+func _spawn_enemy_at(pos: Vector3, etype: String = "") -> void:
+	if etype == "":
+		etype = enemy_type
+	var spec: Dictionary = ROSTER.get(etype, {"cost": 1.0, "loot": "dungeon_basic", "xp": 150})
 	var body := CharacterBody3D.new()
-	body.name = "DungeonEnemy%d" % get_tree().get_nodes_in_group("enemies").size()
+	body.name = "DungeonEnemy%d" % _enemy_idx
 	body.collision_layer = 2
 	body.collision_mask  = 1
 	# Local, not global: the node is not in the tree yet, so global_position
@@ -234,7 +284,7 @@ func _spawn_enemy_at(pos: Vector3) -> void:
 		"skeleton_ranger": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Skeleton_Ranger_01.glb",
 		"hunter": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Hunter_Male_01.glb",
 	}
-	var skin_path: String = _skin_map.get(enemy_type, _skin_map["skeleton"])
+	var skin_path: String = _skin_map.get(etype, _skin_map["skeleton"])
 	var skin_scene = load(skin_path) if FileAccess.file_exists(skin_path + ".import") else null
 	if skin_scene != null:
 		var mi: Node3D = skin_scene.instantiate()
@@ -253,14 +303,19 @@ func _spawn_enemy_at(pos: Vector3) -> void:
 	var script = load("res://scripts/combat/enemy_controller.gd")
 	if script != null:
 		body.set_script(script)
-		body.enemy_type     = enemy_type
-		body.loot_table_key = "dungeon_basic"
+		body.enemy_type     = etype
+		body.xp_value       = int(spec["xp"])
+		body.loot_table_key = str(spec["loot"])
 		# Each enemy gets a unique seed derived from the dungeon seed so the same
 		# dungeon layout always produces the same loot (deterministic runs).
 		body.loot_seed      = _dungeon_seed ^ (_enemy_idx * 0x9e3779b9)
 		_enemy_idx         += 1
 
 	get_node("Enemies").add_child(body)
+	# CRITICAL: dynamic spawns happen after level-ready, so _setup_enemies
+	# never saw this enemy — register it or it has no character sheet and
+	# can never attack (the blank-shell bug).
+	register_enemy(body)
 
 # ── Exit portal ───────────────────────────────────────────────────────────────
 

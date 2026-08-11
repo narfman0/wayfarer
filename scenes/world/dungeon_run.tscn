@@ -19,6 +19,7 @@ radius = 0.35
 [node name="DungeonRun" type="Node3D"]
 script = ExtResource("1_dungeon")
 plane_id = "dungeon_run"
+debug_party_level = 5
 bounds_half_size = 40.0
 
 [node name="Environment" type="WorldEnvironment" parent="."]

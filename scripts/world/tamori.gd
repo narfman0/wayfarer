@@ -18,8 +18,9 @@ func _on_level_ready() -> void:
 		_start_opening_dialogue()
 
 ## Spawn a veil portal near the village shrine that leads to a dungeon run.
+## RiftPortal asks for a challenge-rating tier before it travels.
 func _add_dungeon_portal() -> void:
-	var portal_script = load("res://scripts/world/portal.gd")
+	var portal_script = load("res://scripts/world/rift_portal.gd")
 	if portal_script == null:
 		return
 	var portal := Node3D.new()

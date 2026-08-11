@@ -62,6 +62,9 @@ const _TYPE_ARCHETYPES := {
 	"dock_blade": "skirmisher",
 	"veil_fragment": "skirmisher",
 	"cael": "heavy",
+	"skeleton_ranger": "skirmisher",
+	"skeleton_armored": "heavy",
+	"hunter": "heavy",
 }
 
 @export var patrol_points: Array[NodePath] = []

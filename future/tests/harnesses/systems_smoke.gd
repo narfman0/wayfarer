@@ -18,6 +18,7 @@ func _run() -> void:
 	await _test_tb_combat()
 	await _test_boss_refuses_tb()
 	await _test_pathfinding()
+	await _test_dungeon_enemies()
 
 	if _failures.is_empty():
 		print("SYSTEMS SMOKE: ALL PASS")
@@ -149,6 +150,46 @@ func _test_pathfinding() -> void:
 		_check(found, "dungeon map has adjacent carved tiles")
 	level.queue_free()
 	await get_tree().process_frame
+
+# ── Dungeon: real enemies, CR-scaled groups ───────────────────────────────────
+
+func _test_dungeon_enemies() -> void:
+	GameState.flags["dungeon_cr_tier"] = "fair"
+	var fair_cost := await _dungeon_total_cost()
+	_check(fair_cost > 0.0, "fair rift spawns encounter groups (cost %.1f)" % fair_cost)
+
+	GameState.flags["dungeon_cr_tier"] = "deadly"
+	var deadly_cost := await _dungeon_total_cost()
+	_check(deadly_cost > fair_cost,
+		"deadly rift outweighs fair (%.1f > %.1f)" % [deadly_cost, fair_cost])
+	GameState.flags.erase("dungeon_cr_tier")
+
+## Load a dungeon run and return the summed roster cost of its spawns,
+## while asserting every spawn is a REAL enemy (sheet + skin + wiring).
+func _dungeon_total_cost() -> float:
+	GameState.sarro = null
+	GameState.liris = null
+	var level: Node3D = (load("res://scenes/world/dungeon_run.tscn") as PackedScene).instantiate()
+	add_child(level)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var total := 0.0
+	var all_real := true
+	var any_skin := false
+	for e in level.get_node("Enemies").get_children():
+		if not e is EnemyController:
+			continue
+		var ec := e as EnemyController
+		if ec.character == null or ec.xp_value <= 0 or ec.loot_table_key == "":
+			all_real = false
+		if ec.get_node_or_null("Skin") != null:
+			any_skin = true
+		total += float(level.ROSTER.get(ec.enemy_type, {"cost": 1.0})["cost"])
+	_check(all_real, "every dungeon enemy has a character sheet, XP, and loot")
+	_check(any_skin, "dungeon enemies have real skins (not blank capsules)")
+	level.queue_free()
+	await get_tree().process_frame
+	return total
 
 func _seeded_rng(seed_val: int) -> RandomNumberGenerator:
 	var rng := RandomNumberGenerator.new()

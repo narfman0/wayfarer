@@ -141,6 +141,29 @@ static func make_enemy(enemy_type: String = "bandit"):
 			c.stats.strength = 18; c.stats.dexterity = 10; c.stats.constitution = 16
 			c.equipment.equip_armor(_ArmorData.make_chain_mail())
 			c.equipment.equip_main_hand(_WeaponData.make_greatsword())
+		# --- Dungeon roster (CR costs in DungeonRun.ROSTER) ---
+		"skeleton":
+			c.display_name = "Risen Skeleton"
+			c.stats.level = 2; c.stats.max_hp = 20
+			c.stats.strength = 12; c.stats.dexterity = 12; c.stats.constitution = 12
+			c.equipment.equip_main_hand(_WeaponData.make_shortsword())
+		"skeleton_ranger":
+			c.display_name = "Skeleton Ranger"
+			c.stats.level = 2; c.stats.max_hp = 16
+			c.stats.strength = 10; c.stats.dexterity = 15; c.stats.constitution = 10
+			c.equipment.equip_main_hand(_WeaponData.make_dagger())
+		"skeleton_armored":
+			c.display_name = "Armored Skeleton"
+			c.stats.level = 4; c.stats.max_hp = 38
+			c.stats.strength = 15; c.stats.dexterity = 8; c.stats.constitution = 14
+			c.equipment.equip_armor(_ArmorData.make_chain_mail())
+			c.equipment.equip_main_hand(_WeaponData.make_longsword())
+		"hunter":
+			c.display_name = "Grave Hunter"
+			c.stats.level = 6; c.stats.max_hp = 55
+			c.stats.strength = 16; c.stats.dexterity = 14; c.stats.constitution = 14
+			c.equipment.equip_armor(_ArmorData.make_scale_mail())
+			c.equipment.equip_main_hand(_WeaponData.make_greatsword())
 		"veil_rig":
 			c.display_name = "Crystallization Rig"
 			c.stats.level = 5; c.stats.max_hp = 110

@@ -217,7 +217,7 @@ func _test_creation_wizard() -> void:
 	wiz._style_key = "defense"
 	wiz._feat_key = "lucky"
 	var steps: int = wiz.STEP_TITLES.size()
-	_check(steps == 6, "wizard has six steps (%d)" % steps)
+	_check(steps >= 6, "wizard has all steps (%d — grew with species/background/spells)" % steps)
 	var ok := true
 	for i in steps:
 		wiz._step = i

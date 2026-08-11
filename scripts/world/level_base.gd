@@ -417,10 +417,19 @@ func _setup_enemies() -> void:
 		var ec = enemy if enemy.get_script() != null and enemy.has_method("receive_damage") else null
 		if ec == null:
 			continue
-		ec.character = _Factory.make_enemy(ec.enemy_type)
-		ec.died.connect(_on_enemy_died.bind(ec))
-		if ec.is_boss:
-			ec.phase_changed.connect(_on_boss_phase.bind(ec))
+		register_enemy(ec)
+
+## Give an enemy everything a scene enemy gets at level load: its factory
+## character sheet and death/phase wiring. Dynamic spawners (DungeonRun)
+## MUST call this for enemies created after _ready, or they walk around as
+## sheetless shells that can never attack.
+func register_enemy(ec) -> void:
+	if ec.character != null:
+		return
+	ec.character = _Factory.make_enemy(ec.enemy_type)
+	ec.died.connect(_on_enemy_died.bind(ec))
+	if ec.is_boss:
+		ec.phase_changed.connect(_on_boss_phase.bind(ec))
 
 func _check_player_targeting() -> void:
 	var tgt = _player.target_enemy
