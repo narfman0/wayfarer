@@ -47,13 +47,21 @@ var _hud = null       # HUD
 var _attacker = null  # MeleeAttacker
 var _target_ring: MeshInstance3D = null  # gold ring under the clicked enemy
 
+# ── Isometric camera ──────────────────────────────────────────────────────────
+# Locked "game isometric" framing: pivot yawed 45°, camera pitched −30°,
+# orthographic projection. The pivot follows the player each frame; the camera
+# sits back along its own view axis far enough that near-plane clipping never
+# bites (distance is irrelevant to ortho framing — only `size` is).
+const _ISO_YAW   := deg_to_rad(45.0)
+const _ISO_PITCH := deg_to_rad(-30.0)
+const _ISO_DIST  := 30.0   # metres back along the view ray
+
 # ── Dialogue camera ───────────────────────────────────────────────────────────
-# The Camera3D sits aimed straight at the pivot origin, so scaling its local
-# position toward that origin dollies in while staying framed. During dialogue
-# we ease closer, swing the yaw for a 3/4 angle, and lift the focus to torso
-# height; on dialogue end we ease everything back.
-const _CAM_DIALOGUE_DOLLY := 0.6           # fraction of resting camera distance
-const _CAM_DIALOGUE_YAW   := deg_to_rad(28.0)
+# During dialogue we tighten the orthographic size for a close-up and lift the
+# focus to torso height; on dialogue end we ease back to the player's zoom.
+# TODO: the old perspective camera also swung the yaw 28° for a 3/4 angle —
+# that made no sense for a locked isometric view, so it was dropped.
+const _CAM_DIALOGUE_ZOOM  := 0.5           # fraction of the resting ortho size
 const _CAM_DIALOGUE_FOCUS := Vector3(0.0, 1.1, 0.0)  # pivot lift toward the torso
 const _CAM_BLEND_SECS      := 0.7
 var _cam_rest_pos: Vector3 = Vector3.ZERO  # resting Camera3D local position
@@ -61,14 +69,13 @@ var _cam_focus: Vector3 = Vector3.ZERO     # extra pivot offset (dialogue framin
 var _cam_tween: Tween = null
 
 # ── Walk-around zoom ──────────────────────────────────────────────────────────
-# Mouse wheel dollies the gameplay camera between full distance (1.0) and a
-# modest close-up, riding the same scale-toward-pivot trick as the dialogue
-# camera. Ignored during dialogue so the two never fight; the dialogue camera
-# returns to the player's chosen zoom when the conversation ends.
-const _ZOOM_MIN  := 0.55
-const _ZOOM_MAX  := 1.0
-const _ZOOM_STEP := 0.09
-var _zoom: float = 1.0
+# Mouse wheel adjusts the orthographic size (clamped) instead of dollying.
+# Ignored during dialogue so the two never fight; the dialogue camera returns
+# to the player's chosen zoom when the conversation ends.
+const _ZOOM_MIN  := 14.0
+const _ZOOM_MAX  := 26.0
+const _ZOOM_STEP := 2.0
+var _zoom: float = 20.0    # current orthographic size
 var _zoom_tween: Tween = null
 var _dialogue_active := false
 
@@ -79,6 +86,7 @@ var _queued_liris: String = ""
 func _ready() -> void:
 	_player.camera_pivot = _cam_pivot
 	_companion.follow_target = _player
+	_setup_isometric_camera()
 	_cam_rest_pos = _camera.position
 	DialogueManager.dialogue_started.connect(_on_dialogue_started)
 	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
@@ -98,6 +106,17 @@ func _ready() -> void:
 		GameState.save_game()  # autosave on plane entry
 	_on_level_ready()
 	SceneManager.fade_in()
+
+## Force the scene camera into the locked isometric framing regardless of how
+## the .tscn positioned it (legacy scenes carry the old perspective transform).
+func _setup_isometric_camera() -> void:
+	_cam_pivot.rotation = Vector3(0.0, _ISO_YAW, 0.0)
+	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	_camera.size = _zoom
+	_camera.rotation = Vector3(_ISO_PITCH, 0.0, 0.0)
+	_camera.position = Vector3(0.0, sin(-_ISO_PITCH) * _ISO_DIST, cos(_ISO_PITCH) * _ISO_DIST)
+	_camera.near = 0.5
+	_camera.far = 150.0
 
 ## Override for level-specific setup (opening dialogue, triggers, ...).
 func _on_level_ready() -> void:
@@ -298,26 +317,25 @@ func _respawn_party() -> void:
 	GameState.pending_player_pos = null
 	SceneManager.change_level(plane_id)
 
-## Ease the camera into the closer, angled conversation framing.
+## Ease the camera into the closer conversation framing (ortho size shrink).
 func _on_dialogue_started(_resource) -> void:
 	_dialogue_active = true
 	if _zoom_tween != null and _zoom_tween.is_valid():
 		_zoom_tween.kill()
-	_blend_camera(_cam_rest_pos * _CAM_DIALOGUE_DOLLY, _CAM_DIALOGUE_YAW, _CAM_DIALOGUE_FOCUS)
+	_blend_camera(_zoom * _CAM_DIALOGUE_ZOOM, _CAM_DIALOGUE_FOCUS)
 
 ## Ease the camera back to the resting gameplay framing (at the zoom the
 ## player had dialed in before the conversation).
 func _on_dialogue_ended(_resource) -> void:
 	_dialogue_active = false
-	_blend_camera(_cam_rest_pos * _zoom, 0.0, Vector3.ZERO)
+	_blend_camera(_zoom, Vector3.ZERO)
 
-func _blend_camera(cam_pos: Vector3, pivot_yaw: float, focus: Vector3) -> void:
+func _blend_camera(cam_size: float, focus: Vector3) -> void:
 	if _cam_tween != null and _cam_tween.is_valid():
 		_cam_tween.kill()
 	_cam_tween = create_tween().set_parallel(true) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	_cam_tween.tween_property(_camera, "position", cam_pos, _CAM_BLEND_SECS)
-	_cam_tween.tween_property(_cam_pivot, "rotation:y", pivot_yaw, _CAM_BLEND_SECS)
+	_cam_tween.tween_property(_camera, "size", cam_size, _CAM_BLEND_SECS)
 	_cam_tween.tween_property(self, "_cam_focus", focus, _CAM_BLEND_SECS)
 
 func _setup_hud() -> void:
@@ -481,7 +499,7 @@ func _adjust_zoom(step: float) -> void:
 	if _zoom_tween != null and _zoom_tween.is_valid():
 		_zoom_tween.kill()
 	_zoom_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_zoom_tween.tween_property(_camera, "position", _cam_rest_pos * _zoom, 0.18)
+	_zoom_tween.tween_property(_camera, "size", _zoom, 0.18)
 
 # ── Sarro Abilities ───────────────────────────────────────────────────────────
 
