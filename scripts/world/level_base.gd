@@ -7,7 +7,6 @@ extends Node3D
 
 const _Factory       = preload("res://scripts/characters/character_factory.gd")
 const _MeleeAttacker = preload("res://scripts/combat/melee_attacker.gd")
-const _Animator      = preload("res://scripts/world/character_animator.gd")
 const _Scenery       = preload("res://scripts/world/scenery.gd")
 const _Atmosphere    = preload("res://scripts/world/atmosphere.gd")
 const _DamageNumber  = preload("res://scripts/world/damage_number.gd")
@@ -99,7 +98,6 @@ func _ready() -> void:
 	_setup_prop_collision()
 	_setup_bounds()
 	_setup_pathfinding()
-	_setup_animators()
 	_apply_loaded_state()
 	_setup_scenery()  # after _apply_loaded_state so avoid-points use final positions
 	_setup_atmosphere()
@@ -216,18 +214,12 @@ func _setup_atmosphere() -> void:
 	var sun := get_node_or_null("Sun") as DirectionalLight3D
 	_Atmosphere.apply(self, plane_id, sun, ground)
 
-func _setup_animators() -> void:
-	for body in _bodies_with_skins():
-		var skin = body.get_node_or_null("Skin")
-		if skin == null:
-			continue
-		var set_key := "femn" if body == _companion else "masc"
-		_Animator.attach(skin, body, set_key)
-
-func _bodies_with_skins() -> Array:
-	var bodies: Array = [_player, _companion]
-	bodies.append_array(get_tree().get_nodes_in_group("enemies"))
-	return bodies
+# Animators are attached by each body's own controller in _ready()
+# (PlayerController, CompanionFollow, EnemyController, NPC), which picks a more
+# specific clip set than this node can — e.g. EnemyController uses the feminine
+# set for witches and shades. A second level-side pass used to run here and
+# double-applied CharacterAnimator's 180° skin spin, rendering everyone
+# back-to-front; see CharacterAnimator.attach().
 
 ## Apply world state staged by GameState.load_game() or a portal transition.
 func _apply_loaded_state() -> void:
