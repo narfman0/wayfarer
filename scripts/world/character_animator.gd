@@ -25,6 +25,13 @@ const COMBAT_CLIPS := {
 	"attack_heavy": "res://assets/meshes/ANIMATION_Sword_Combat_SourceFiles_v5/SourceFiles/Animations/Polygon/Attack/HeavyCombo01/A_Attack_HeavyCombo01A_Sword.gltf",
 	"hit": "res://assets/meshes/ANIMATION_Sword_Combat_SourceFiles_v5/SourceFiles/Animations/Polygon/Hit/HitReact/A_Hit_F_React_Sword.gltf",
 	"death": "res://assets/meshes/ANIMATION_Sword_Combat_SourceFiles_v5/SourceFiles/Animations/Polygon/Death/A_Death_F_01_Sword.gltf",
+	# Cast gestures — no dedicated spellcasting pack exists, so these are
+	# emote/idle clips picked to fit the fiction: Wardens borrow (prayer),
+	# bolts are pointed redirections, big invocations raise arms.
+	"cast_bolt": "res://assets/meshes/ANIMATION_Idles_SourceFiles_v3/SourceFiles/Animations/Polygon/Masculine/PointHand/Actions/A_POLY_IDL_PointHand_Index_F_Masc.gltf",
+	"cast_heal": "res://assets/meshes/ANIMATION_Idles_SourceFiles_v3/SourceFiles/Animations/Polygon/Masculine/Pray/Actions/A_POLY_IDL_Pray_CrossChest_Masc.gltf",
+	"cast_raise": "res://assets/meshes/ANIMATION_Emotes_And_Taunts_SourceFiles_v1/SourceFiles/Animations/Polygon/Masculine/Happy/A_POLY_EMOT_Happy_ArmsRaised_Masc.gltf",
+	"cast_loop": "res://assets/meshes/ANIMATION_Idles_SourceFiles_v3/SourceFiles/Animations/Polygon/Masculine/Pray/Stances/A_POLY_IDL_Pray_Standing_Loop_Masc.gltf",
 }
 
 ## Marks a skin whose 180° facing correction has been applied, and caches the

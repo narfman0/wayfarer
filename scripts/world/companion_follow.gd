@@ -89,6 +89,7 @@ func _try_auto_heal() -> void:
 func _cast_healing_word(caster, target) -> void:
 	caster.healing_word_charges -= 1
 	_heal_cooldown = 10.0  # don't spam — 10s between auto-heals
+	_CharAnim.oneshot(self, "cast_heal", 1.4, 0.8)
 	var heal: int = _Dice.roll(4) + caster.stats.ability_modifier(4)  # 4 = WIS
 	heal = maxi(1, heal)
 	target.stats.current_hp = mini(target.stats.max_hp, target.stats.current_hp + heal)

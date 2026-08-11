@@ -616,6 +616,9 @@ func start_cast(label: String, secs: float) -> void:
 	_cast_bar.pixel_size = 0.004
 	_cast_bar.modulate = Color(1.0, 0.75, 0.3)
 	add_child(_cast_bar)
+	# Prayer-loop channel under the cast bar; a mid-cast hit react (stun /
+	# Shield Bash) simply plays over it — the interruption reads itself.
+	_CharAnim.oneshot(self, "cast_loop")
 	AudioManager.play_sfx("telegraph", -4.0)
 
 func is_casting() -> bool:

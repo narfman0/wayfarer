@@ -100,10 +100,16 @@ loot table). **Every dynamic spawn goes through
 sheet and death/phase wiring; skipping it yields a blank shell.
 
 **Animation**: `character_animator.gd` retargets Base Locomotion clips
-onto every humanoid and now layers **Sword Combat oneshots** — attack,
-heavy attack (crits), hit react, and death (suppresses the ragdoll-less
-collapse spin) — via `_CharAnim.oneshot(body, clip)` from
-melee_attacker and enemy_controller. Bow Combat clips + bow/arrow
+onto every humanoid and layers **Sword Combat oneshots** — attack,
+heavy attack (crits), hit react, and death — plus **cast gestures**
+(point / prayer / arms-raised / prayer-loop, borrowed from the
+Idles + Emotes packs; no dedicated spellcasting pack exists). Combat
+uses **contact-frame timing**: rolls resolve at swing start, but
+damage/SFX/numbers land at the visual contact — player wind-ups are
+0.18–0.30s with a movement-cancelable follow-through, enemy swings
+wind up 0.5s (dodgeable by stepping out, interrupted by a stagger; the
+wind-up window is where boss impact-area projection will hook in), and
+spells fire at a 0.4s gesture apex. Bow Combat clips + bow/arrow
 meshes are confirmed cooked on srv but intentionally unwired (no player
 ranged weapon exists yet).
 

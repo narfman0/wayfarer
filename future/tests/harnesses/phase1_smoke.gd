@@ -64,8 +64,9 @@ func _test_combat_clips() -> void:
 	_check(skin != null and skin.has_meta("wayfarer_animator"), "player skin has an animator")
 	if skin != null and skin.has_meta("wayfarer_animator"):
 		var anim = skin.get_meta("wayfarer_animator")
-		for clip in ["attack", "attack_heavy", "hit", "death"]:
-			_check(anim._ap.has_animation(clip), "sword clip '%s' loaded" % clip)
+		for clip in ["attack", "attack_heavy", "hit", "death",
+				"cast_bolt", "cast_heal", "cast_raise", "cast_loop"]:
+			_check(anim._ap.has_animation(clip), "combat clip '%s' loaded" % clip)
 
 ## Spells cast through the public cast_spell path: damage lands, slots spend,
 ## cantrips don't, heals restore the caster.
@@ -74,24 +75,28 @@ func _test_spellcasting() -> void:
 	var guard := _level.get_node("Enemies/PenGuard2") as CharacterBody3D
 	var liris = GameState.liris
 
-	# damage spell from Liris (Warden — has slots) at Sarro's target
+	# damage spell from Liris (Warden — has slots) at Sarro's target.
+	# Effects land at the gesture apex (CAST_APEX) — await past it.
 	_player.target_enemy = guard
 	var hp_before: int = guard.character.stats.current_hp
 	var slots_before: int = liris.energy_slots.slots_remaining_at(1)
 	_level.cast_spell(spell_data.make_guiding_bolt(), liris)
-	_check(guard.character.stats.current_hp < hp_before, "damage spell hurts the target")
 	_check(liris.energy_slots.slots_remaining_at(1) == slots_before - 1,
-		"L1 spell spends a slot")
+		"L1 spell spends a slot at cast time")
+	await get_tree().create_timer(0.6).timeout
+	_check(guard.character.stats.current_hp < hp_before, "damage spell hurts the target")
 
 	# cantrip: no slot spent
 	slots_before = liris.energy_slots.slots_remaining_at(1)
 	_level.cast_spell(spell_data.make_sacred_flame(), liris)
 	_check(liris.energy_slots.slots_remaining_at(1) == slots_before,
 		"cantrip spends no slot")
+	await get_tree().create_timer(0.6).timeout
 
 	# heal spell restores the caster
 	liris.stats.current_hp = 20
 	_level.cast_spell(spell_data.make_cure_wounds(), liris)
+	await get_tree().create_timer(0.6).timeout
 	_check(liris.stats.current_hp > 20, "heal spell restores the caster")
 	_player.target_enemy = null
 
