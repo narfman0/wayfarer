@@ -114,7 +114,6 @@ func _build() -> void:
 
 	var top_c: Color  = pal[1]
 	var rock_c: Color = top_c.darkened(SKIRT_DARKEN).lerp(Color(0.25, 0.22, 0.20), 0.4)
-	var cap_y: float  = SKIRT_RINGS[SKIRT_RINGS.size() - 1]
 
 	for row in ROWS:
 		for col in COLS:
@@ -128,10 +127,6 @@ func _build() -> void:
 			# ── top face (normal UP, y=0) ────────────────────────────────────
 			_quad(st, Vector3(x0,0,z1), Vector3(x1,0,z1),
 			          Vector3(x1,0,z0), Vector3(x0,0,z0), Vector3.UP, top_c)
-
-			# ── bottom cap (normal DOWN, at nominal keel depth) ──────────────
-			_under_quad(su, Vector3(x0,cap_y,z0), Vector3(x1,cap_y,z0),
-			                Vector3(x1,cap_y,z1), Vector3(x0,cap_y,z1), rock_c)
 
 			# ── craggy curtains where a neighbour is void (off-grid counts) ──
 			var void_n: bool = row == 0        or int(active[row-1][col]) <= 0
@@ -178,11 +173,8 @@ func _build() -> void:
 func _curtain(su: SurfaceTool, a: Vector2, b: Vector2, color: Color) -> void:
 	var last := SKIRT_RINGS.size() - 1
 	for i in last:
-		_under_quad(su, _rim_vert(a, i),        _rim_vert(b, i),
-		                _rim_vert(b, i + 1),    _rim_vert(a, i + 1), color)
-	var cap_y: float = SKIRT_RINGS[last]
-	_under_quad(su, _rim_vert(a, last),         _rim_vert(b, last),
-	                Vector3(b.x, cap_y, b.y),   Vector3(a.x, cap_y, a.y), color)
+		_under_quad(su, _rim_vert(a, i),     _rim_vert(b, i),
+		                _rim_vert(b, i + 1), _rim_vert(a, i + 1), color)
 
 ## Displaced position of a rim vertex at curtain ring `i`. Purely a function of
 ## the (x, z) rim position and ring index, so vertices shared between adjacent
