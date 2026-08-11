@@ -214,7 +214,11 @@ func _spawn_enemy_at(pos: Vector3) -> void:
 	body.name = "DungeonEnemy%d" % get_tree().get_nodes_in_group("enemies").size()
 	body.collision_layer = 2
 	body.collision_mask  = 1
-	body.global_position = pos
+	# Local, not global: the node is not in the tree yet, so global_position
+	# errors out ("!is_inside_tree()"). Enemies/ sits at the origin so local ==
+	# global, and setting it here means EnemyController._ready() captures the
+	# right _spawn_pos when add_child() below puts it in the tree.
+	body.position = pos
 	body.add_to_group("enemies")
 
 	var col := CollisionShape3D.new()
@@ -274,7 +278,7 @@ func _place_exit_portal() -> void:
 	var portal := Node3D.new()
 	portal.name = "ExitPortal"
 	portal.set_script(portal_script)
-	portal.global_position = Vector3(px, 0, pz)
+	portal.position = Vector3(px, 0, pz)  # local — not in the tree yet; Level is at origin
 	portal.set("display_name", "Exit Dungeon")
 	portal.set("target_plane", exit_to)
 	portal.set("target_spawn_id", exit_spawn)

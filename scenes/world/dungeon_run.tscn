@@ -1,10 +1,12 @@
-[gd_scene load_steps=7 format=3 uid="uid://dungeon_run"]
+[gd_scene load_steps=9 format=3 uid="uid://dungeon_run"]
 
 [ext_resource type="Script" path="res://scripts/world/dungeon_run.gd" id="1_dungeon"]
 [ext_resource type="Script" path="res://scripts/world/player_controller.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/world/companion_follow.gd" id="3_companion"]
 [ext_resource type="Script" path="res://scripts/world/terrain_mesh.gd" id="4_terrain"]
 [ext_resource type="Environment" path="res://resources/env_kaveth.tres" id="5_env"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Rouge_01.gltf" id="c_sarro"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_01.gltf" id="c_liris"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sarro"]
 height = 1.8
@@ -46,6 +48,8 @@ collision_mask = 7
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_sarro")
 
+[node name="Skin" parent="Characters/Sarro" instance=ExtResource("c_sarro")]
+
 [node name="Liris" type="CharacterBody3D" parent="Characters" groups=["companions"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.9, 1.5)
 script = ExtResource("3_companion")
@@ -55,6 +59,8 @@ collision_mask = 3
 [node name="LirisCollision" type="CollisionShape3D" parent="Characters/Liris"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_liris")
+
+[node name="Skin" parent="Characters/Liris" instance=ExtResource("c_liris")]
 
 [node name="CameraPivot" type="Node3D" parent="."]
 
