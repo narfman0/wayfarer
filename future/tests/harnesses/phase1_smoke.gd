@@ -95,6 +95,18 @@ func _test_spellcasting() -> void:
 	_check(liris.stats.current_hp > 20, "heal spell restores the caster")
 	_player.target_enemy = null
 
+	# Liris's auto Healing Word — regression: passed the character SHEET as
+	# the position source and crashed on Resource.global_position.
+	var companion := _level.get_node("Characters/Liris") as CharacterBody3D
+	var sarro = GameState.sarro
+	var hp_low: int = maxi(1, int(sarro.stats.max_hp * 0.2))
+	sarro.stats.current_hp = hp_low
+	liris.healing_word_charges = maxi(1, liris.healing_word_charges)
+	companion._heal_cooldown = 0.0
+	companion._try_auto_heal()
+	_check(sarro.stats.current_hp > hp_low, "Liris auto Healing Word heals Sarro without crashing")
+	sarro.stats.current_hp = sarro.stats.max_hp
+
 func _test_skirmisher_fires() -> void:
 	var guard := _level.get_node("Enemies/PenGuard1") as CharacterBody3D
 	_teleport_party(guard.global_position + Vector3(6.0, 0, 0))

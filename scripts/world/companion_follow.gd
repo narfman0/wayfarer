@@ -92,7 +92,9 @@ func _cast_healing_word(caster, target) -> void:
 	var heal: int = _Dice.roll(4) + caster.stats.ability_modifier(4)  # 4 = WIS
 	heal = maxi(1, heal)
 	target.stats.current_hp = mini(target.stats.max_hp, target.stats.current_hp + heal)
-	_DamageNumber.spawn(get_tree().current_scene, target.global_position + Vector3(0, 1.5, 0),
+	# `target` is a character sheet (Resource) — read position off the body.
+	var pos: Vector3 = follow_target.global_position if follow_target != null else global_position
+	_DamageNumber.spawn(get_tree().current_scene, pos + Vector3(0, 1.5, 0),
 		"+%d HW" % heal, Color(0.4, 1.0, 0.6))
 	print("[Spell] Liris: Healing Word — %s +%d HP" % [target.display_name, heal])
 
