@@ -123,8 +123,9 @@ func _build() -> void:
 	var mesh := st.commit()
 
 	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 0.9
+	mat.metallic = 0.0
 	mesh.surface_set_material(0, mat)
 
 	var mi := MeshInstance3D.new()

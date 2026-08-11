@@ -96,7 +96,8 @@ static func apply(level: Node3D, plane_id: String, sun: DirectionalLight3D,
 	if sun != null:
 		sun.rotation_degrees = spec["sun_rot"]
 		sun.light_color = spec["sun_color"]
-		sun.light_energy = spec["sun_energy"]
+		# Dim the sun to 55% — islands in the void aren't under a noon sky
+		sun.light_energy = spec["sun_energy"] * 0.55
 
 	var hx := 20.0
 	var hz := 20.0
@@ -135,9 +136,21 @@ static func _apply_void_sky(level: Node3D) -> void:
 	env.fog_enabled = false
 	env.volumetric_fog_enabled = false
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color  = Color(0.45, 0.42, 0.55)
-	env.ambient_light_energy = 0.6
+	env.ambient_light_color  = Color(0.30, 0.28, 0.42)  # cool violet-dark ambient
+	env.ambient_light_energy = 0.55
 	we.environment = env
+	_add_fill_light(level)
+
+## Soft cool fill light from below-opposite the sun — gives the underside of
+## islands a faint blue-violet rim and stops lit materials going pure black.
+static func _add_fill_light(level: Node3D) -> void:
+	var fill := DirectionalLight3D.new()
+	fill.name = "VoidFill"
+	fill.light_color = Color(0.40, 0.45, 0.70)   # cool blue-violet
+	fill.light_energy = 0.25
+	fill.shadow_enabled = false
+	fill.rotation_degrees = Vector3(40.0, -145.0, 0.0)  # low angle, opposite sun
+	level.add_child(fill)
 
 static func _make_field(p: Dictionary, hx: float, hz: float) -> CPUParticles3D:
 	var field := CPUParticles3D.new()
