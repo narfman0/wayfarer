@@ -1,5 +1,5 @@
 ## Procedurally generated dungeon encounter — room+corridor BSP layout.
-## Each run carves 4-6 rooms of random sizes into a 20×20 stone MAP,
+## Each run carves 4-6 rooms of random sizes into a 32×32 stone map,
 ## connects them with L-shaped corridors, spawns 1-2 enemies per room
 ## (skipping the entry room), and places an exit portal in the final room.
 class_name DungeonRun
@@ -7,6 +7,14 @@ extends WayfarerLevel
 
 const _VeilPortal = preload("res://scripts/world/portal.gd")
 const _EnemyController = preload("res://scripts/combat/enemy_controller.gd")
+const _IslandGrid = preload("res://scripts/world/island_grid.gd")
+
+## Grid dimensions and metres-per-tile from the shared island grid spec.
+const _N: int = _IslandGrid.DEFAULT_GRID_SIZE      # 32
+const _TILE: float = _IslandGrid.TILE_SIZE         # 2.0
+## Room extents in tiles (was 3–6 on the old 20-wide map).
+const _ROOM_MIN := 4
+const _ROOM_MAX := 8
 
 @export var exit_to: String = "tamori"
 @export var exit_spawn: String = "dungeon_return"
@@ -18,7 +26,7 @@ const _EnemyController = preload("res://scripts/combat/enemy_controller.gd")
 
 var _rng := RandomNumberGenerator.new()
 var _rooms: Array = []        # each: {x, y, w, h}
-var _dungeon_map: Array = []  # 20×20 int heights
+var _dungeon_map: Array = []  # 32×32 int heights
 ## Per-run seed captured after randomize(); drives deterministic loot per position.
 var _dungeon_seed: int = 0
 ## Counter so each enemy gets a unique offset from the dungeon seed.
@@ -36,12 +44,13 @@ func _on_level_ready() -> void:
 # ── Map generation ────────────────────────────────────────────────────────────
 
 func _generate_map() -> void:
-	# Fill everything with height-2 stone walls.
+	# Fill with height-2 stone walls; the outer ring is void (island edge).
 	_dungeon_map = []
-	for _r in 20:
+	for r in _N:
 		var row: Array = []
-		for _c in 20:
-			row.append(2)
+		for c in _N:
+			var edge: bool = r == 0 or c == 0 or r == _N - 1 or c == _N - 1
+			row.append(0 if edge else 2)
 		_dungeon_map.append(row)
 
 	# Carve rooms.
@@ -51,7 +60,7 @@ func _generate_map() -> void:
 
 	if _rooms.is_empty():
 		# Fallback: single open room
-		_rooms.append({x=4, y=4, w=12, h=12})
+		_rooms.append({x=8, y=8, w=16, h=16})
 
 	# Sort rooms left-to-right so entry/exit are predictable.
 	_rooms.sort_custom(func(a, b): return a.x < b.x)
@@ -82,10 +91,11 @@ func _generate_map() -> void:
 
 func _try_place_room() -> void:
 	for _attempt in 30:
-		var w: int = _rng.randi_range(3, 6)
-		var h: int = _rng.randi_range(3, 6)
-		var x: int = _rng.randi_range(1, 19 - w)
-		var y: int = _rng.randi_range(1, 19 - h)
+		var w: int = _rng.randi_range(_ROOM_MIN, _ROOM_MAX)
+		var h: int = _rng.randi_range(_ROOM_MIN, _ROOM_MAX)
+		# Keep a stone shell between rooms and the void rim (tiles 2.._N-3).
+		var x: int = _rng.randi_range(2, _N - 3 - w)
+		var y: int = _rng.randi_range(2, _N - 3 - h)
 		var overlap := false
 		for rm in _rooms:
 			if x < rm.x + rm.w + 1 and x + w > rm.x - 1 \
@@ -99,7 +109,7 @@ func _try_place_room() -> void:
 func _carve_rect(rx: int, ry: int, rw: int, rh: int, height: int) -> void:
 	for r in range(ry, ry + rh):
 		for c in range(rx, rx + rw):
-			if r >= 0 and r < 20 and c >= 0 and c < 20:
+			if r >= 1 and r < _N - 1 and c >= 1 and c < _N - 1:
 				_dungeon_map[r][c] = height
 
 # ── Apply to terrain ──────────────────────────────────────────────────────────
@@ -109,15 +119,26 @@ func _apply_map_to_terrain() -> void:
 	if terrain == null:
 		return
 	if terrain.has_method("set_palette"):
-		terrain.set_palette([
+		var pal: Array[Color] = [
 			Color(0.08, 0.07, 0.06),  # 0  abyss
 			Color(0.22, 0.20, 0.18),  # 1  dungeon floor (dark stone)
 			Color(0.32, 0.29, 0.25),  # 2  wall stone
 			Color(0.42, 0.38, 0.32),  # 3  upper stone
-		])
+		]
+		terrain.set_palette(pal)
 	if terrain.has_method("rebuild_from"):
 		terrain.rebuild_from(_dungeon_map)
+	# Refresh the player's click-to-walk grid for the generated layout.
+	var player = get_node_or_null("Characters/Sarro")
+	if player != null and player.has_method("rebuild_pathfinding"):
+		player.rebuild_pathfinding(_dungeon_map)
 	_scatter_dungeon_props()
+
+## Room-centre tile coords → world position (grid centred on the origin).
+func _room_center(rm) -> Vector3:
+	return Vector3(
+		(rm.x + rm.w * 0.5 - _N * 0.5) * _TILE, 0.0,
+		(rm.y + rm.h * 0.5 - _N * 0.5) * _TILE)
 
 # ── Dungeon prop decoration ───────────────────────────────────────────────────
 
@@ -144,10 +165,11 @@ func _scatter_dungeon_props() -> void:
 	# Each room gets corner pillars and a candle; non-entry rooms get rubble.
 	for i in _rooms.size():
 		var rm = _rooms[i]
-		var cx: float = (rm.x + rm.w * 0.5 - 10.0) * 4.0
-		var cz: float = (rm.y + rm.h * 0.5 - 10.0) * 4.0
-		var hw: float = rm.w * 2.0 - 1.0
-		var hh: float = rm.h * 2.0 - 1.0
+		var center := _room_center(rm)
+		var cx: float = center.x
+		var cz: float = center.z
+		var hw: float = rm.w * _TILE * 0.5 - 0.5
+		var hh: float = rm.h * _TILE * 0.5 - 0.5
 
 		# Candle near the centre of every room.
 		_place_prop(props_node, _DUNGEON_DIR + _CANDLE_MESH,
@@ -182,12 +204,11 @@ func _spawn_enemies() -> void:
 	# Skip entry room (index 0); spawn 1 enemy per remaining room.
 	for i in range(1, _rooms.size()):
 		var rm = _rooms[i]
-		var cx: float = (rm.x + rm.w * 0.5 - 10.0) * 4.0
-		var cz: float = (rm.y + rm.h * 0.5 - 10.0) * 4.0
-		_spawn_enemy_at(Vector3(cx, 0.9, cz))
+		var center := _room_center(rm)
+		_spawn_enemy_at(Vector3(center.x, 0.9, center.z))
 		# Two enemies in the last room.
 		if i == _rooms.size() - 1 and _rooms.size() > 2:
-			_spawn_enemy_at(Vector3(cx + 2.0, 0.9, cz - 1.5))
+			_spawn_enemy_at(Vector3(center.x + 2.0, 0.9, center.z - 1.5))
 
 func _spawn_enemy_at(pos: Vector3) -> void:
 	var body := CharacterBody3D.new()
@@ -244,8 +265,9 @@ func _place_exit_portal() -> void:
 	if _rooms.is_empty():
 		return
 	var last = _rooms[-1]
-	var px: float = (last.x + last.w * 0.5 - 10.0) * 4.0
-	var pz: float = (last.y + last.h * 0.5 - 10.0) * 4.0
+	var center := _room_center(last)
+	var px: float = center.x
+	var pz: float = center.z
 
 	var portal_script = load("res://scripts/world/portal.gd")
 	if portal_script == null:
@@ -266,8 +288,9 @@ func _place_player_at_entry() -> void:
 	if _rooms.is_empty():
 		return
 	var entry = _rooms[0]
-	var px: float = (entry.x + entry.w * 0.5 - 10.0) * 4.0
-	var pz: float = (entry.y + entry.h * 0.5 - 10.0) * 4.0
+	var center := _room_center(entry)
+	var px: float = center.x
+	var pz: float = center.z
 	var player := get_node_or_null("Characters/Sarro")
 	var companion := get_node_or_null("Characters/Liris")
 	if player != null:
