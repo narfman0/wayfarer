@@ -9,11 +9,13 @@ extends Control
 @onready var _enemy_name: Label = $EnemyRow/EnemyName
 
 const _Progression = preload("res://scripts/characters/character_progression.gd")
+const _PartyPanel  = preload("res://scripts/ui/party_panel.gd")
+const _SkillBar    = preload("res://scripts/ui/skill_bar.gd")
 
 var _tracked_enemy: EnemyController = null
 var _toast: Label
-var _sarro_label: Label
-var _liris_label: Label
+var _party_panel: PartyPanel
+var _skill_bar: SkillBar
 var _pending_label: Label
 var _rest_panel: PanelContainer
 var _btn_short_rest: Button
@@ -31,17 +33,16 @@ func _ready() -> void:
 	_toast.visible = false
 	add_child(_toast)
 
-	_sarro_label = Label.new()
-	_sarro_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_sarro_label.position.y = -62
-	_sarro_label.add_theme_font_size_override("font_size", 15)
-	add_child(_sarro_label)
+	_party_panel = _PartyPanel.new()
+	add_child(_party_panel)
 
-	_liris_label = Label.new()
-	_liris_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_liris_label.position.y = -40
-	_liris_label.add_theme_font_size_override("font_size", 15)
-	add_child(_liris_label)
+	_skill_bar = _SkillBar.new()
+	add_child(_skill_bar)
+
+	_party_panel.character_selected.connect(_skill_bar.build_for)
+
+	if GameState.sarro != null:
+		_skill_bar.build_for(GameState.sarro)
 
 	_pending_label = Label.new()
 	_pending_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -180,7 +181,6 @@ func show_toast_text(text: String) -> void:
 
 func _process(_delta: float) -> void:
 	_refresh_party()
-	_refresh_hotbar()
 	if _pending_label != null:
 		_pending_label.visible = GameState.sarro != null \
 			and _Progression.is_choice_driven(GameState.sarro) \
@@ -191,33 +191,6 @@ func _process(_delta: float) -> void:
 		_btn_short_rest.disabled = CombatManager.in_combat
 	if _btn_long_rest != null:
 		_btn_long_rest.disabled = CombatManager.in_combat
-
-func _refresh_hotbar() -> void:
-	if GameState.sarro != null and _sarro_label != null:
-		var sc = GameState.sarro
-		var sw := "Ready" if not sc.second_wind_used else "Spent"
-		var line := "Sarro — [1] Second Wind: %s" % sw
-		if sc.stats.level >= 2:
-			var surge: String
-			if sc.subclass_key == "freeblade":
-				surge = "Ready" if sc.action_surge_cd <= 0.0 else "%ds" % ceili(sc.action_surge_cd)
-			else:
-				surge = "Ready" if not sc.action_surge_used else "Spent"
-			line += "  [6] Action Surge: %s" % surge
-		if sc.stats.level >= 3:
-			var sb := "Ready" if sc.shield_bash_cd <= 0.0 else "%ds" % ceili(sc.shield_bash_cd)
-			line += "  [5] Shield Bash: %s" % sb
-		_sarro_label.text = line
-		_sarro_label.modulate = Color(0.6, 1.0, 0.7) if not sc.second_wind_used or sc.shield_bash_cd <= 0.0 else Color(0.55, 0.55, 0.6)
-
-	if GameState.liris != null and _liris_label != null:
-		var lc = GameState.liris
-		var gb := "Ready" if lc.guiding_bolt_ready else "Spent"
-		var hw := "%d charge" % lc.healing_word_charges if lc.healing_word_charges == 1 else "Spent"
-		var cd := "Ready" if lc.channel_divinity_ready else "Spent"
-		_liris_label.text = "Liris — [2] Guiding Bolt: %s  [3] Healing Word: %s  [4] Channel Divinity: %s" % [gb, hw, cd]
-		var any_ready: bool = lc.guiding_bolt_ready or lc.healing_word_charges > 0 or lc.channel_divinity_ready
-		_liris_label.modulate = Color(0.6, 0.8, 1.0) if any_ready else Color(0.55, 0.55, 0.6)
 
 func track_enemy(enemy: EnemyController) -> void:
 	if _tracked_enemy != null:

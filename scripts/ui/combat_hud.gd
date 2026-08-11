@@ -17,18 +17,6 @@ var _btn_tb:        Button
 var _lbl_move:      Label
 var _lbl_turn:      Label
 
-# Ability row (second row, keybindings 1-6)
-var _btn_second_wind:    Button
-var _btn_guiding_bolt:   Button
-var _btn_healing_word:   Button
-var _btn_channel_div:    Button
-var _btn_shield_bash:    Button
-var _btn_action_surge:   Button
-var _btn_spells:         Button
-
-# Spell popup
-var _spell_popup: PanelContainer = null
-
 # Reaction prompt overlay
 var _reaction_panel: PanelContainer
 var _reaction_label: Label
@@ -52,7 +40,7 @@ func _ready() -> void:
 func _build_ui() -> void:
 	_panel = PanelContainer.new()
 	_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_panel.offset_top    = -72
+	_panel.offset_top    = -68
 	_panel.offset_bottom = 0
 	_panel.offset_left   = 0
 	_panel.offset_right  = 0
@@ -96,38 +84,6 @@ func _build_ui() -> void:
 
 	_btn_tb = _make_btn("[T] Exit TB", hbox, _on_toggle_tb)
 	_btn_tb.add_theme_color_override("font_color", Color(0.7, 0.7, 1.0))
-
-	# ── Ability row (below main bar) ─────────────────────────────────────────
-	var ability_panel := PanelContainer.new()
-	ability_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	ability_panel.offset_top    = -120
-	ability_panel.offset_bottom = -72
-	ability_panel.offset_left   = 0
-	ability_panel.offset_right  = 0
-	var ab_style := StyleBoxFlat.new()
-	ab_style.bg_color     = Color(0.05, 0.05, 0.07, 0.80)
-	ab_style.border_color = Color(0.4, 0.35, 0.2, 0.8)
-	ab_style.set_border_width_all(1)
-	ability_panel.add_theme_stylebox_override("panel", ab_style)
-
-	var ahbox := HBoxContainer.new()
-	ahbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	ahbox.add_theme_constant_override("separation", 6)
-	ability_panel.add_child(ahbox)
-
-	_btn_second_wind  = _make_btn("[1] 2nd Wind",  ahbox, func(): _trigger_ability("ability_1"))
-	_btn_guiding_bolt = _make_btn("[2] Guiding Bolt", ahbox, func(): _trigger_ability("ability_2"))
-	_btn_healing_word = _make_btn("[3] Heal Word", ahbox, func(): _trigger_ability("ability_3"))
-	_btn_channel_div  = _make_btn("[4] Chan. Div", ahbox, func(): _trigger_ability("ability_4"))
-	_btn_shield_bash  = _make_btn("[5] Shield Bash", ahbox, func(): _trigger_ability("ability_5"))
-	_btn_action_surge = _make_btn("[6] Act. Surge", ahbox, func(): _trigger_ability("ability_6"))
-
-	var sep3 := VSeparator.new()
-	ahbox.add_child(sep3)
-	_btn_spells = _make_btn("Spells", ahbox, _on_spells)
-	_btn_spells.add_theme_color_override("font_color", Color(0.7, 0.8, 1.0))
-
-	add_child(ability_panel)
 
 	# ── Reaction prompt overlay ───────────────────────────────────────────────
 	_reaction_panel = PanelContainer.new()
@@ -284,12 +240,6 @@ func _on_toggle_tb() -> void:
 		CombatManager.enter_tb_mode()
 		_btn_tb.text = "[T] Exit TB"
 
-func _trigger_ability(action: String) -> void:
-	# Simulate the keybind so level_base handles it (including TB economy).
-	Input.action_press(action)
-	await get_tree().process_frame
-	Input.action_release(action)
-
 func _on_reaction_available(type: String, trigger: Node, _reactor: Node) -> void:
 	if type == "opportunity_attack":
 		_reaction_trigger_node = trigger
@@ -312,7 +262,6 @@ func _refresh() -> void:
 	var is_my_turn := CombatManager.is_player_turn()
 	var player := _get_player()
 	var has_act := is_my_turn and player != null and CombatManager.has_action(player)
-	var has_bon := is_my_turn and player != null and CombatManager.has_bonus_action(player)
 	var has_mov := is_my_turn and player != null and CombatManager.movement_left(player) > 0.05
 
 	_btn_move.disabled       = not is_my_turn or not has_mov
@@ -330,7 +279,6 @@ func _refresh() -> void:
 		_lbl_turn.text = ""
 
 	_refresh_move_label()
-	_refresh_ability_buttons(has_act, has_bon, is_my_turn)
 
 func _refresh_move_label() -> void:
 	var player := _get_player()
@@ -341,121 +289,9 @@ func _refresh_move_label() -> void:
 	else:
 		_lbl_move.text = ""
 
-func _refresh_ability_buttons(has_act: bool, has_bon: bool, is_my_turn: bool) -> void:
-	var s = GameState.sarro
-	var l = GameState.liris
-	if _btn_second_wind != null:
-		_btn_second_wind.disabled  = not has_bon or s == null or s.second_wind_used
-	if _btn_guiding_bolt != null:
-		_btn_guiding_bolt.disabled = not has_act or l == null or not l.guiding_bolt_ready
-	if _btn_healing_word != null:
-		_btn_healing_word.disabled = not has_bon or l == null or l.healing_word_charges <= 0
-	if _btn_channel_div != null:
-		_btn_channel_div.disabled  = not has_act or l == null or not l.channel_divinity_ready
-	if _btn_shield_bash != null:
-		_btn_shield_bash.disabled  = not has_act or s == null or s.shield_bash_cd > 0.0 or (s.stats != null and s.stats.level < 3)
-	if _btn_action_surge != null:
-		var surge_rdy: bool = s != null and (
-			(s.subclass_key == "freeblade" and s.action_surge_cd <= 0.0) or
-			(s.subclass_key != "freeblade" and not s.action_surge_used)
-		) and (s.stats == null or s.stats.level >= 2)
-		_btn_action_surge.disabled = not surge_rdy
-	if _btn_spells != null:
-		var has_spells: bool = s != null and (s.cantrips.size() > 0 or s.known_spells.size() > 0)
-		_btn_spells.disabled = not is_my_turn or not has_spells
-
 func _get_player() -> Node:
 	var players := get_tree().get_nodes_in_group("players")
 	return players[0] if players.size() > 0 else null
-
-# ── Spell popup ───────────────────────────────────────────────────────────────
-
-func _on_spells() -> void:
-	if not CombatManager.is_player_turn():
-		return
-	if _spell_popup != null and _spell_popup.visible:
-		_spell_popup.queue_free()
-		_spell_popup = null
-		return
-	_build_spell_popup()
-
-func _build_spell_popup() -> void:
-	if _spell_popup != null:
-		_spell_popup.queue_free()
-	_spell_popup = PanelContainer.new()
-	_spell_popup.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_spell_popup.offset_top    = -340
-	_spell_popup.offset_bottom = -122
-	_spell_popup.offset_left   = 200
-	_spell_popup.offset_right  = -200
-	var style := StyleBoxFlat.new()
-	style.bg_color     = Color(0.07, 0.06, 0.14, 0.96)
-	style.border_color = Color(0.5, 0.4, 0.9, 1.0)
-	style.set_border_width_all(2)
-	style.corner_radius_top_left    = 6
-	style.corner_radius_top_right   = 6
-	style.corner_radius_bottom_left = 6
-	style.corner_radius_bottom_right = 6
-	_spell_popup.add_theme_stylebox_override("panel", style)
-
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 180)
-	_spell_popup.add_child(scroll)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-	scroll.add_child(vbox)
-
-	var title := Label.new()
-	title.text = "── Cantrips ──"
-	title.add_theme_font_size_override("font_size", 14)
-	title.add_theme_color_override("font_color", Color(0.85, 0.75, 1.0))
-	vbox.add_child(title)
-
-	var sarro = GameState.sarro
-	if sarro != null:
-		for sp in sarro.cantrips:
-			vbox.add_child(_spell_btn(sp, false))
-
-		var lvl_title := Label.new()
-		lvl_title.text = "── Level 1 Spells ──"
-		lvl_title.add_theme_font_size_override("font_size", 14)
-		lvl_title.add_theme_color_override("font_color", Color(0.85, 0.75, 1.0))
-		vbox.add_child(lvl_title)
-
-		for sp in sarro.known_spells:
-			var can_cast: bool = _can_cast_l1()
-			vbox.add_child(_spell_btn(sp, not can_cast))
-
-	var close_btn := Button.new()
-	close_btn.text = "Close"
-	close_btn.pressed.connect(func():
-		if _spell_popup != null: _spell_popup.queue_free(); _spell_popup = null)
-	vbox.add_child(close_btn)
-
-	add_child(_spell_popup)
-
-func _spell_btn(sp, disabled: bool) -> Button:
-	var btn := Button.new()
-	var cost_str := " [bonus]" if sp.is_bonus_action else " [action]"
-	btn.text = "%s%s — %s" % [sp.spell_name, cost_str, sp.description]
-	btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn.custom_minimum_size = Vector2(0, 36)
-	btn.add_theme_font_size_override("font_size", 12)
-	btn.disabled = disabled
-	var sp_ref = sp
-	btn.pressed.connect(func():
-		if _spell_popup != null: _spell_popup.queue_free(); _spell_popup = null
-		spell_requested.emit(sp_ref))
-	return btn
-
-func _can_cast_l1() -> bool:
-	var sarro = GameState.sarro
-	if sarro == null:
-		return false
-	if sarro.energy_slots != null and sarro.energy_slots.has_method("slots_remaining"):
-		return sarro.energy_slots.slots_remaining(1) > 0
-	return true   # fallback: allow cast if no slot tracker
 
 # ── Keyboard shortcut ─────────────────────────────────────────────────────────
 
