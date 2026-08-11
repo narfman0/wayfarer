@@ -246,6 +246,12 @@ func take_turn() -> void:
 	if dist > MELEE_DIST and dist <= speed_m + MELEE_DIST:
 		_state = State.CHASE
 
+	# The RT chase branches auto-fire on their own timers; hold them past
+	# the movement window so a TB turn is one move + ONE deliberate action.
+	_ranged_timer = maxf(_ranged_timer, 1.2)
+	_support_timer = maxf(_support_timer, 1.2)
+	_slam_timer = maxf(_slam_timer, 1.2)
+
 	await get_tree().create_timer(0.9).timeout
 
 	# Opportunity attack: player was adjacent and we moved away.
@@ -257,16 +263,53 @@ func take_turn() -> void:
 					await get_tree().create_timer(0.6).timeout
 				break  # one OA per move
 
-	# Attack if now in range.
+	# Action phase — archetype-aware. Telegraph-dodging is inherently
+	# real-time (off-turn players are frozen), so heavies fight as melee
+	# here; skirmishers volley (an honest attack roll), supports heal.
 	if not _dead and _target != null:
-		var d2 := global_position.distance_to(_target.global_position)
-		if d2 <= MELEE_DIST * 1.5:
-			_fire_attack()
-			await get_tree().create_timer(0.5).timeout
+		await _take_turn_action()
 
 	set_meta("taking_turn", false)
 	if CombatManager.in_combat:
 		CombatManager.end_turn()
+
+func _take_turn_action() -> void:
+	var dist := global_position.distance_to(_target.global_position)
+	match _arch:
+		"skirmisher":
+			if dist <= RANGED_MAX:
+				_fire_projectile()
+				await get_tree().create_timer(0.7).timeout
+				return
+		"support":
+			var patient = _most_wounded_ally()
+			if patient != null:
+				start_cast("Mending Litany", 0.6)  # brief flourish, then heal
+				if not cast_finished.is_connected(_on_support_cast):
+					cast_finished.connect(_on_support_cast)
+				await get_tree().create_timer(0.9).timeout
+				return
+	if dist <= MELEE_DIST * 1.5:
+		_fire_attack()
+		await get_tree().create_timer(0.5).timeout
+
+## Living packmate below max HP within litany range, or null.
+func _most_wounded_ally():
+	var best = null
+	var best_frac := 1.0
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not e is EnemyController or e == self:
+			continue
+		var ec := e as EnemyController
+		if ec.character == null or ec._dead:
+			continue
+		if global_position.distance_to(ec.global_position) > SUPPORT_RANGE:
+			continue
+		var frac: float = float(ec.character.stats.current_hp) / maxf(1.0, ec.character.stats.max_hp)
+		if frac < 1.0 and frac < best_frac:
+			best_frac = frac
+			best = ec
+	return best
 
 func take_rt_action() -> void:
 	pass  # RT mode: _physics_process AI loop handles everything

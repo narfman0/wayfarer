@@ -236,9 +236,11 @@ func _on_toggle_tb() -> void:
 	if CombatManager.tb_mode:
 		CombatManager.exit_tb_mode()
 		_btn_tb.text = "[T] Enter TB"
-	else:
-		CombatManager.enter_tb_mode()
+	elif CombatManager.enter_tb_mode():
 		_btn_tb.text = "[T] Exit TB"
+	else:
+		# refused — a boss fight won't wait its turn
+		_lbl_turn.text = "The Veil won't wait — not in this fight."
 
 func _on_reaction_available(type: String, trigger: Node, _reactor: Node) -> void:
 	if type == "opportunity_attack":

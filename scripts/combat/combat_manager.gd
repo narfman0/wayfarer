@@ -47,12 +47,16 @@ func enter_combat(combatants: Array) -> void:
 			if not _queue.has(c):
 				_queue.append(c)
 				_reset_turn_data(c)
+		if tb_mode and boss_in_combat():
+			exit_tb_mode()  # a boss joined mid-fight: bosses don't take turns
 		return
 
 	in_combat = true
 	_queue = _roll_initiative(combatants)
 	for c in _queue:
 		_reset_turn_data(c)
+	if tb_mode and boss_in_combat():
+		exit_tb_mode()  # TB latched from an earlier fight; bosses refuse it
 
 	combat_started.emit(_queue)
 	if tb_mode:
@@ -82,14 +86,26 @@ func end_turn() -> void:
 	_reset_turn_data(_queue[_turn_idx])
 	_start_turn(_queue[_turn_idx])
 
-func enter_tb_mode() -> void:
+## Returns false (and stays real-time) when a boss is in the fight — boss
+## encounters are timed orchestrations (channels, telegraph sequences,
+## phase timers) that turn order would trivialize or break.
+func enter_tb_mode() -> bool:
 	if tb_mode:
-		return
+		return true
+	if boss_in_combat():
+		return false
 	tb_mode = true
 	tb_mode_changed.emit(true)
 	if in_combat and not _queue.is_empty():
 		_turn_idx = 0
 		_start_turn(_queue[0])
+	return true
+
+func boss_in_combat() -> bool:
+	for c in _queue:
+		if is_instance_valid(c) and c.get("is_boss") == true:
+			return true
+	return false
 
 func exit_tb_mode() -> void:
 	if not tb_mode:
