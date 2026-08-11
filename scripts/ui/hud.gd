@@ -14,8 +14,8 @@ const _SkillBar    = preload("res://scripts/ui/skill_bar.gd")
 
 var _tracked_enemy: EnemyController = null
 var _toast: Label
-var _party_panel: PartyPanel
-var _skill_bar: SkillBar
+var _party_panel
+var _skill_bar
 var _pending_label: Label
 var _rest_panel: PanelContainer
 var _btn_short_rest: Button

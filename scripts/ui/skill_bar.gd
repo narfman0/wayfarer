@@ -7,7 +7,7 @@ const _SkillTooltip    = preload("res://scripts/ui/skill_tooltip.gd")
 
 var _abilities: Array[Dictionary] = []
 var _slots: Array[Button] = []
-var _tooltip: SkillTooltip
+var _tooltip
 var _current_char = null
 
 func _ready() -> void:
