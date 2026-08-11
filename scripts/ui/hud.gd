@@ -2,8 +2,6 @@
 class_name HUD
 extends Control
 
-@onready var _sarro_bar:  ProgressBar = $Party/SarroHP
-@onready var _liris_bar:  ProgressBar = $Party/LirisHP
 @onready var _enemy_row:  HBoxContainer = $EnemyRow
 @onready var _enemy_bar:  ProgressBar = $EnemyRow/EnemyHP
 @onready var _enemy_name: Label = $EnemyRow/EnemyName
@@ -25,6 +23,10 @@ var _gold_label: Label
 func _ready() -> void:
 	theme = UITheme.theme
 	_enemy_row.visible = false
+	# Hide the old scene-based HP bars — replaced by PartyPanel
+	var old_party := get_node_or_null("Party")
+	if old_party:
+		old_party.visible = false
 
 	_toast = Label.new()
 	_toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -180,7 +182,6 @@ func show_toast_text(text: String) -> void:
 	_show_toast(text)
 
 func _process(_delta: float) -> void:
-	_refresh_party()
 	if _pending_label != null:
 		_pending_label.visible = GameState.sarro != null \
 			and _Progression.is_choice_driven(GameState.sarro) \
@@ -211,14 +212,6 @@ func track_enemy(enemy: EnemyController) -> void:
 	if enemy.character != null:
 		_enemy_bar.max_value = enemy.character.stats.max_hp
 		_enemy_bar.value     = enemy.character.stats.current_hp
-
-func _refresh_party() -> void:
-	if GameState.sarro != null:
-		_sarro_bar.max_value = GameState.sarro.stats.max_hp
-		_sarro_bar.value     = GameState.sarro.stats.current_hp
-	if GameState.liris != null:
-		_liris_bar.max_value = GameState.liris.stats.max_hp
-		_liris_bar.value     = GameState.liris.stats.current_hp
 
 func _on_enemy_hp(current: int, max_hp: int) -> void:
 	_enemy_bar.max_value = max_hp
