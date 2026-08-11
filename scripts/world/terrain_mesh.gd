@@ -125,8 +125,12 @@ func _build() -> void:
 			var z1 := z0 + CELL
 
 			# ── top face (normal UP, y=0) ────────────────────────────────────
-			_quad(st, Vector3(x0,0,z1), Vector3(x1,0,z1),
-			          Vector3(x1,0,z0), Vector3(x0,0,z0), Vector3.UP, top_c)
+			# Wound clockwise seen from above: Godot front-faces are clockwise
+			# (PlaneMesh FACE_Y has shading normal +Y but a right-hand-rule
+			# normal of -Y). Reversing these four makes the surface render
+			# from above instead of only from underneath.
+			_quad(st, Vector3(x0,0,z0), Vector3(x1,0,z0),
+			          Vector3(x1,0,z1), Vector3(x0,0,z1), Vector3.UP, top_c)
 
 			# ── craggy curtains where a neighbour is void (off-grid counts) ──
 			var void_n: bool = row == 0        or int(active[row-1][col]) <= 0

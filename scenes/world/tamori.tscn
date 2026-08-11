@@ -42,8 +42,7 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Sorcerer.gltf" id="c_npc_m2"]
 [ext_resource type="Environment" path="res://resources/env_village.tres" id="env_shared"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
-size = Vector3(80, 0.4, 80)
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_ground"]
 size = Vector3(80, 0.2, 80)
@@ -87,7 +86,7 @@ mesh = SubResource("BoxMesh_ground")
 surface_material_override/0 = SubResource("Mat_ground")
 
 [node name="GroundCollision" type="CollisionShape3D" parent="Level/Ground"]
-shape = SubResource("BoxShape3D_ground")
+shape = SubResource("WorldBoundaryShape3D_1")
 
 [node name="Props" type="Node3D" parent="Level"]
 
