@@ -1,151 +1,163 @@
 # Wayfarer — State & Architecture
 
-As-built reference, 2026-08-03. This documents what IS in the repo, not
-plans. Design-intent references (kept): `design/bosses.md`,
-`design/gameplay.md`, `design/levels.md`, `design/progression.md`,
-`design/setting-classes.md`, `narrative/`.
+As-built reference, updated 2026-08-11 after the BG3-direction pivot.
+This documents what IS in the repo, not plans. Design-intent references
+(kept): `design/bosses.md`, `design/gameplay.md`, `design/levels.md`,
+`design/progression.md`, `design/setting-classes.md`, `narrative/`.
+Where those docs and this one disagree, this one describes the build.
 
 ## What the game is right now
 
-A playable, start-to-finish 3D action RPG in Godot 4.7: two-character
-party (Sarro + companion Liris), SRD 5e-style dice combat, click/WASD
-movement, fourteen scenes across seven planes, three telegraph-driven
-boss fights, six meaningful story choices threading a conviction score
-into two different endings. All art is Synty placeholder kits over
-graybox arenas; all audio is synthesized placeholder WAV.
+A playable, start-to-finish 3D RPG in Godot 4.7 with a **locked
+orthographic isometric camera** (45°/−30°): two-character party (a fully
+built player character + Liris, a customizable Warden companion), SRD 5e
+combat that runs **real-time by default with an opt-in BG3-style
+turn-based mode**, fifteen scenes across seven planes plus a procedural
+dungeon, three telegraph-driven boss fights, a gold/inventory/shop
+economy, and six meaningful story choices threading a conviction score
+into two endings. Art is Synty kits (now including Samurai Empire and
+Dark Fantasy); audio is synthesized placeholder WAV.
 
 ## World inventory
 
-Every scene is a flat box arena (BoxMesh ground + infinite
-WorldBoundaryShape3D floor). No terrain, no heightmaps — walkable space
-is a plane; "cliffs" and hills are non-colliding backdrop dressing.
+Two terrain styles coexist:
 
-| Scene | plane_id | Arena (m) | Content |
-|---|---|---|---|
-| tamori | tamori | 40×40 | Village: 3 NPCs, opening dialogue, shrine, gated exit |
-| tamori_road | tamori_road | 56×26 | Bandits, patroller, waymark tower, Mender campsite lore |
-| tamori_fields | tamori_fields | 44×44 | Bandit/brute camp, patrol, Blackened Paddy lore, loot |
-| tamori_anchor | tamori_anchor | 36×36 | BOSS: Idris + crystallization rig → Warden's Ritual choice |
-| reach | reach | 46×46 | Skirmisher intro, fence-camp pack, the Extractor Deal dialogue |
-| reach_rig | reach_rig | 46×46 | Ambush, pack camp, elite; BOSS: Extractor Engine |
-| kaveth | kaveth | 46×46 | Combat-free night ruins, Defector's Records, lore |
-| kaveth_vault | kaveth_vault | 42×42 | Husk pack, lurker-shade ambush, Waking Tear beat |
-| verath | verath | 46×46 | Dock-blade pack, Faction Accord |
-| verath_seawall | verath_seawall | 46×30 | Cael glimpse, Sarro's Portal choice dialogue |
-| between | between | 46×46 | Prototype-graybox non-place (single scene) |
-| ashan | ashan | 46×46 | Zero combat; 4 wandering villagers, the Reunion |
-| convergence_approach | convergence_approach | 44×44 | Zealot gauntlet with support healers |
-| convergence | convergence | 50×50 | BOSS: Cael — conviction-gated dialogue or combat ending |
+- **Island-grid scenes** (`tamori`, `dungeon_run`): a `TiledTerrain`
+  mesh over `IslandGrid` (2 m tiles, 32×32 default, flat top at y=0)
+  with noise-displaced craggy undersides floating in a **void sky**;
+  click-to-move routes on `AStarGrid2D` (`player_controller.gd`).
+  Tamori's island is 80×80 m.
+- **Legacy flat arenas** (the other 13 scenes): BoxMesh slab over an
+  infinite `WorldBoundaryShape3D`, 36–56 m per side. Invisible boundary
+  walls are generated at load, sized from the ground collider or the
+  GroundMesh AABB (`level_base._setup_bounds`).
 
-World graph (portals, flag-gated): tamori → road → fields → anchor →
-reach → reach_rig → kaveth → kaveth_vault → verath → verath_seawall →
-between → ashan → convergence_approach → convergence.
-`SceneManager.LEVELS` is the plane_id → scene registry.
+| Scene | plane_id | Content |
+|---|---|---|
+| tamori | tamori | 80 m island: village NPCs, shop, dungeon rift, opening dialogue |
+| dungeon_run | dungeon_run | Procedural: 4–6 rooms carved into the void, corridors, skeletons with seeded loot, exit portal |
+| tamori_road / _fields / _anchor | — | Act 1 chain; anchor = Idris + rig boss → Warden's Ritual choice |
+| reach / reach_rig | — | Skirmisher intro + Deal dialogue → Extractor Engine boss |
+| kaveth / kaveth_vault | — | Combat-free night ruins → husk/shade vault, Waking Tear |
+| verath / verath_seawall | — | Dock blades → Cael glimpse + Sarro's Portal choice |
+| between / ashan | — | Prototype non-place; combat-free golden-hour village (wandering NPCs) |
+| convergence_approach / convergence | — | Zealot gauntlet (support healers) → Cael, conviction-gated ending |
 
-## Systems architecture (~5.3k lines GDScript)
+`SceneManager.LEVELS` is the plane_id → scene registry. Portal chain
+gates on story flags as before.
 
-**Autoloads** (`scripts/system/`): `SceneManager` (level registry,
-fade transitions, portal spawn staging) · `GameState` (party, XP/level
-ups, story flags, conviction score, save/load; SAVE_VERSION 3) ·
-`AudioManager` (pooled SFX + crossfading per-plane ambient loops) ·
-`DialogueManager` (addon).
+## Systems architecture
 
-**Level pipeline** (`scripts/world/level_base.gd`, ~470 lines — every
-scene extends it or a subclass): party sync + debug-party fallback,
-enemy character assignment from the factory, generated trimesh prop
-collision, animator attachment, autosave on entry, defeat/respawn,
-dialogue camera (dolly/yaw/focus blend), wheel zoom, hotbar abilities
-(Second Wind, Guiding Bolt, Healing Word, Channel Divinity, Shield
-Bash lvl 3, Action Surge lvl 2), pause action queue. Per-scene scripts
-(`anchor_tear.gd`, `reach_rig.gd`, `convergence.gd`,
-`verath_seawall.gd`, `tamori.gd`) add boss fights and beats on top.
+**Autoloads**: `SceneManager` (registry, fades, portal staging) ·
+`GameState` (party, XP/level-ups, flags, conviction, **gold +
+inventory**, save/load; SAVE_VERSION 5) · `AudioManager` (SFX pool +
+per-plane ambient crossfade) · `CombatManager` (encounter state,
+initiative, TB turn engine, reactions) · `UITheme` (Cinzel/Crimson
+fantasy theme) · `DialogueManager` (addon).
 
-**Combat** (`scripts/combat/`): `enemy_controller.gd` — one FSM
-(Patrol/Chase/Attack/Return) with four archetypes chosen per type or
-per node: bruiser, skirmisher (kiting + dodgeable projectiles), heavy
-(telegraphed slam), support (interruptible group-heal channel). Plus:
-visible cast bars with interrupt/stun, pack aggro (`pack_id`),
-spawn-leashing with walk-home heal, ambush hiding
-(`ambush_trigger.gd`), boss phase thresholds (60/30%), knockback,
-loot drops. `telegraph.gd` — circle/line/cone/donut ground warnings
-with `contains()` hit-tests (dodge-out always works). `juice.gd` —
-hit-stop, camera shake, impact particles, death collapse.
-`veil_rig.gd` — stationary attackable objectives (Idris's rig, Engine
-pillars). Bosses are level-script orchestrations over these parts —
-there is no separate boss framework.
+**Combat** — two layers over one SRD core:
 
-**Procedural per-plane identity** (all keyed by plane_id, split scenes
-alias to their plane): `scenery.gd` — PACKS registry (folder/ext/unit
-per Synty pack) + RECIPES (backdrop ring, scatter layers, ground
-tint); seeded by plane_id, collision-free, backdrop pieces auto-slide
-clear of spawns + camera boom. `atmosphere.gd` — sun angle/color/
-energy + one signature CPUParticles field per plane.
-`resources/env_*.tres` — sky/fog/glow per plane. `AudioManager`
-ambients per plane. `veil_tear.gd`/`scar_tissue.gd` — the shared Veil
-motif and Mender-scar dressing.
+- *Real-time (default)*: the archetype FSM in `enemy_controller.gd` —
+  bruiser / skirmisher (kiting + dodgeable projectiles) / heavy
+  (telegraphed slams) / support (interruptible group heal), plus cast
+  bars + Shield Bash interrupts, pack aggro, spawn-leashing, ambush
+  triggers, boss phases. `telegraph.gd` ground warnings with
+  `contains()` hit-tests; `juice.gd` feel layer.
+- *Turn-based (opt-in, [T] in combat)*: `CombatManager` rolls d20+DEX
+  initiative and runs one combatant at a time with per-turn
+  action/bonus/reaction/movement budgets (node metadata), opportunity
+  attacks via an accept/skip reaction modal, and a movement-range ring.
+  Enemy turns are archetype-aware (skirmishers volley, supports heal
+  the most wounded packmate, heavies fight as melee — telegraph-dodging
+  is inherently real-time). **Bosses refuse TB** (`enter_tb_mode`
+  returns false; latched TB force-exits when a boss joins) because boss
+  fights are timed orchestrations.
+- Player abilities live in `level_base.gd` gated on turn economy in TB;
+  `melee_attacker.gd` resolves rolls through `Combatant` (bonus hooks +
+  crit_threshold from build choices).
 
-**Build choices** (`scripts/characters/character_progression.gd`):
-creation picks class, fighting style, ability scores, skills, and a
-starting feat (six-step wizard); level 3 grants a subclass choice
-(3 per class), and class ASI levels grant +2 / +1+1 or a feat — all
-spent at REST POINTS via `level_up_screen.gd` (a HUD hint shows while
-choices are unspent; Liris is story-driven and only announced).
-Choices persist as records (SAVE_VERSION 4) replayed over saved base
-scores; max HP is always recomputed from scratch. Effects flow through
-`make_combatant()` (flat bonuses + crit range) and call-site hooks
-(Lucky/Sentinel/riposte/subclass passives). Old saves are owed their
-choices at the next rest — migration is the pending engine.
+**Build choices** (`character_progression.gd`): creation wizard picks
+class (all four: Soldier, Ghost, Warden, Psion), **species, background**
+(SRD addon resources), fighting style, ability scores, skills, starting
+feat, and **cantrips/spells for casters**; Liris is optionally
+customized. Level 3 grants subclass; class ASI levels grant +2/+1+1 or
+a feat — all spent at rest points (`level_up_screen.gd`); the HUD also
+offers short/long rest buttons out of combat. Choices persist as
+records replayed over saved base scores; max HP recomputes from
+scratch. Spells cast through `level_base.cast_spell` from the skill bar
+(click or keys 7 8 9 0), spending `EnergySlots` (`use_slot`).
 
-**Story**: dialogue files in `dialogue/` (Dialogue Manager syntax) set
-flags and conviction via `do GameState...`. Six choices: Warden's
-Ritual, Extractor Deal, Sarro's Portal, (Mender-You-Understand — not
-yet built), Cael's Resolution (conviction ≥ 2 → dialogue ending),
-Final Portal. `story_event.gd` gold-ring beats remain for minor lore.
-`npc.gd` — talkable/barking villagers with optional wander loops.
+**Economy**: `GameState.gold`/`inventory` with signals; `LootTable`
+(weighted, seeded tables) → `LootBag` (searchable Area3D on corpses) →
+`loot_bag_screen`; `shop_npc` + `shop_screen` (Odo's Goods in Tamori);
+`inventory_screen` from the pause menu; walk-over `gold_pickup`; a real
+death screen with Try Again / Main Menu.
+
+**UI**: `party_panel` (BG3-style portrait cards, click to select) +
+`skill_bar` (64 px icon slots from `ability_registry`, tooltips) +
+`combat_hud` (TB controls, reaction modal) + HUD toasts, gold readout,
+pending-build-choice hint.
+
+**Procedural identity (dormant by default)**: `scenery.gd` biome
+recipes and the `EditorPreview` node still exist but
+`generate_scenery` now defaults to **false** — manual placement is the
+preferred direction; recipes are opt-in per scene and the editor
+preview honors the same flag. `atmosphere.gd` still runs everywhere:
+void-sky environment override, dimmed sun + cool fill light, per-plane
+motes. Veil tears (`veil_tear.gd`) and scar tissue remain the shared
+motif on portals/rest points.
+
+**Story**: dialogue files set flags/conviction via `do GameState...`;
+six choices (Warden's Ritual, Extractor Deal, Sarro's Portal, Cael's
+Resolution at conviction ≥ 2, Final Portal; Mender-You-Understand still
+a gold ring). `npc.gd` villagers talk, bark, and wander.
 
 ## Asset pipeline
 
-Synty FBX lives on srv (`srv.blastedstudios.com:49200`); the
-asset-cooker bakes them to gltf+bin with a shared per-pack atlas and
-the cm→m/Y-up correction on a child node (scene roots are metre-scale
-— never re-apply 0.01). `./fetch_assets.sh` syncs `assets/meshes/`
-(gitignored). Six packs in use: Fantasy Kingdom, Fantasy Characters,
-Base Locomotion, MeadowForest, AncientEgypt, Scifi Space, Western,
-Prototype. Placeholder audio is generated by `tools/gen_audio.py` into
-`assets/audio/` (tracked).
+Synty FBX on srv (`srv.blastedstudios.com:49200`) cooked to gltf+atlas
+(cm→m/Y-up correction baked on a child node — scene roots are
+metre-scale). `./fetch_assets.sh` default mode fetches **only assets
+referenced by the project** (~50 MB); `--pack`/`--all` for whole packs.
+Post-fetch it runs `tools/patch_gltf_materials.py` (BLEND→MASK +
+texture-index fixes). Packs in use include Fantasy Kingdom/Characters,
+Base Locomotion, MeadowForest, AncientEgypt, Scifi, Western, Prototype,
+**Samurai Empire, Dark Fantasy**. Placeholder audio via
+`tools/gen_audio.py` (tracked in `assets/audio/`).
 
 ## Verification
 
-Headless smoke harnesses in `future/tests/harnesses/` (phase1,
-anchor_fight, act2, act3, all_planes) — each prints `ALL PASS` /
-nonzero exit — plus `plane_gallery.tscn` under Xvfb which screenshots
-every plane to `.screenshots/` for visual review. Numeric checks have
-missed composition bugs twice; always eyeball the gallery after
-visual changes.
+Headless harnesses in `future/tests/harnesses/` (each prints ALL PASS,
+nonzero exit on failure): `phase1_smoke` (feel + spells + zoom),
+`anchor_fight_smoke`, `act2_smoke`, `act3_smoke`, `progression_smoke`
+(39 build-choice checks), `systems_smoke` (TB, boss refusal, loot,
+gold, pathfinding), `all_planes_smoke` (every plane incl. dungeon_run:
+atmosphere, bounds-vs-mesh, scenery flag honesty). `plane_gallery` and
+`ui_gallery` screenshot under Xvfb — always eyeball after visual work.
 
-## Tuning knobs (where to change what)
+## Tuning knobs
 
-- **Enemy placement/difficulty**: per-node exports in the scene files —
-  `enemy_type`, `xp_value`, `aggro_radius`, `archetype`, `pack_id`,
-  `leash_radius`, `patrol_points`, `loot_preset`, `is_boss`.
-- **Statblocks**: `character_factory.gd` `make_enemy()` roster.
-- **Archetype feel**: consts at the top of `enemy_controller.gd`
-  (ranged band, slam radius/windup, support cast/period).
-- **Boss mechanics**: consts at the top of `anchor_tear.gd`,
-  `reach_rig.gd`, `convergence.gd` (periods, damage dice, phase gates,
-  conviction threshold).
-- **Plane look**: `scenery.gd` RECIPES, `atmosphere.gd` PLANES,
-  `resources/env_*.tres`.
-- **XP curve**: scene `xp_value`s + `docs/design/progression.md`.
-- **Player abilities**: `level_base.gd` ability functions + consts.
+- Encounters: per-node exports (`enemy_type`, `xp_value`, `archetype`,
+  `pack_id`, `leash_radius`, `patrol_points`, `loot_table_key`,
+  `loot_seed`, `is_boss`).
+- Statblocks: `character_factory.make_enemy`. Loot: `loot_table.gd`.
+- Archetype/TB feel: consts atop `enemy_controller.gd` /
+  `combat_manager.gd` (RT_ROUND, movement math).
+- Boss mechanics: consts atop `anchor_tear.gd`, `reach_rig.gd`,
+  `convergence.gd`. Dungeon shape: consts in `dungeon_run.gd` +
+  `island_grid.gd`.
+- Plane look: `atmosphere.gd` PLANES, `resources/env_*.tres`; dormant
+  scenery recipes in `scenery.gd`.
+- Player abilities/spells: `level_base.gd`, `ability_registry.gd`,
+  addon `spell_data.gd`.
 
-## Known placeholder quirks / not built
+## Known gaps / decided-out
 
-- Scifi "asteroid" backdrop meshes carry station-sign atlas textures
-  (cooker best-guess texture wiring).
-- Crystal adds in the Anchor fight deferred (no dynamic enemy
-  spawning).
-- The Between has not had its floating-islands rebuild; the
-  Mender-You-Understand choice is not built.
-- Out of scope by decision: procedural dungeons, crafting, difficulty
-  modes, free camera rotation, Terrain3D, spawn randomization.
+- TB enemy turns don't use telegraphs (real-time-only by design);
+  boss fights are RT-only.
+- The Between rebuild and the Mender-You-Understand dialogue remain
+  unbuilt; flat legacy scenes await island-grid conversion if the
+  direction continues.
+- Terrain3D was trialed and reverted in favor of `TiledTerrain`.
+- Out of scope by decision: free camera rotation, difficulty modes
+  (dungeon CR select is planned separately), spawn randomization in
+  act content.
