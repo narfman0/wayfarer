@@ -403,6 +403,7 @@ func _do_attack(delta: float) -> void:
 func _fire_attack() -> void:
 	if character == null or _target == null:
 		return
+	_CharAnim.oneshot(self, "attack")
 	_MeleeAttacker.lunge(self, _target.global_position)
 	AudioManager.play_sfx("swing", -3.0)
 	_resolve_attack_on(_target)
@@ -453,6 +454,8 @@ func _apply_party_damage(target_char, body: Node3D, dmg: int, crit: bool) -> voi
 				near_sarro = true
 	dmg = CharacterProgression.modify_party_damage(dmg, target_char, "melee", crit, near_sarro)
 	target_char.stats.current_hp = max(0, target_char.stats.current_hp - dmg)
+	if target_char.stats.current_hp > 0:
+		_CharAnim.oneshot(body, "hit")
 	var scene := get_tree().current_scene
 	AudioManager.play_sfx("crit" if crit else "hit", -2.0)
 	_DamageNumber.hit(scene, body.global_position, dmg, crit)
@@ -633,6 +636,8 @@ func receive_damage(amount: int, from: Vector3 = Vector3.INF) -> void:
 	guiding_bolt_active = false  # consumed on hit regardless of outcome
 	character.stats.current_hp = max(0, character.stats.current_hp - amount)
 	hp_changed.emit(character.stats.current_hp, character.stats.max_hp)
+	if character.stats.current_hp > 0:
+		_CharAnim.oneshot(self, "hit")
 	_Juice.impact_burst(get_tree().current_scene, global_position)
 	if from != Vector3.INF:
 		var away := global_position - from
@@ -662,7 +667,10 @@ func _die() -> void:
 	if loot_table_key != "":
 		_spawn_loot_bag()
 	died.emit()
-	_Juice.death_collapse(self)
+	# Real death animation where the clip loaded; the tween fall stays as
+	# the fallback for skinless bodies (rigs, pillars).
+	var animated := _CharAnim.oneshot(self, "death")
+	_Juice.death_collapse(self, animated)
 
 # ── Boss phases ───────────────────────────────────────────────────────────────
 

@@ -72,13 +72,14 @@ static func impact_burst(scene: Node, pos: Vector3,
 ## Fall over, linger a beat, sink through the ground, free. The body must be
 ## made inert (groups/collision/processing) by its controller BEFORE calling —
 ## this only owns the send-off. Replaces queue_free()-mid-swing disappearance.
-static func death_collapse(body: CharacterBody3D) -> void:
+static func death_collapse(body: CharacterBody3D, has_death_anim := false) -> void:
 	var skin := body.get_node_or_null("Skin") as Node3D
 	var tween := body.create_tween()
-	if skin != null:
+	if skin != null and not has_death_anim:
+		# procedural fall — only when no real death clip is playing
 		tween.tween_property(skin, "rotation:x", -PI / 2.0, 0.35) \
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tween.tween_interval(0.8)
+	tween.tween_interval(1.6 if has_death_anim else 0.8)
 	tween.tween_property(body, "position:y", body.position.y - 1.6, 0.9) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_callback(body.queue_free)

@@ -29,6 +29,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	await _test_camera_zoom()
+	_test_combat_clips()
 	await _test_spellcasting()
 	await _test_skirmisher_fires()
 	await _test_death_collapse()
@@ -56,6 +57,15 @@ func _test_camera_zoom() -> void:
 		_level._adjust_zoom(2.0)
 	await get_tree().create_timer(0.4).timeout
 	_check(cam.size >= 25.5 and cam.size <= 26.1, "zoom clamps at the far limit")
+
+## Sword Combat clips retarget and load onto every humanoid animator.
+func _test_combat_clips() -> void:
+	var skin := _player.get_node_or_null("Skin")
+	_check(skin != null and skin.has_meta("wayfarer_animator"), "player skin has an animator")
+	if skin != null and skin.has_meta("wayfarer_animator"):
+		var anim = skin.get_meta("wayfarer_animator")
+		for clip in ["attack", "attack_heavy", "hit", "death"]:
+			_check(anim._ap.has_animation(clip), "sword clip '%s' loaded" % clip)
 
 ## Spells cast through the public cast_spell path: damage lands, slots spend,
 ## cantrips don't, heals restore the caster.

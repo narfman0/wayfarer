@@ -10,6 +10,7 @@ const _ArmorData      = preload("res://addons/srd/resources/armor_data.gd")
 const _DamageNumber   = preload("res://scripts/world/damage_number.gd")
 const _Juice          = preload("res://scripts/combat/juice.gd")
 const _Progression    = preload("res://scripts/characters/character_progression.gd")
+const _CharAnim       = preload("res://scripts/world/character_animator.gd")
 
 const MELEE_RANGE  := 1.6   # metres
 const ATTACK_RATE  := 1.0   # seconds between attacks
@@ -99,6 +100,9 @@ func _do_attack() -> void:
 	var target_name: String = _target.name  # capture before damage — a kill nulls _target via stop()
 
 	var target_pos: Vector3 = _target.global_position
+	# Real sword swing where a clip exists; the procedural lunge stays as a
+	# readability accent underneath it.
+	_CharAnim.oneshot(owner_body, "attack_heavy" if crit else "attack")
 	lunge(owner_body, target_pos)
 	var dmg := 0
 	AudioManager.play_sfx("swing")
