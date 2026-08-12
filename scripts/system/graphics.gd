@@ -26,6 +26,19 @@ const PRESETS := {
 	"high": DEFAULTS,
 }
 
+## Generic UI preference store, same settings.cfg ([ui] section).
+static func ui_setting(key: String, default: Variant) -> Variant:
+	var cf := ConfigFile.new()
+	if cf.load(_CFG) == OK:
+		return cf.get_value("ui", key, default)
+	return default
+
+static func set_ui_setting(key: String, value: Variant) -> void:
+	var cf := ConfigFile.new()
+	cf.load(_CFG)
+	cf.set_value("ui", key, value)
+	cf.save(_CFG)
+
 static func get_setting(key: String) -> Variant:
 	var cf := ConfigFile.new()
 	if cf.load(_CFG) == OK:

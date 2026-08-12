@@ -64,6 +64,8 @@ var _debug_party := false
 var _hud = null       # HUD
 var _attacker = null  # MeleeAttacker
 var _target_ring: MeshInstance3D = null  # gold ring under the clicked enemy
+var _outlined: Node3D = null                     # enemy carrying the outline overlay
+var _outline_mat: StandardMaterial3D = null      # shared inverted-hull material
 
 # ── Isometric camera ──────────────────────────────────────────────────────────
 # Locked "game isometric" framing: pivot yawed 45°, camera pitched −30°,
@@ -591,8 +593,35 @@ func register_enemy(ec) -> void:
 	if ec.is_boss:
 		ec.phase_changed.connect(_on_boss_phase.bind(ec))
 
+## Inverted-hull outline: gold while targeted, red when the attack loop is
+## in range and landing — the "who will my attack impact" read.
+func _update_target_outline(tgt: Node3D) -> void:
+	if _outlined != tgt:
+		if _outlined != null and is_instance_valid(_outlined):
+			_set_skin_overlay(_outlined, null)
+		_outlined = tgt
+		if tgt != null:
+			if _outline_mat == null:
+				_outline_mat = StandardMaterial3D.new()
+				_outline_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				_outline_mat.cull_mode = BaseMaterial3D.CULL_FRONT
+				_outline_mat.grow = true
+				_outline_mat.grow_amount = 0.035
+			_set_skin_overlay(tgt, _outline_mat)
+	if tgt != null and _outline_mat != null:
+		var in_range: bool = _attacker != null and _attacker.is_attacking(tgt)
+		_outline_mat.albedo_color = Color(1.0, 0.25, 0.15) if in_range else Color(1.0, 0.82, 0.3)
+
+func _set_skin_overlay(enemy: Node3D, mat: Material) -> void:
+	var skin := enemy.get_node_or_null("Skin")
+	if skin == null:
+		return
+	for mi: MeshInstance3D in skin.find_children("*", "MeshInstance3D", true, false):
+		mi.material_overlay = mat
+
 func _check_player_targeting() -> void:
 	var tgt = _player.target_enemy
+	_update_target_outline(tgt if tgt != null and tgt.has_method("receive_damage") else null)
 	if tgt == null:
 		return
 	var ec = tgt if tgt != null and tgt.has_method("receive_damage") else null

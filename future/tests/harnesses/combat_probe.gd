@@ -41,6 +41,21 @@ func _run() -> void:
 	if hit:
 		print("RAY HIT: %s at %s" % [hit["collider"], hit["position"]])
 
+	# 1b) targeting UX: widget + outline right after the click, identified after 4s
+	for i in 20:
+		await get_tree().process_frame
+	get_viewport().get_texture().get_image().save_png("res://.screenshots/targeting_fresh.png")
+	var skin := guard.get_node_or_null("Skin")
+	if skin != null:
+		var outlined := false
+		for mi: MeshInstance3D in skin.find_children("*", "MeshInstance3D", true, false):
+			if mi.material_overlay != null:
+				outlined = true
+		print("OUTLINE applied: ", outlined)
+	await get_tree().create_timer(4.5).timeout
+	get_viewport().get_texture().get_image().save_png("res://.screenshots/targeting_identified.png")
+	print("IDENTIFIED meta: ", guard.get_meta("wayfarer_identified", false))
+
 	# 2) run the fight a few seconds, then inventory VFX positions
 	guard.alerted(player)
 	for i in 240:

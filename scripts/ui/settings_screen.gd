@@ -116,6 +116,25 @@ func _build_ui() -> void:
 
 	outer.add_child(HSeparator.new())
 
+	# ── Interface ──────────────────────────────────────────────────────────────
+	outer.add_child(_section_label("Interface"))
+	var ui_grid := GridContainer.new()
+	ui_grid.columns = 2
+	ui_grid.add_theme_constant_override("h_separation", 16)
+	outer.add_child(ui_grid)
+	ui_grid.add_child(_row_label("Enemy info", "where enemy name/HP/status display"))
+	var enemy_opt := OptionButton.new()
+	for item in [["Beside target", "beside"], ["Top bar", "top"], ["Over all enemies", "all"]]:
+		enemy_opt.add_item(item[0])
+	var current_mode: String = Graphics.ui_setting("enemy_info", "beside")
+	var mode_ids := ["beside", "top", "all"]
+	enemy_opt.select(mode_ids.find(current_mode) if current_mode in mode_ids else 0)
+	enemy_opt.item_selected.connect(func(idx: int) -> void:
+		Graphics.set_ui_setting("enemy_info", mode_ids[idx]))
+	ui_grid.add_child(enemy_opt)
+
+	outer.add_child(HSeparator.new())
+
 	# ── Audio ──────────────────────────────────────────────────────────────────
 	outer.add_child(_section_label("Audio"))
 	var vol_grid := GridContainer.new()

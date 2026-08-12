@@ -23,7 +23,44 @@ func _ready() -> void:
 	_quit_btn.pressed.connect(_quit)
 	_add_inventory_button()
 	_add_graphics_button()
+	_add_target_inspect()
 	_build_queue_section()
+
+## Thorough examination while paused: the current target's full statline.
+func _add_target_inspect() -> void:
+	var players := get_tree().get_nodes_in_group("players")
+	if players.is_empty():
+		return
+	var tgt = players[0].get("target_enemy")
+	if tgt == null or not is_instance_valid(tgt) or tgt.get("character") == null:
+		return
+	var ch = tgt.character
+	var vbox: VBoxContainer = $Panel/VBox
+	vbox.add_child(HSeparator.new())
+	var header := Label.new()
+	header.text = "Target: %s" % ch.display_name
+	header.add_theme_font_size_override("font_size", 15)
+	header.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
+	vbox.add_child(header)
+	var detail := Label.new()
+	var combatant = ch.make_combatant() if ch.has_method("make_combatant") else null
+	var conditions: Array[String] = []
+	if tgt.has_method("is_stunned") and tgt.is_stunned():
+		conditions.append("stunned")
+	if tgt.has_method("is_casting") and tgt.is_casting():
+		conditions.append("casting")
+	if tgt.get("guiding_bolt_active") == true:
+		conditions.append("marked")
+	detail.text = "HP %d/%d   AC %d   %s%s" % [
+		ch.stats.current_hp, ch.stats.max_hp,
+		combatant.armor_class if combatant != null else 0,
+		String(tgt.get("_arch")) if tgt.get("_arch") != null else "",
+		("   [" + ", ".join(conditions) + "]") if not conditions.is_empty() else ""]
+	detail.add_theme_font_size_override("font_size", 12)
+	detail.add_theme_color_override("font_color", Color(0.8, 0.8, 0.85))
+	vbox.add_child(detail)
+	# Examining thoroughly identifies instantly.
+	tgt.set_meta("wayfarer_identified", true)
 
 func _add_graphics_button() -> void:
 	var vbox: VBoxContainer = $Panel/VBox
