@@ -279,10 +279,10 @@ func _spawn_enemy_at(pos: Vector3, etype: String = "") -> void:
 	body.add_child(col)
 
 	var _skin_map := {
-		"skeleton": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Skeleton_01.glb",
-		"skeleton_armored": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Skeleton_HeavyArmor_01.glb",
-		"skeleton_ranger": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Skeleton_Ranger_01.glb",
-		"hunter": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Hunter_Male_01.glb",
+		"skeleton": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Skeleton_01.gltf",
+		"skeleton_armored": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Skeleton_HeavyArmor_01.gltf",
+		"skeleton_ranger": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Skeleton_Ranger_01.gltf",
+		"hunter": "res://assets/meshes/POLYGON_Dark_Fantasy_SourceFiles_v3/SourceFiles/FBX/Characters/Unreal_Characters/SK_Chr_Hunter_Male_01.gltf",
 	}
 	var skin_path: String = _skin_map.get(etype, _skin_map["skeleton"])
 	var skin_scene = load(skin_path) if FileAccess.file_exists(skin_path + ".import") else null

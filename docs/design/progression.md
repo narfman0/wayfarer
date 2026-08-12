@@ -104,13 +104,13 @@ scene's `debug_party_level` (reach 5, kaveth 8, verath 11, between 13,
 ashan 15, convergence 16) and suppresses ALL saving so tests never touch
 the real slot.
 
-Known cosmetic issue (pre-existing, all planes): far-from-camera
-characters sometimes render in bind pose (lying flat, +90°X). Skeleton
-data is correct (verified) and close-range/combat rendering is fine;
-runtime workarounds (lod_bias, per-instance Skin, cull margin,
-custom_aabb, skeleton rebind) all failed. Real fix: bake the armature
-orientation upright in the cooker (fbx_to_glb.py) so the bind pose
-stands, then re-cook Fantasy_Characters + re-fetch.
+RESOLVED 2026-08-12: the far-from-camera bind-pose render (characters
+lying flat, 100× scale) is fixed at the source — the cooker
+(fbx_to_glb.py on srv) now bakes the FBX import correction into
+armature and mesh data for character skins, so the bind pose stands
+upright at metre scale and the render fallback is invisible. The
+rest-aware retarget (anim_retarget.gd) absorbs the changed rests;
+animation packs are exempt from the bake by design.
 
 ## Tuning loop
 
