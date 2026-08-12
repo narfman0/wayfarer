@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://reach_rig"]
+[gd_scene load_steps=32 format=3 uid="uid://reach_rig"]
 
 [ext_resource type="Script" path="res://scripts/world/reach_rig.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
@@ -19,6 +19,18 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_NatureBiomes_MeadowForest_SourceFiles_v2/Meadow_Source_Files/FBX/SM_Prop_SciFiCrate_01.gltf" id="p_crate"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_NatureBiomes_MeadowForest_SourceFiles_v2/Meadow_Source_Files/FBX/SM_Prop_SciFiCable_02.gltf" id="p_cable"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Item_Crystal_01.gltf" id="p_crystal"]
+
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Detail_Machine_01.gltf" id="r_machine"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Detail_Tank_01.gltf" id="r_tank1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Detail_Tank_02.gltf" id="r_tank2"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Oxygen_Tank.gltf" id="r_oxy"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Oxygen_Tank_Large.gltf" id="r_oxyl"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Oxygen_Tank_Small.gltf" id="r_oxys"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_ControlPanel_01.gltf" id="r_panel1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_ControlPanel_02.gltf" id="r_panel2"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Crate_Ammo_01.gltf" id="r_ammo"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Crate_01.gltf" id="r_crate"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Antenna_01.gltf" id="r_ant"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -329,3 +341,40 @@ anchor_bottom = 1.0
 [node name="EditorPreview" type="Node3D" parent="."]
 script = ExtResource("99_preview")
 plane_id = "reach_rig"
+
+[node name="RigMachine" parent="Level/Props" instance=ExtResource("r_machine")]
+transform = Transform3D(0.866, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866, -14, 0, -2)
+
+[node name="RigTank1" parent="Level/Props" instance=ExtResource("r_tank1")]
+transform = Transform3D(0.9397, 0, -0.342, 0, 1, 0, 0.342, 0, 0.9397, 16, 0, -2)
+
+[node name="RigTank2" parent="Level/Props" instance=ExtResource("r_tank2")]
+transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, -16, 0, -6)
+
+[node name="OxyCluster1" parent="Level/Props" instance=ExtResource("r_oxyl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 14, 0, 6)
+
+[node name="OxyCluster2" parent="Level/Props" instance=ExtResource("r_oxy")]
+transform = Transform3D(0.766, 0, 0.6428, 0, 1, 0, -0.6428, 0, 0.766, 15.2, 0, 6.8)
+
+[node name="OxyCluster3" parent="Level/Props" instance=ExtResource("r_oxys")]
+transform = Transform3D(0.866, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866, 13.2, 0, 7.4)
+
+[node name="RigPanel1" parent="Level/Props" instance=ExtResource("r_panel1")]
+transform = Transform3D(-0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, -0.7071, -8, 0, 0)
+
+[node name="RigPanel2" parent="Level/Props" instance=ExtResource("r_panel2")]
+transform = Transform3D(0.6428, 0, -0.766, 0, 1, 0, 0.766, 0, 0.6428, 6, 0, 1)
+
+[node name="AmmoCrates" parent="Level/Props" instance=ExtResource("r_ammo")]
+transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, 12, 0, 10)
+
+[node name="SupplyCrate1" parent="Level/Props" instance=ExtResource("r_crate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -13, 0, 8)
+
+[node name="SupplyCrate2" parent="Level/Props" instance=ExtResource("r_crate")]
+transform = Transform3D(0.8192, 0, 0.5736, 0, 1, 0, -0.5736, 0, 0.8192, -12, 0, 9.4)
+
+[node name="RigAntenna" parent="Level/Props" instance=ExtResource("r_ant")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 18, 0, -6)
+
