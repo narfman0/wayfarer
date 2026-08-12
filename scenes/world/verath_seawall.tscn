@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://verath_seawall"]
+[gd_scene load_steps=23 format=3 uid="uid://verath_seawall"]
 
 [ext_resource type="Script" path="res://scripts/world/verath_seawall.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
@@ -16,6 +16,10 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Pillar_Stone_01.gltf" id="p_pillar"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Archway_Small_01.gltf" id="p_arch"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Barrel_Stack_01.gltf" id="p_barrels"]
+
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Veh_Boat_Dinghy_01.gltf" id="v_boat"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Street_Lamp_01.gltf" id="v_lamp"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Market_Stall_03.gltf" id="v_stall"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -199,3 +203,22 @@ anchor_bottom = 1.0
 [node name="EditorPreview" type="Node3D" parent="."]
 script = ExtResource("99_preview")
 plane_id = "verath_seawall"
+
+[node name="SeaBoat1" parent="Level/Props" instance=ExtResource("v_boat")]
+transform = Transform3D(0.766, 0, 0.6428, 0, 1, 0, -0.6428, 0, 0.766, -6, -0.15, -19)
+
+[node name="SeaBoat2" parent="Level/Props" instance=ExtResource("v_boat")]
+transform = Transform3D(-0.766, 0, -0.6428, 0, 1, 0, 0.6428, 0, -0.766, 8, -0.15, -18)
+
+[node name="WallLamp1" parent="Level/Props" instance=ExtResource("v_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -8, 0, -12)
+
+[node name="WallLamp2" parent="Level/Props" instance=ExtResource("v_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 2, 0, -12)
+
+[node name="WallLamp3" parent="Level/Props" instance=ExtResource("v_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 10, 0, -12)
+
+[node name="FishStall" parent="Level/Props" instance=ExtResource("v_stall")]
+transform = Transform3D(0.1736, 0, -0.9848, 0, 1, 0, 0.9848, 0, 0.1736, -14, 0, 4)
+

@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://kaveth"]
+[gd_scene load_steps=39 format=3 uid="uid://kaveth"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
@@ -21,6 +21,18 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Pillar_Stone_01.gltf" id="p_pillar"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Dead_04.gltf" id="p_dead"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Ground_Crater_03.gltf" id="p_crater"]
+
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Buildings/SM_Bld_Sphinx_Medium_01.gltf" id="k_sphinx"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Buildings/SM_Bld_Obelisk_Medium_01.gltf" id="k_obelisk"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Statue_01.gltf" id="k_statue1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Statue_03.gltf" id="k_statue3"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Scroll_Pile_01.gltf" id="k_spile"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Scroll_Basket_01.gltf" id="k_sbasket"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Scroll_Open_01.gltf" id="k_sopen"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Brazier_01.gltf" id="k_brazier"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Ruins_Base_01.gltf" id="k_ruin1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Ruins_Base_02.gltf" id="k_ruin2"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Ruins_Stairs_01.gltf" id="k_stairs"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -195,3 +207,43 @@ anchor_bottom = 1.0
 [node name="EditorPreview" type="Node3D" parent="."]
 script = ExtResource("99_preview")
 plane_id = "kaveth"
+
+[node name="SunkenSphinx" parent="Level/Props" instance=ExtResource("k_sphinx")]
+transform = Transform3D(-0.9063, -0.02948, -0.4216, 0, 0.9976, -0.06976, 0.4226, -0.06322, -0.9041, 0, -0.9, -19)
+
+[node name="Obelisk1" parent="Level/Props" instance=ExtResource("k_obelisk")]
+transform = Transform3D(0.866, 0.06093, 0.4963, 0, 0.9925, -0.1219, -0.5, 0.1055, 0.8596, -14, -0.5, -4)
+
+[node name="Obelisk2" parent="Level/Props" instance=ExtResource("k_obelisk")]
+transform = Transform3D(-0.9397, -0.02981, 0.3407, 0, 0.9962, 0.08716, -0.342, 0.0819, -0.9361, 10, -0.3, -14)
+
+[node name="ArchiveStatue1" parent="Level/Props" instance=ExtResource("k_statue1")]
+transform = Transform3D(-0.5, 0, 0.866, 0, 1, 0, -0.866, 0, -0.5, -16, 0, 2)
+
+[node name="ArchiveStatue2" parent="Level/Props" instance=ExtResource("k_statue3")]
+transform = Transform3D(0.5, 0, -0.866, 0, 1, 0, 0.866, 0, 0.5, 16, 0, 10)
+
+[node name="ScrollPile1" parent="Level/Props" instance=ExtResource("k_spile")]
+transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, -4.5, 0, -5.5)
+
+[node name="ScrollBasket" parent="Level/Props" instance=ExtResource("k_sbasket")]
+transform = Transform3D(0.766, 0, -0.6428, 0, 1, 0, 0.6428, 0, 0.766, -7, 0, -4.8)
+
+[node name="ScrollOpen" parent="Level/Props" instance=ExtResource("k_sopen")]
+transform = Transform3D(0.342, 0, 0.9397, 0, 1, 0, -0.9397, 0, 0.342, -5.8, 0, -8.6)
+
+[node name="RuinBase1" parent="Level/Props" instance=ExtResource("k_ruin1")]
+transform = Transform3D(0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, 0.7071, 14, 0, -2)
+
+[node name="RuinBase2" parent="Level/Props" instance=ExtResource("k_ruin2")]
+transform = Transform3D(0.9397, 0, -0.342, 0, 1, 0, 0.342, 0, 0.9397, -12, 0, -13)
+
+[node name="RuinStairs" parent="Level/Props" instance=ExtResource("k_stairs")]
+transform = Transform3D(-0.1736, 0, 0.9848, 0, 1, 0, -0.9848, 0, -0.1736, 6, 0, 10)
+
+[node name="RestBrazier1" parent="Level/Props" instance=ExtResource("k_brazier")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -13.2, 0, 12.4)
+
+[node name="RestBrazier2" parent="Level/Props" instance=ExtResource("k_brazier")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -16.8, 0, 15.6)
+

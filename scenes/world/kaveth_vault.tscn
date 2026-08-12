@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://kaveth_vault"]
+[gd_scene load_steps=30 format=3 uid="uid://kaveth_vault"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
@@ -19,6 +19,14 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_DestroyedWall_Bottom_02.gltf" id="p_wall1"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_DestroyedWall_RubblePile_01.gltf" id="p_rubble"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_Pillar_Stone_01.gltf" id="p_pillar"]
+
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Shelf_01.gltf" id="k_shelf1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Shelf_02.gltf" id="k_shelf2"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Embalming_Table_01.gltf" id="k_table"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Scroll_Pile_01.gltf" id="k_spile"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Scroll_Open_01.gltf" id="k_sopen"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Brazier_01.gltf" id="k_brazier"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Buildings/SM_Bld_Obelisk_Medium_01.gltf" id="k_obelisk"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -278,3 +286,40 @@ anchor_bottom = 1.0
 [node name="EditorPreview" type="Node3D" parent="."]
 script = ExtResource("99_preview")
 plane_id = "kaveth_vault"
+
+[node name="Stack1" parent="Level/Props" instance=ExtResource("k_shelf1")]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, -17, 0, -5)
+
+[node name="Stack2" parent="Level/Props" instance=ExtResource("k_shelf2")]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, -17, 0, -1)
+
+[node name="Stack3" parent="Level/Props" instance=ExtResource("k_shelf1")]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, -17, 0, 3)
+
+[node name="Stack4" parent="Level/Props" instance=ExtResource("k_shelf2")]
+transform = Transform3D(6.123e-17, 0, -1, 0, 1, 0, 1, 0, 6.123e-17, 15, 0, 2)
+
+[node name="Stack5" parent="Level/Props" instance=ExtResource("k_shelf1")]
+transform = Transform3D(6.123e-17, 0, -1, 0, 1, 0, 1, 0, 6.123e-17, 15, 0, 6)
+
+[node name="ReadingTable" parent="Level/Props" instance=ExtResource("k_table")]
+transform = Transform3D(0.866, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866, -8, 0, 8)
+
+[node name="VaultScrolls1" parent="Level/Props" instance=ExtResource("k_spile")]
+transform = Transform3D(-0.9397, 0, -0.342, 0, 1, 0, 0.342, 0, -0.9397, -6, 0, 9.4)
+
+[node name="VaultScrolls2" parent="Level/Props" instance=ExtResource("k_sopen")]
+transform = Transform3D(0.9659, 0, -0.2588, 0, 1, 0, 0.2588, 0, 0.9659, 9, 0, 6)
+
+[node name="TearObelisk1" parent="Level/Props" instance=ExtResource("k_obelisk")]
+transform = Transform3D(0.2588, 0.101, 0.9606, 0, 0.9945, -0.1045, -0.9659, 0.02705, 0.2574, 3, -0.4, -18)
+
+[node name="TearObelisk2" parent="Level/Props" instance=ExtResource("k_obelisk")]
+transform = Transform3D(0.866, 0.03488, -0.4988, 0, 0.9976, 0.06976, 0.5, -0.06041, 0.8639, 12, -0.2, -12)
+
+[node name="VaultBrazier1" parent="Level/Props" instance=ExtResource("k_brazier")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 0, 0, 12)
+
+[node name="VaultBrazier2" parent="Level/Props" instance=ExtResource("k_brazier")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 8, 0, 10)
+

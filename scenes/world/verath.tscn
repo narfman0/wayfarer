@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://verath"]
+[gd_scene load_steps=32 format=3 uid="uid://verath"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
@@ -18,6 +18,13 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Banner_02.gltf" id="p_banner2"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Barrel_Stack_01.gltf" id="p_barrels"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Bridge_01.gltf" id="p_bridge"]
+
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Market_Stall_01.gltf" id="v_stall1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Market_Stall_03.gltf" id="v_stall3"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Market_Stall_01_Dressing.gltf" id="v_dress"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Market_Label_01.gltf" id="v_label"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Veh_Boat_Dinghy_01.gltf" id="v_boat"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Street_Lamp_01.gltf" id="v_lamp"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -230,3 +237,31 @@ anchor_bottom = 1.0
 [node name="EditorPreview" type="Node3D" parent="."]
 script = ExtResource("99_preview")
 plane_id = "verath"
+
+[node name="MarketStall1" parent="Level/Props" instance=ExtResource("v_stall1")]
+transform = Transform3D(0.9063, 0, -0.4226, 0, 1, 0, 0.4226, 0, 0.9063, -6, 0, 2)
+
+[node name="StallDress1" parent="Level/Props" instance=ExtResource("v_dress")]
+transform = Transform3D(0.9063, 0, -0.4226, 0, 1, 0, 0.4226, 0, 0.9063, -6, 0, 2)
+
+[node name="MarketStall2" parent="Level/Props" instance=ExtResource("v_stall3")]
+transform = Transform3D(0.8192, 0, 0.5736, 0, 1, 0, -0.5736, 0, 0.8192, 2, 0, -1)
+
+[node name="MarketLabel" parent="Level/Props" instance=ExtResource("v_label")]
+transform = Transform3D(0.9063, 0, -0.4226, 0, 1, 0, 0.4226, 0, 0.9063, -4.6, 0, 2.8)
+
+[node name="HarborBoat1" parent="Level/Props" instance=ExtResource("v_boat")]
+transform = Transform3D(0.342, 0, 0.9397, 0, 1, 0, -0.9397, 0, 0.342, -5, -0.15, 30)
+
+[node name="HarborBoat2" parent="Level/Props" instance=ExtResource("v_boat")]
+transform = Transform3D(-0.5, 0, -0.866, 0, 1, 0, 0.866, 0, -0.5, 9, -0.15, 31)
+
+[node name="DockLamp1" parent="Level/Props" instance=ExtResource("v_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 3, 0, 24)
+
+[node name="DockLamp2" parent="Level/Props" instance=ExtResource("v_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 10, 0, 25)
+
+[node name="QuayLamp" parent="Level/Props" instance=ExtResource("v_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -12, 0, 8)
+
