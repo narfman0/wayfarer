@@ -39,6 +39,7 @@ var _fade_tween: Tween
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS  # sfx during pause menus too
+	set_master_volume(master_volume())  # restore persisted volume
 	for i in _SFX_POOL_SIZE:
 		var p := AudioStreamPlayer.new()
 		p.volume_db = _SFX_DB
@@ -49,6 +50,23 @@ func _ready() -> void:
 	for p in [_ambient_current, _ambient_old]:
 		p.volume_db = _AMBIENT_DB
 		add_child(p)
+
+## Master volume, persisted alongside the graphics settings. Stored linear
+## 0..1; applied to the Master bus (0 = silent via the bottom of the dB ramp).
+func master_volume() -> float:
+	var cf := ConfigFile.new()
+	if cf.load("user://settings.cfg") == OK:
+		return clampf(cf.get_value("audio", "master", 1.0), 0.0, 1.0)
+	return 1.0
+
+func set_master_volume(v: float) -> void:
+	v = clampf(v, 0.0, 1.0)
+	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(v, 0.0001)))
+	AudioServer.set_bus_mute(0, v <= 0.0)
+	var cf := ConfigFile.new()
+	cf.load("user://settings.cfg")
+	cf.set_value("audio", "master", v)
+	cf.save("user://settings.cfg")
 
 ## Fire a one-shot by base name ("hit" → sfx_hit.wav). Small random pitch
 ## spread keeps rapid repeats from machine-gunning.

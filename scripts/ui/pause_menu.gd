@@ -25,18 +25,16 @@ func _ready() -> void:
 	_add_graphics_button()
 	_build_queue_section()
 
-## Cycles low → medium → high, persists, and re-applies to the live level.
 func _add_graphics_button() -> void:
 	var vbox: VBoxContainer = $Panel/VBox
-	var gfx_btn := Button.new()
-	gfx_btn.text = "Graphics: %s" % Graphics.tier().capitalize()
-	gfx_btn.pressed.connect(func() -> void:
-		gfx_btn.text = "Graphics: %s" % Graphics.next_tier().capitalize()
-		var lvl := get_tree().current_scene
-		if lvl != null and lvl.has_method("apply_graphics_tier"):
-			lvl.apply_graphics_tier())
-	vbox.add_child(gfx_btn)
-	vbox.move_child(gfx_btn, 3)
+	var settings_btn := Button.new()
+	settings_btn.text = "Settings"
+	settings_btn.pressed.connect(func() -> void:
+		var screen: CanvasLayer = load("res://scripts/ui/settings_screen.gd").new()
+		get_tree().current_scene.add_child(screen))
+		# settings closes over the pause menu, same as inventory
+	vbox.add_child(settings_btn)
+	vbox.move_child(settings_btn, 3)
 
 func _add_inventory_button() -> void:
 	var vbox: VBoxContainer = $Panel/VBox

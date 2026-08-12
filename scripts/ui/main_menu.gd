@@ -15,6 +15,19 @@ func _ready() -> void:
 	_continue_btn.pressed.connect(_on_continue)
 	_new_game_btn.pressed.connect(_on_new_game)
 	_quit_btn.pressed.connect(_on_quit)
+	_add_settings_button()
+
+## Settings sits between New Game and Quit (built in code — the overlay is
+## procedural, so the menu hook is too).
+func _add_settings_button() -> void:
+	var settings_btn := Button.new()
+	settings_btn.text = "Settings"
+	settings_btn.pressed.connect(func() -> void:
+		var screen: CanvasLayer = load("res://scripts/ui/settings_screen.gd").new()
+		add_child(screen))
+	var layout := $Layout
+	layout.add_child(settings_btn)
+	layout.move_child(settings_btn, _quit_btn.get_index())
 
 func _style_title() -> void:
 	if _title_label == null:

@@ -50,6 +50,14 @@ func _run() -> void:
 		for f in 6:
 			await get_tree().process_frame
 		_shot("ui_levelup_next_page")
+
+	# settings screen (over the level for the live-apply path)
+	var settings: CanvasLayer = load("res://scripts/ui/settings_screen.gd").new()
+	add_child(settings)
+	for f in 4:
+		await get_tree().process_frame
+	_shot("ui_settings")
+	settings.queue_free()
 	print("UI GALLERY DONE")
 	get_tree().quit(0)
 

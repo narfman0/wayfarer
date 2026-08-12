@@ -265,7 +265,7 @@ static func _add_rim_light(level: Node3D, color: Color) -> void:
 	rim.name = "RimLight"
 	rim.light_color = color
 	rim.light_energy = 0.5
-	rim.specular = 1.0
+	rim.light_specular = 1.0
 	rim.shadow_enabled = false
 	rim.rotation_degrees = Vector3(-18.0, 225.0, 0.0)  # low, opposite the camera
 	level.add_child(rim)
