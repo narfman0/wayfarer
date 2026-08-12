@@ -83,7 +83,8 @@ func _test_spellcasting() -> void:
 	_level.cast_spell(spell_data.make_guiding_bolt(), liris)
 	_check(liris.energy_slots.slots_remaining_at(1) == slots_before - 1,
 		"L1 spell spends a slot at cast time")
-	await get_tree().create_timer(0.6).timeout
+	# apex (0.4s) + bolt flight (up to 0.4s) before damage lands
+	await get_tree().create_timer(1.1).timeout
 	_check(guard.character.stats.current_hp < hp_before, "damage spell hurts the target")
 
 	# cantrip: no slot spent
