@@ -137,6 +137,23 @@ func _test_spellcasting() -> void:
 	sarro.stats.strength = str_before
 	_player.target_enemy = null
 
+	# Enemy signatures: a shove-signature guard pushes the player; grapple holds.
+	var sguard := _level.get_node("Enemies/PenGuard1") as CharacterBody3D
+	sguard._stun_left = 0.0  # the trip test just floored this guard
+	_player.global_position = sguard.global_position + Vector3(1.0, 0, 0)
+	sguard._target = _player
+	sguard.character.stats.strength = 100
+	sguard.signature_ability = "shove"
+	sguard._signature_timer = 0.0
+	sguard._try_signature()
+	_check(_player._knockback.length() > 0.1, "enemy shove knocks the player back")
+	_player._knockback = Vector3.ZERO
+	sguard.signature_ability = "grapple"
+	sguard._try_signature()
+	_check(_player.is_rooted(), "enemy grapple roots the player")
+	_player._root_left = 0.0
+	sguard.character.stats.strength = 10
+
 	# Liris's auto Healing Word — regression: passed the character SHEET as
 	# the position source and crashed on Resource.global_position.
 	var companion := _level.get_node("Characters/Liris") as CharacterBody3D

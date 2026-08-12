@@ -22,6 +22,7 @@ const _Telegraph      = preload("res://scripts/combat/telegraph.gd")
 const _Projectile     = preload("res://scripts/combat/projectile.gd")
 const _Juice          = preload("res://scripts/combat/juice.gd")
 const _Vfx            = preload("res://scripts/combat/vfx.gd")
+const _Maneuvers      = preload("res://scripts/combat/maneuvers.gd")
 
 enum State { PATROL, CHASE, ATTACK, RETURN }
 
@@ -99,6 +100,13 @@ const _TYPE_ARCHETYPES := {
 @export var loot_table_key: String = ""
 ## Seed for the loot roll. 0 = derived from world position at death time.
 @export var loot_seed: int = 0
+## Signature move used occasionally in combat. "auto" picks by archetype
+## (bruiser → shove, heavy → grapple, support → bolt); bosses default to
+## none — their fights are choreographed, not wrestled.
+@export_enum("auto", "none", "shove", "grapple", "bolt") var signature_ability: String = "auto"
+## Seconds between signature attempts — long on purpose so fights stay
+## readable and maneuvers feel like moments, not spam.
+@export var signature_cooldown: float = 14.0
 
 ## Filled by WayfarerCharacter factory in task 8. Nil = use defaults.
 var character = null  # WayfarerCharacter
@@ -114,6 +122,7 @@ var _attack_timer: float = 0.0
 var _ranged_timer: float = 0.0
 var _support_timer: float = 4.0   # first litany shortly after combat starts
 var _slam_timer: float = 2.5   # first slam lands shortly after combat starts
+var _signature_timer: float = 6.0   # first signature a beat into the fight
 var _slam_winding: bool = false
 var _knockback: Vector3 = Vector3.ZERO
 var _dead: bool = false
@@ -197,6 +206,10 @@ func _physics_process(delta: float) -> void:
 
 	if _root_left > 0.0:
 		_root_left -= delta
+	if _signature_timer > 0.0 and (_state == State.CHASE or _state == State.ATTACK):
+		_signature_timer -= delta
+		if _signature_timer <= 0.0:
+			_try_signature()
 	if _stun_left > 0.0:
 		_stun_left -= delta
 		velocity.x = 0.0
@@ -316,6 +329,60 @@ func _do_attack(delta: float) -> void:
 		_attack_timer = 1.5
 		if _invuln_timer <= 0.0:
 			_fire_attack()
+
+# ── Signature moves — the same maneuver vocabulary players use ───────────────
+
+func _signature_kind() -> String:
+	if signature_ability != "auto":
+		return signature_ability
+	if is_boss:
+		return "none"
+	match _arch:
+		"bruiser": return "shove"
+		"heavy":   return "grapple"
+		"support": return "bolt"
+	return "none"
+
+## Attempt the signature on the current target; contested like the player's
+## own maneuvers (Maneuvers.contest, ties to the defender).
+func _try_signature() -> void:
+	_signature_timer = signature_cooldown
+	var kind := _signature_kind()
+	if kind == "none" or _dead or _stun_left > 0.0 or is_casting():
+		return
+	var tgt := _target
+	if tgt == null or not is_instance_valid(tgt) or character == null:
+		return
+	var dist := global_position.distance_to(tgt.global_position)
+	var scene := get_tree().current_scene
+	match kind:
+		"shove":
+			if dist > MELEE_DIST * 1.4:
+				return
+			if _Maneuvers.contest(character, _char_for(tgt), 0, 0):
+				var away := tgt.global_position - global_position
+				away.y = 0.0
+				tgt.set("_knockback", away.normalized() * _Maneuvers.SHOVE_PUSH)
+				_Maneuvers.feedback(scene, tgt.global_position, "SHOVED", Color(1.0, 0.6, 0.4))
+			else:
+				_Maneuvers.feedback(scene, tgt.global_position, "resisted", Color(0.75, 0.75, 0.8))
+		"grapple":
+			if dist > MELEE_DIST * 1.4 or not tgt.has_method("root"):
+				return
+			if _Maneuvers.contest(character, _char_for(tgt), 0, 0):
+				tgt.root(1.5)
+				_Maneuvers.feedback(scene, tgt.global_position, "HELD", Color(1.0, 0.7, 0.4))
+			else:
+				_Maneuvers.feedback(scene, tgt.global_position, "slipped free", Color(0.75, 0.75, 0.8))
+		"bolt":
+			if dist > 12.0:
+				return
+			_CharAnim.oneshot(self, "cast_bolt", 1.4, 0.8)
+			var from := global_position
+			_Vfx.spell_bolt(scene, from, tgt.global_position, Color(1.0, 0.5, 0.6),
+				func() -> void:
+					if not _dead and tgt != null and is_instance_valid(tgt):
+						_resolve_attack_on(tgt))
 
 # ── Attack resolution (shared by melee, projectile, slam) ────────────────────
 

@@ -21,6 +21,14 @@ var attacker = null
 
 var _down := false
 var _heal_cooldown: float = 0.0
+var _knockback := Vector3.ZERO
+var _root_left := 0.0
+
+func root(secs: float) -> void:
+	_root_left = maxf(_root_left, secs)
+
+func is_rooted() -> bool:
+	return _root_left > 0.0
 
 func _ready() -> void:
 	var skin := get_node_or_null("Skin")
@@ -33,6 +41,14 @@ func _physics_process(delta: float) -> void:
 
 	if _heal_cooldown > 0.0:
 		_heal_cooldown -= delta
+
+	if _root_left > 0.0:
+		_root_left -= delta
+		velocity.x = _knockback.x
+		velocity.z = _knockback.z
+		_knockback = _knockback.move_toward(Vector3.ZERO, 18.0 * delta)
+		move_and_slide()
+		return
 
 	var enemy = _nearest_enemy()
 	if _update_down_state(enemy != null):
@@ -49,6 +65,9 @@ func _physics_process(delta: float) -> void:
 			attacker.stop()
 		_follow(delta)
 
+	velocity.x += _knockback.x
+	velocity.z += _knockback.z
+	_knockback = _knockback.move_toward(Vector3.ZERO, 18.0 * delta)
 	move_and_slide()
 
 ## Liris at 0 HP drops out of the fight; the Veil steadies her once combat

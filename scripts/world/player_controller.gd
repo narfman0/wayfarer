@@ -30,6 +30,16 @@ var _hold_timer := 0.0
 var _hover_timer := 0.0
 var _mouse_pos := Vector2.ZERO
 
+# Forced-movement states (enemy shoves/grapples work on us too).
+var _knockback := Vector3.ZERO
+var _root_left := 0.0
+
+func root(secs: float) -> void:
+	_root_left = maxf(_root_left, secs)
+
+func is_rooted() -> bool:
+	return _root_left > 0.0
+
 var _enabled: bool = true
 var _click_target: Vector3 = Vector3.INF  # INF = no active click destination
 
@@ -70,6 +80,15 @@ func _physics_process(delta: float) -> void:
 		_hover_timer = 0.1
 		hovered_enemy = _enemy_under_cursor()
 
+	# Rooted (grappled): no voluntary movement, knockback still applies.
+	if _root_left > 0.0:
+		_root_left -= delta
+		velocity.x = _knockback.x
+		velocity.z = _knockback.z
+		_knockback = _knockback.move_toward(Vector3.ZERO, 18.0 * delta)
+		move_and_slide()
+		return
+
 	# WASD / stick input takes priority over click-to-move
 	var stick := _read_input()
 	if stick.length_squared() > 0.01:
@@ -83,6 +102,9 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, SPEED * 8.0 * delta)
 		velocity.z = move_toward(velocity.z, 0.0, SPEED * 8.0 * delta)
 
+	velocity.x += _knockback.x
+	velocity.z += _knockback.z
+	_knockback = _knockback.move_toward(Vector3.ZERO, 18.0 * delta)
 	move_and_slide()
 
 func _input(event: InputEvent) -> void:
