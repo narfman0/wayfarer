@@ -696,9 +696,16 @@ func _end_cast() -> void:
 
 # ── Damage intake / death ─────────────────────────────────────────────────────
 
+## Overstitch consequence: each scar on the current plane hardens its
+## enemies by 1 damage per hit (min 1 still lands), capped here.
+const SCAR_RESIST_CAP := 3
+
 func receive_damage(amount: int, from: Vector3 = Vector3.INF) -> void:
 	if character == null or _invuln_timer > 0.0 or _dead:
 		return
+	var scars: int = GameState.scar_count(GameState.current_plane)
+	if scars > 0 and amount > 1:
+		amount = maxi(1, amount - mini(scars, SCAR_RESIST_CAP))
 	guiding_bolt_active = false  # consumed on hit regardless of outcome
 	character.stats.current_hp = max(0, character.stats.current_hp - amount)
 	hp_changed.emit(character.stats.current_hp, character.stats.max_hp)

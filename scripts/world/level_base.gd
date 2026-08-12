@@ -127,6 +127,7 @@ func _ready() -> void:
 	_apply_loaded_state()
 	_setup_scenery()  # after _apply_loaded_state so avoid-points use final positions
 	_setup_atmosphere()
+	_spawn_scars()  # persisted overstitch damage re-grows on entry
 	if not _debug_party:
 		GameState.save_game()  # autosave on plane entry
 	_on_level_ready()
@@ -1017,14 +1018,18 @@ func _use_channel_divinity() -> void:
 
 ## Public entry point for the skill bar (AbilityRegistry spell slots call
 ## this on the current scene). `caster` defaults to Sarro; Liris's known
-## spells pass her explicitly.
-func cast_spell(spell, caster = null) -> void:
-	_cast_spell(spell, caster)
+## spells pass her explicitly. `overstitch` (SHIFT-cast, leveled spells
+## only): force the seam wider — +2 effect dice from the same slot, but the
+## plane scars where the spell lands and its enemies grow resistant.
+func cast_spell(spell, caster = null, overstitch := false) -> void:
+	_cast_spell(spell, caster, overstitch)
 
-func _cast_spell(spell, caster = null) -> void:
+func _cast_spell(spell, caster = null, overstitch := false) -> void:
 	var c = caster if caster != null else GameState.sarro
 	if c == null or _defeated:
 		return
+	overstitch = overstitch and spell.spell_level > 0  # cantrips can't force
+	var extra_dice: int = 2 if overstitch else 0
 	# The body performing the gesture (spells belong to a sheet, not a node).
 	var caster_body: Node3D = _companion if c == GameState.liris else _player
 
@@ -1036,7 +1041,7 @@ func _cast_spell(spell, caster = null) -> void:
 				"Select a target first!", Color(1.0, 0.5, 0.3))
 			return
 		var dmg: int = 0
-		for _i in spell.damage_count:
+		for _i in spell.damage_count + extra_dice:
 			dmg += _Dice.roll(spell.damage_dice)
 		# Point at the apex, then a bolt FLIES to the target and damage lands
 		# on arrival. Deliberately weightier than a sword wind-up.
@@ -1056,12 +1061,14 @@ func _cast_spell(spell, caster = null) -> void:
 					_DamageNumber.hit(self, tgt.global_position, dmg, false)
 					_DamageNumber.spawn(self, tgt.global_position + Vector3(0, 2.0, 0),
 						spell.spell_name, Color(0.7, 0.7, 1.0))
+					if overstitch:
+						_apply_overstitch(tgt.global_position)
 					print("[Spell] %s → %s: %d dmg" % [spell.spell_name, tgt.name, dmg])))
 
 	# Heal spell — restores the caster
 	elif spell.heal_dice > 0:
 		var heal: int = 0
-		for _i in spell.heal_count:
+		for _i in spell.heal_count + extra_dice:
 			heal += _Dice.roll(spell.heal_dice)
 		heal += c.stats.ability_modifier(4)  # WIS
 		_CharAnim.oneshot(caster_body, "cast_heal", 1.4, 0.8)
@@ -1073,6 +1080,8 @@ func _cast_spell(spell, caster = null) -> void:
 			_Vfx.heal_aura(self, at)
 			_DamageNumber.spawn(self, at + Vector3(0, 1.5, 0),
 				"+%d %s" % [heal, spell.spell_name], Color(0.4, 1.0, 0.5))
+			if overstitch:
+				_apply_overstitch(at)
 			print("[Spell] %s: +%d HP to %s" % [spell.spell_name, heal, c.display_name]))
 
 	# Buff / utility — arms raised, announce at the apex
@@ -1088,8 +1097,39 @@ func _cast_spell(spell, caster = null) -> void:
 			print("[Spell] %s cast" % spell.spell_name))
 
 	# Slot + action economy spend stays at cast time (only the effect waits).
+	# Overstitching pulls MORE through the same slot — that's the whole deal.
 	if spell.spell_level > 0 and c.energy_slots != null:
 		c.energy_slots.use_slot(spell.spell_level)
+
+## The cost of forcing the seam: scar tissue at the impact site, a permanent
+## per-plane count in GameState.flags (dialogue reads it), and every enemy on
+## a scarred plane resists damage (EnemyController.SCAR_RESIST_CAP ticks max).
+func _apply_overstitch(pos: Vector3) -> void:
+	GameState.add_scar(plane_id)
+	_Vfx.scar_tissue(self, pos)
+	SceneManager.veil_pulse(0.55, 0.8)
+	_DamageNumber.spawn(self, pos + Vector3(0, 2.6, 0), "OVERSTITCH",
+		Color(0.8, 0.45, 1.0))
+	AudioManager.play_sfx("portal", -2.0)
+	var n: int = GameState.scar_count(plane_id)
+	if _hud != null:
+		_hud.show_toast_text("The plane scars (%d) — its enemies grow resistant." % n)
+	print("[Overstitch] %s scarred (%d total here)" % [plane_id, n])
+
+## Re-grow the plane's scar tissue from the persisted count — positions are
+## seeded by plane and index, so a scarred plane always looks the same.
+func _spawn_scars() -> void:
+	var n: int = GameState.scar_count(plane_id)
+	if n <= 0:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(plane_id) ^ 0x5CA125
+	for i in n:
+		var ang := rng.randf_range(0.0, TAU)
+		var r := rng.randf_range(3.0, 11.0)
+		_Vfx.scar_tissue(self, Vector3(cos(ang) * r, 0.0, sin(ang) * r))
+	if _hud != null:
+		_hud.show_toast_text("The Veil is scarred here (%d) — enemies resist damage." % n)
 
 # ── Pause / queue ─────────────────────────────────────────────────────────────
 

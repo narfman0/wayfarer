@@ -264,11 +264,14 @@ static func _spell_entry(char, sp, index: int) -> Dictionary:
 	var cost: String = "quick cast" if sp.is_bonus_action else "cast"
 	# Spell hotkeys 7 8 9 0 (dispatched by the skill bar, not input actions)
 	var kb: String = "" if index >= 4 else ("0" if index == 3 else str(7 + index))
+	var desc := String(sp.description)
+	if sp.spell_level > 0:
+		desc += "\nSHIFT-cast: overstitch — +2 dice from the same slot, but the plane scars."
 	var entry := {
 		"id": "spell_%s" % String(sp.spell_name).to_lower().replace(" ", "_"),
 		"group": "spell",
 		"name": String(sp.spell_name),
-		"description": String(sp.description),
+		"description": desc,
 		"cost": cost,
 		"attack_roll": "",
 		"damage": _spell_damage_text(sp),
@@ -282,7 +285,8 @@ static func _spell_entry(char, sp, index: int) -> Dictionary:
 			var tree := Engine.get_main_loop() as SceneTree
 			var lvl = tree.current_scene if tree != null else null
 			if lvl != null and lvl.has_method("cast_spell"):
-				lvl.cast_spell(sp, char),
+				lvl.cast_spell(sp, char,
+					sp.spell_level > 0 and Input.is_key_pressed(KEY_SHIFT)),
 	}
 	if sp.spell_level > 0:  # leveled spells badge their remaining slots
 		entry["count"] = func() -> int:

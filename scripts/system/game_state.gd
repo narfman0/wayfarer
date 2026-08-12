@@ -92,6 +92,18 @@ func get_flag(flag_name: String, default: Variant = null) -> Variant:
 func has_flag(flag_name: String) -> bool:
 	return bool(flags.get(flag_name, false))
 
+## Overstitch scars — the world remembers forced casts. Counts live in flags
+## (so they persist with the save and dialogue can read them: "scars_tamori",
+## "scars_total", "has_overstitched"). Enemies on scarred planes resist
+## damage — see EnemyController.SCAR_RESIST_CAP.
+func add_scar(plane: String) -> void:
+	flags["scars_" + plane] = scar_count(plane) + 1
+	flags["scars_total"] = int(flags.get("scars_total", 0)) + 1
+	flags["has_overstitched"] = true
+
+func scar_count(plane: String) -> int:
+	return int(flags.get("scars_" + plane, 0))
+
 ## Liris's conviction score — adjusted by dialogue choices
 ## (`do GameState.add_conviction(1)`), read by Act 3 gates. Persisted in flags.
 func add_conviction(amount: int) -> void:

@@ -15,6 +15,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	_test_loot_and_gold()
+	_test_overstitch_scars()
 	await _test_rt_combat()
 	await _test_pathfinding()
 	await _test_dungeon_enemies()
@@ -42,6 +43,23 @@ func _test_loot_and_gold() -> void:
 	GameState.add_item({"name": "Healing Draught", "kind": "consumable"})
 	_check(GameState.has_item("Healing Draught"), "inventory stores items")
 
+# ── Overstitch scars ──────────────────────────────────────────────────────────
+
+func _test_overstitch_scars() -> void:
+	GameState.flags.erase("scars_testplane")
+	GameState.flags.erase("scars_total")
+	GameState.flags.erase("has_overstitched")
+	GameState.add_scar("testplane")
+	GameState.add_scar("testplane")
+	_check(GameState.scar_count("testplane") == 2, "scar count accumulates per plane")
+	_check(int(GameState.get_flag("scars_total", 0)) == 2, "scars_total flag tracks all planes")
+	_check(bool(GameState.get_flag("has_overstitched", false)),
+		"has_overstitched story flag set — dialogue-readable")
+	_check(GameState.scar_count("elsewhere") == 0, "scars stay plane-local")
+	GameState.flags.erase("scars_testplane")
+	GameState.flags.erase("scars_total")
+	GameState.flags.erase("has_overstitched")
+
 # ── Real-time combat ──────────────────────────────────────────────────────────
 
 func _test_rt_combat() -> void:
@@ -65,6 +83,14 @@ func _test_rt_combat() -> void:
 	_check(CombatManager._queue.has(guard), "aggroed enemy joins the encounter")
 	_check((guard.collision_mask & 8) != 0 and (guard.collision_mask & 16) != 0,
 		"enemies collide with props and barriers")
+
+	# scar resistance: 2 scars on the current plane soak 2 damage per hit
+	var hp_before: int = guard.character.stats.current_hp
+	GameState.flags["scars_" + GameState.current_plane] = 2
+	guard.receive_damage(10)
+	_check(hp_before - guard.character.stats.current_hp == 8,
+		"enemies on a scarred plane resist damage (2 scars → −2)")
+	GameState.flags.erase("scars_" + GameState.current_plane)
 
 	# killing the last enemy ends combat via the RT round poll
 	for e in level.get_node("Enemies").get_children():

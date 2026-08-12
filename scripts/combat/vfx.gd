@@ -289,3 +289,58 @@ static func death_dissolve(scene: Node, pos: Vector3,
 	scene.get_tree().create_timer(1.8).timeout.connect(func() -> void:
 		if is_instance_valid(p):
 			p.queue_free())
+
+## Overstitch scar tissue: a dark weal in the ground where the Veil was
+## forced. Permanent for the visit — level_base respawns them from the
+## persisted per-plane count on re-entry. Returns the root node.
+static func scar_tissue(scene: Node, pos: Vector3) -> Node3D:
+	var root := Node3D.new()
+	scene.add_child(root)
+	root.global_position = pos + Vector3(0, 0.05, 0)
+
+	# puckered dark disc with a violet rim glow
+	var mi := MeshInstance3D.new()
+	var disc := CylinderMesh.new()
+	disc.top_radius = 1.1
+	disc.bottom_radius = 1.1
+	disc.height = 0.03
+	mi.mesh = disc
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(0.10, 0.03, 0.17, 0.9)
+	mat.emission_enabled = true
+	mat.emission = Color(0.5, 0.2, 0.9)
+	mat.emission_energy_multiplier = 0.5
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(mi)
+
+	# a few motes drifting up forever — the tear never quite closes
+	var p := CPUParticles3D.new()
+	p.amount = 5
+	p.lifetime = 3.2
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	p.emission_sphere_radius = 0.8
+	p.direction = Vector3.UP
+	p.spread = 8.0
+	p.gravity = Vector3(0, 0.5, 0)
+	p.initial_velocity_min = 0.05
+	p.initial_velocity_max = 0.25
+	var mote := SphereMesh.new()
+	mote.radius = 0.035
+	mote.height = 0.07
+	mote.radial_segments = 6
+	mote.rings = 3
+	var mote_mat := StandardMaterial3D.new()
+	mote_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mote_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mote_mat.albedo_color = Color(0.55, 0.3, 0.9, 0.7)
+	mote_mat.emission_enabled = true
+	mote_mat.emission = Color(0.55, 0.3, 0.9)
+	mote_mat.emission_energy_multiplier = 1.4
+	mote.material = mote_mat
+	p.mesh = mote
+	p.emitting = true
+	root.add_child(p)
+	return root
