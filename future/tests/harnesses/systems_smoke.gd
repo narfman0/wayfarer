@@ -63,6 +63,8 @@ func _test_rt_combat() -> void:
 	await get_tree().process_frame
 	_check(CombatManager.in_combat, "aggro enters combat")
 	_check(CombatManager._queue.has(guard), "aggroed enemy joins the encounter")
+	_check((guard.collision_mask & 8) != 0 and (guard.collision_mask & 16) != 0,
+		"enemies collide with props and barriers")
 
 	# killing the last enemy ends combat via the RT round poll
 	for e in level.get_node("Enemies").get_children():

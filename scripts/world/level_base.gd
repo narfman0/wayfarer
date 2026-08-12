@@ -179,6 +179,11 @@ const _PROP_LAYER := 1 << 3  # value 8; unused by ground(1)/enemies(2)/companion
 ## Boundary walls and pad rails: blocks bodies, invisible to click rays
 ## (CLICK_MASK = ground|enemies) — a 10 m wall must never eat an attack click.
 const _BARRIER_LAYER := 1 << 4  # value 16
+## Everything a moving body must collide with beyond its scene defaults:
+## world props (trimesh) + boundary walls/rails. ONE constant so a new
+## mover can't silently miss a layer again (enemies used to walk through
+## trees because only the player's mask was extended).
+const _MOVER_MASK_EXTRA := _PROP_LAYER | _BARRIER_LAYER
 
 func _setup_prop_collision() -> void:
 	var props := get_node_or_null("Level/Props")
@@ -192,9 +197,8 @@ func _setup_prop_collision() -> void:
 		if body != null:
 			body.collision_layer = _PROP_LAYER
 			body.collision_mask = 0
-	_player.collision_mask |= _PROP_LAYER
-	_player.collision_mask |= _BARRIER_LAYER
-	_companion.collision_mask |= _BARRIER_LAYER
+	_player.collision_mask |= _MOVER_MASK_EXTRA
+	_companion.collision_mask |= _MOVER_MASK_EXTRA
 
 ## The StaticBody3D that create_trimesh_collision() just parented under `mi`
 ## (Synty prop meshes carry no collision of their own, so it's the only one).
@@ -593,7 +597,7 @@ func register_enemy(ec) -> void:
 	if ec.character != null:
 		return
 	ec.character = _Factory.make_enemy(ec.enemy_type)
-	ec.collision_mask |= _BARRIER_LAYER
+	ec.collision_mask |= _MOVER_MASK_EXTRA
 	ec.died.connect(_on_enemy_died.bind(ec))
 	if ec.is_boss:
 		ec.phase_changed.connect(_on_boss_phase.bind(ec))
