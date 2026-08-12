@@ -115,6 +115,28 @@ func _test_spellcasting() -> void:
 	_check(sarro.heavy_strike_cd > 0.0, "Heavy Strike cooldown starts")
 	_player.target_enemy = null
 
+	# Maneuvers: shove knocks back, grapple roots, trip (soldier flavor) stuns.
+	var mguard := _level.get_node("Enemies/PenGuard1") as CharacterBody3D
+	_player.global_position = mguard.global_position + Vector3(1.2, 0, 0)
+	_player.target_enemy = mguard
+	sarro.shove_cd = 0.0
+	var kb_before: Vector3 = mguard.get("_knockback")
+	# force the contest to succeed: pump STR sky-high
+	var str_before: int = sarro.stats.strength
+	sarro.stats.strength = 100  # +45 mod: d20+45 vs d20+~1 cannot lose
+	_level._use_shove()
+	_check(mguard.get("_knockback") != kb_before or mguard.is_stunned(),
+		"Shove knocks the target back")
+	sarro.grapple_cd = 0.0
+	_level._use_grapple()
+	_check(mguard.is_rooted(), "Grapple roots the target")
+	mguard.break_root()
+	sarro.flavor_cd = 0.0
+	_level._use_class_flavor()  # debug Sarro is a soldier → Trip
+	_check(mguard.is_stunned(), "Trip knocks the target prone")
+	sarro.stats.strength = str_before
+	_player.target_enemy = null
+
 	# Liris's auto Healing Word — regression: passed the character SHEET as
 	# the position source and crashed on Resource.global_position.
 	var companion := _level.get_node("Characters/Liris") as CharacterBody3D

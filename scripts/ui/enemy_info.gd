@@ -127,13 +127,15 @@ func _refresh_panel(panel: PanelContainer, e: Node3D, is_target: bool) -> void:
 	else:
 		info_lbl.text = ""
 
-## Compact condition badges: ⊘ stunned, ◍ casting, ✦ marked (guiding bolt).
+## Compact condition badges: ⊘ stunned, ◍ casting, ⌗ held, ✦ marked.
 func _badges(e: Node3D) -> String:
 	var out := ""
 	if e.has_method("is_stunned") and e.is_stunned():
 		out += "⊘"
 	if e.has_method("is_casting") and e.is_casting():
 		out += "◍"
+	if e.has_method("is_rooted") and e.is_rooted():
+		out += "⌗"
 	if e.get("guiding_bolt_active") == true:
 		out += "✦"
 	return out

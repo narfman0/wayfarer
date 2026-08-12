@@ -46,6 +46,12 @@ var shield_bash_cd: float = 0.0
 ## stagger; short cooldown starts when the primed swing lands.
 var heavy_strike_primed: bool = false
 var heavy_strike_cd: float = 0.0
+## Maneuvers (session-only): shove/grapple for everyone, one class-flavor
+## active (Trip/Feint/Ward/Repel), plus the Warden ward's absorb pool.
+var shove_cd: float = 0.0
+var grapple_cd: float = 0.0
+var flavor_cd: float = 0.0
+var ward_hp: int = 0
 
 ## Sarro: Action Surge (level 2) — once per rest; Freeblades instead run it
 ## on a short cooldown (Surge Mastery).

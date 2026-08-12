@@ -25,6 +25,12 @@ static func abilities_for(char) -> Array[Dictionary]:
 		out.append(_healing_word(char))
 		out.append(_channel_divinity(char))
 
+	# Maneuvers — every player character fights with their hands too.
+	if is_sarro:
+		out.append(_shove(char))
+		out.append(_grapple(char))
+		out.append(_class_flavor(char))
+
 	# Known-spell entries (one per spell) — Sarro or anyone with spells.
 	if char.get("known_spells") != null:
 		var i: int = 0
@@ -41,7 +47,7 @@ static func _second_wind(char) -> Dictionary:
 		"id": "second_wind",
 		"name": "Second Wind",
 		"description": "Self-heal drawing on your reserves. Recovers on short rest.",
-		"cost": "bonus_action",
+		"cost": "instant",
 		"attack_roll": "",
 		"damage": "1d10+%d healing" % char.stats.level,
 		"icon_color": Color(0.75, 0.35, 0.35),
@@ -70,7 +76,7 @@ static func _shield_bash(char) -> Dictionary:
 		"id": "shield_bash",
 		"name": "Shield Bash",
 		"description": "Slam your shield into the target. Damages and knocks prone. Short cooldown.",
-		"cost": "action",
+		"cost": "combat",
 		"attack_roll": "+%d to hit" % _prof_plus_str(char),
 		"damage": "1d6 bludgeoning + prone",
 		"icon_color": Color(0.55, 0.55, 0.65),
@@ -99,6 +105,67 @@ static func _action_surge(char) -> Dictionary:
 		"activate": _trigger_action("ability_6"),
 	}
 
+static func _shove(char) -> Dictionary:
+	return {
+		"id": "shove",
+		"name": "Shove",
+		"description": "Contested STR: knock the target away from you. Edges are fair game.",
+		"cost": "melee range",
+		"attack_roll": "STR vs STR",
+		"damage": "knockback",
+		"icon_color": Color(0.85, 0.6, 0.35),
+		"keybind": "E",
+		"is_ready": func() -> bool: return char.shove_cd <= 0.0,
+		"activate": _trigger_action("ability_8"),
+	}
+
+static func _grapple(char) -> Dictionary:
+	return {
+		"id": "grapple",
+		"name": "Grapple",
+		"description": "Contested STR: hold the target in place. They get one escape attempt; attacks against a held target have advantage.",
+		"cost": "melee range",
+		"attack_roll": "STR vs STR",
+		"damage": "hold 2.5s",
+		"icon_color": Color(0.6, 0.5, 0.4),
+		"keybind": "G",
+		"is_ready": func() -> bool: return char.grapple_cd <= 0.0,
+		"activate": _trigger_action("ability_9"),
+	}
+
+static func _class_flavor(char) -> Dictionary:
+	var cls := ""
+	if char.class_data != null:
+		cls = String(char.class_data.class_name_str).to_lower()
+	var name := "Trip"
+	var desc := "Contested STR vs DEX: knock the target prone — attacks against them have advantage."
+	var color := Color(1.0, 0.7, 0.3)
+	match cls:
+		"ghost":
+			name = "Feint"
+			desc = "A misleading step: your next attack within 3s has advantage."
+			color = Color(0.7, 0.75, 0.95)
+		"warden":
+			name = "Ward"
+			desc = "A borrowed current shields you: absorbs 8 + level damage."
+			color = Color(0.5, 0.8, 1.0)
+		"psion":
+			name = "Repel"
+			desc = "Imposed certainty: every nearby enemy is shoved away."
+			color = Color(0.8, 0.55, 1.0)
+	return {
+		"id": "class_flavor",
+		"name": name,
+		"description": desc,
+		"cost": "class",
+		"attack_roll": "",
+		"damage": "",
+		"icon_color": color,
+		"keybind": "R",
+		"is_ready": func() -> bool: return char.flavor_cd <= 0.0,
+		"activate": _trigger_action("ability_10"),
+	}
+
 # ── Liris abilities ───────────────────────────────────────────────────────────
 
 static func _guiding_bolt(char) -> Dictionary:
@@ -106,7 +173,7 @@ static func _guiding_bolt(char) -> Dictionary:
 		"id": "guiding_bolt",
 		"name": "Guiding Bolt",
 		"description": "Radiant lance that grants advantage to the next attack against the target.",
-		"cost": "action",
+		"cost": "combat",
 		"attack_roll": "+%d spell attack" % _spell_atk(char),
 		"damage": "4d6 radiant",
 		"icon_color": Color(0.95, 0.85, 0.4),
@@ -120,7 +187,7 @@ static func _healing_word(char) -> Dictionary:
 		"id": "healing_word",
 		"name": "Healing Word",
 		"description": "Whispered mercy — restore an ally at range.",
-		"cost": "bonus_action",
+		"cost": "instant",
 		"attack_roll": "",
 		"damage": "1d4+%d healing" % _cha_mod(char),
 		"icon_color": Color(0.4, 0.9, 0.55),
@@ -134,7 +201,7 @@ static func _channel_divinity(char) -> Dictionary:
 		"id": "channel_divinity",
 		"name": "Channel Divinity",
 		"description": "Invoke divine power — Sacred Flame damage or Turn Undead. Recovers on short rest.",
-		"cost": "action",
+		"cost": "combat",
 		"attack_roll": "DC %d save" % (8 + _prof(char) + _cha_mod(char)),
 		"damage": "2d8 radiant",
 		"icon_color": Color(0.85, 0.55, 0.95),
@@ -146,7 +213,7 @@ static func _channel_divinity(char) -> Dictionary:
 # ── Spell entries ─────────────────────────────────────────────────────────────
 
 static func _spell_entry(char, sp, index: int) -> Dictionary:
-	var cost: String = "bonus_action" if sp.is_bonus_action else "action"
+	var cost: String = "quick cast" if sp.is_bonus_action else "cast"
 	# Spell hotkeys 7 8 9 0 (dispatched by the skill bar, not input actions)
 	var kb: String = "" if index >= 4 else ("0" if index == 3 else str(7 + index))
 	return {

@@ -129,6 +129,7 @@ var _cast_left: float = 0.0
 var _cast_total: float = 0.0
 var _cast_bar: Label3D = null
 var _stun_left: float = 0.0
+var _root_left: float = 0.0   # grappled: can't move, can still swing
 
 ## Emitted when this enemy takes damage (hp_current, hp_max).
 signal hp_changed(current: int, max_hp: int)
@@ -194,6 +195,8 @@ func _physics_process(delta: float) -> void:
 	if _invuln_timer > 0.0:
 		_invuln_timer -= delta
 
+	if _root_left > 0.0:
+		_root_left -= delta
 	if _stun_left > 0.0:
 		_stun_left -= delta
 		velocity.x = 0.0
@@ -218,6 +221,9 @@ func _physics_process(delta: float) -> void:
 			_tick_slam(delta)
 
 	# Knockback rides on top of whatever the state set, then decays fast.
+	if _root_left > 0.0:
+		velocity.x = 0.0
+		velocity.z = 0.0
 	velocity.x += _knockback.x
 	velocity.z += _knockback.z
 	_knockback = _knockback.move_toward(Vector3.ZERO, 18.0 * delta)
@@ -383,6 +389,13 @@ func _apply_party_damage(target_char, body: Node3D, dmg: int, crit: bool) -> voi
 			if p is Node3D and body.global_position.distance_to((p as Node3D).global_position) <= 6.0:
 				near_sarro = true
 	dmg = CharacterProgression.modify_party_damage(dmg, target_char, "melee", crit, near_sarro)
+	# Warden ward: an absorb pool soaks damage before HP.
+	if target_char.get("ward_hp") != null and target_char.ward_hp > 0 and dmg > 0:
+		var soaked: int = mini(target_char.ward_hp, dmg)
+		target_char.ward_hp -= soaked
+		dmg -= soaked
+		_DamageNumber.spawn(get_tree().current_scene,
+			body.global_position + Vector3(0, 2.4, 0), "WARD -%d" % soaked, Color(0.5, 0.8, 1.0))
 	target_char.stats.current_hp = max(0, target_char.stats.current_hp - dmg)
 	if target_char.stats.current_hp > 0:
 		_CharAnim.oneshot(body, "hit", 1.5, 0.7)  # brisk flinch — combat stays fluid
@@ -526,6 +539,17 @@ func start_cast(label: String, secs: float) -> void:
 
 func is_casting() -> bool:
 	return _cast_left > 0.0
+
+func root(secs: float) -> void:
+	if _dead:
+		return
+	_root_left = maxf(_root_left, secs)
+
+func break_root() -> void:
+	_root_left = 0.0
+
+func is_rooted() -> bool:
+	return _root_left > 0.0
 
 func is_stunned() -> bool:
 	return _stun_left > 0.0

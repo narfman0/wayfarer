@@ -16,6 +16,7 @@ const _Progression   = preload("res://scripts/characters/character_progression.g
 const _CharAnim      = preload("res://scripts/world/character_animator.gd")
 const _Juice         = preload("res://scripts/combat/juice.gd")
 const _Vfx           = preload("res://scripts/combat/vfx.gd")
+const _Maneuvers     = preload("res://scripts/combat/maneuvers.gd")
 const _Platform      = preload("res://scripts/world/platform_terrain.gd")
 
 ## Seconds from cast gesture start to the effect landing (the gesture's
@@ -422,6 +423,10 @@ func _process(_delta: float) -> void:
 		GameState.sarro.action_surge_cd = maxf(0.0, GameState.sarro.action_surge_cd - _delta)
 	if GameState.sarro != null and GameState.sarro.heavy_strike_cd > 0.0:
 		GameState.sarro.heavy_strike_cd = maxf(0.0, GameState.sarro.heavy_strike_cd - _delta)
+	if GameState.sarro != null:
+		GameState.sarro.shove_cd = maxf(0.0, GameState.sarro.shove_cd - _delta)
+		GameState.sarro.grapple_cd = maxf(0.0, GameState.sarro.grapple_cd - _delta)
+		GameState.sarro.flavor_cd = maxf(0.0, GameState.sarro.flavor_cd - _delta)
 	if not _defeated and GameState.sarro != null and GameState.sarro.stats.current_hp <= 0:
 		_on_party_defeated()
 
@@ -692,6 +697,12 @@ func _input(event: InputEvent) -> void:
 		_use_action_surge()
 	elif event.is_action_pressed("ability_7"):
 		_use_heavy_strike()
+	elif event.is_action_pressed("ability_8"):
+		_use_shove()
+	elif event.is_action_pressed("ability_9"):
+		_use_grapple()
+	elif event.is_action_pressed("ability_10"):
+		_use_class_flavor()
 	elif event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			_adjust_zoom(-_ZOOM_STEP)
@@ -724,6 +735,105 @@ func _use_heavy_strike() -> void:
 	_DamageNumber.spawn(self, _player.global_position + Vector3(0, 2.0, 0),
 		"HEAVY STRIKE", Color(1.0, 0.6, 0.25))
 	print("[Combat] Heavy Strike primed")
+
+# ── Maneuvers (any player character) ─────────────────────────────────────────
+
+## The current melee-range target, or null (maneuvers need your hands on them).
+func _maneuver_target(reach := 2.2) -> Node3D:
+	var tgt = _player.target_enemy
+	if tgt == null or not tgt.has_method("receive_damage"):
+		return null
+	if _player.global_position.distance_to(tgt.global_position) > reach:
+		_DamageNumber.spawn(self, _player.global_position + Vector3(0, 2, 0),
+			"Too far!", Color(1.0, 0.5, 0.3))
+		return null
+	return tgt
+
+## [E] Shove — contested STR vs STR: knock the target away (edges are fair
+## game). The bread-and-butter forced-movement maneuver.
+func _use_shove() -> void:
+	var c = GameState.sarro
+	if c == null or _defeated or c.shove_cd > 0.0:
+		return
+	var tgt := _maneuver_target()
+	if tgt == null:
+		return
+	c.shove_cd = _Maneuvers.SHOVE_CD
+	_CharAnim.oneshot(_player, "attack", 2.2, 0.6)
+	if not _Maneuvers.contest(c, tgt.character, 0, 0):
+		_Maneuvers.feedback(self, tgt.global_position, "resisted", Color(0.75, 0.75, 0.8))
+		return
+	_Maneuvers.apply_shove(self, tgt, _player.global_position)
+
+## [G] Grapple — contested STR vs STR: hold the target in place. They get one
+## escape attempt halfway through; bosses shrug it off.
+func _use_grapple() -> void:
+	var c = GameState.sarro
+	if c == null or _defeated or c.grapple_cd > 0.0:
+		return
+	var tgt := _maneuver_target()
+	if tgt == null:
+		return
+	c.grapple_cd = _Maneuvers.GRAPPLE_CD
+	if _Maneuvers.resists(tgt):
+		_Maneuvers.feedback(self, tgt.global_position, "RESISTED", Color(0.8, 0.8, 0.85))
+		return
+	if not _Maneuvers.contest(c, tgt.character, 0, 0):
+		_Maneuvers.feedback(self, tgt.global_position, "slipped free", Color(0.75, 0.75, 0.8))
+		return
+	tgt.root(_Maneuvers.GRAPPLE_HOLD)
+	_Maneuvers.feedback(self, tgt.global_position, "GRAPPLED", Color(1.0, 0.85, 0.4))
+	# one escape attempt at the midpoint
+	get_tree().create_timer(_Maneuvers.GRAPPLE_HOLD * 0.5).timeout.connect(func() -> void:
+		if tgt == null or not is_instance_valid(tgt) or not tgt.is_rooted():
+			return
+		if _Maneuvers.contest(tgt.character, GameState.sarro, 0, 0):
+			tgt.break_root()
+			_Maneuvers.feedback(self, tgt.global_position, "breaks free!", Color(0.9, 0.7, 0.5)))
+
+## [R] Class flavor — Soldier Trip / Ghost Feint / Warden Ward / Psion Repel.
+func _use_class_flavor() -> void:
+	var c = GameState.sarro
+	if c == null or _defeated or c.flavor_cd > 0.0:
+		return
+	var cls := ""
+	if c.class_data != null:
+		cls = String(c.class_data.class_name_str).to_lower()
+	match cls:
+		"ghost":
+			c.flavor_cd = _Maneuvers.FLAVOR_CD
+			c.riposte_until_ms = Time.get_ticks_msec() + 3000
+			_Vfx.buff_flare(self, _player.global_position, Color(0.7, 0.75, 0.95))
+			_Maneuvers.feedback(self, _player.global_position, "FEINT", Color(0.7, 0.75, 0.95))
+		"warden":
+			c.flavor_cd = _Maneuvers.FLAVOR_CD
+			c.ward_hp = 8 + c.stats.level
+			_Vfx.buff_flare(self, _player.global_position, Color(0.5, 0.8, 1.0))
+			_Maneuvers.feedback(self, _player.global_position, "WARD %d" % c.ward_hp, Color(0.5, 0.8, 1.0))
+		"psion":
+			c.flavor_cd = _Maneuvers.FLAVOR_CD
+			_Vfx.buff_flare(self, _player.global_position, Color(0.8, 0.55, 1.0))
+			var pushed := 0
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if e is Node3D and e.has_method("receive_damage") \
+						and _player.global_position.distance_to(e.global_position) <= 4.5:
+					if _Maneuvers.apply_shove(self, e, _player.global_position):
+						pushed += 1
+			_Maneuvers.feedback(self, _player.global_position, "REPEL ×%d" % pushed, Color(0.8, 0.55, 1.0))
+		_:  # soldier and everyone else: Trip
+			var tgt := _maneuver_target()
+			if tgt == null:
+				return
+			c.flavor_cd = _Maneuvers.FLAVOR_CD
+			_CharAnim.oneshot(_player, "attack", 2.2, 0.6)
+			if _Maneuvers.resists(tgt):
+				_Maneuvers.feedback(self, tgt.global_position, "RESISTED", Color(0.8, 0.8, 0.85))
+				return
+			if not _Maneuvers.contest(c, tgt.character, 0, 1):  # STR vs DEX
+				_Maneuvers.feedback(self, tgt.global_position, "kept footing", Color(0.75, 0.75, 0.8))
+				return
+			tgt.stun(_Maneuvers.TRIP_PRONE)
+			_Maneuvers.feedback(self, tgt.global_position, "TRIPPED", Color(1.0, 0.7, 0.3))
 
 ## [1] Second Wind: heal 1d10 + level, once per rest. (Bonus action in TB.)
 func _use_second_wind() -> void:

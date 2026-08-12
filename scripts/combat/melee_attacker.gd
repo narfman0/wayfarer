@@ -84,6 +84,10 @@ func _do_attack() -> void:
 	# Advantage: Guiding Bolt mark, or the Freeblade riposte window an
 	# enemy's miss just opened. Roll 2d20 take higher.
 	var advantage: bool = _target.get("guiding_bolt_active") == true
+	# Downed or held targets are easy prey (prone/grapple → advantage).
+	if _target.has_method("is_stunned") and (_target.is_stunned()
+			or (_target.has_method("is_rooted") and _target.is_rooted())):
+		advantage = true
 	if character.riposte_until_ms > 0 and Time.get_ticks_msec() < character.riposte_until_ms:
 		advantage = true
 		character.riposte_until_ms = 0
