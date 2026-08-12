@@ -51,6 +51,7 @@ size = Vector3(3, 0.4, 10)
 
 [node name="Verath" type="Node3D"]
 script = ExtResource("1_level")
+platform_terrain = true
 plane_id = "verath"
 debug_party_level = 11
 

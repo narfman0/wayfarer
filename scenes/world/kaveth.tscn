@@ -58,6 +58,7 @@ emission_energy_multiplier = 3.0
 
 [node name="Kaveth" type="Node3D"]
 script = ExtResource("1_level")
+platform_terrain = true
 plane_id = "kaveth"
 debug_party_level = 8
 

@@ -37,6 +37,7 @@ albedo_color = Color(0.27, 0.2, 0.33, 1)
 
 [node name="ConvergenceApproach" type="Node3D"]
 script = ExtResource("1_level")
+platform_terrain = true
 plane_id = "convergence_approach"
 debug_party_level = 15
 

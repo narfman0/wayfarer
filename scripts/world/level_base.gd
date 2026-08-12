@@ -42,6 +42,13 @@ const CAST_APEX := 0.4
 ## platform (faint tactical grid on top, portal pads on causeways beyond
 ## the edge). Top stays flat at y=0 — gameplay untouched.
 @export var platform_terrain: bool = false
+## Move portals onto their causeway pads and open rail-guarded corridors
+## through the boundary walls — leaving the plane means physically crossing
+## a bridge. Requires platform_terrain.
+@export var platform_walkable_pads: bool = false
+
+## Corridor records for _setup_bounds: {side, at} per relocated portal.
+var _pad_corridors: Array[Dictionary] = []
 
 ## True when this run spawned its own debug party — autosave is skipped so an
 ## isolated test never overwrites the real save slot.
@@ -211,23 +218,70 @@ func _setup_bounds() -> void:
 	var level := get_node_or_null("Level")
 	if level == null:
 		return
-	var walls := [
-		[Vector3(0, H * 0.5, -hz - T * 0.5), Vector3(hx * 2.0 + T * 2.0, H, T)],   # north
-		[Vector3(0, H * 0.5,  hz + T * 0.5), Vector3(hx * 2.0 + T * 2.0, H, T)],   # south
-		[Vector3(-hx - T * 0.5, H * 0.5, 0), Vector3(T, H, hz * 2.0 + T * 2.0)],   # west
-		[Vector3( hx + T * 0.5, H * 0.5, 0), Vector3(T, H, hz * 2.0 + T * 2.0)],   # east
-	]
-	for w: Array in walls:
-		var body := StaticBody3D.new()
-		body.collision_layer = 1
-		body.collision_mask  = 0
-		var shape_node := CollisionShape3D.new()
-		var shape := BoxShape3D.new()
-		shape.size = w[1]
-		shape_node.shape = shape
-		shape_node.position = w[0]
-		body.add_child(shape_node)
-		level.add_child(body)
+	# Each side is a run along one axis at a fixed edge. Pad corridors split
+	# the run and grow a rail-guarded pocket around their pad.
+	for side_def in [
+		["north", false, -1.0, hz, hx], ["south", false, 1.0, hz, hx],
+		["west",  true,  -1.0, hx, hz], ["east",  true,  1.0, hx, hz],
+	]:
+		var side: String = side_def[0]
+		var east_west: bool = side_def[1]   # wall run is along Z
+		var s: float = side_def[2]
+		var h: float = side_def[3]          # distance of wall from centre
+		var run: float = side_def[4]        # half-length of the run
+		var gaps: Array[float] = []
+		for c in _pad_corridors:
+			if c["side"] == side:
+				gaps.append(c["at"])
+		gaps.sort()
+		# wall segments between gaps
+		var cursor := -run - T
+		var stops := gaps.duplicate()
+		stops.append(run + T + 999.0)
+		for at in stops:
+			var seg_end: float = minf(at - _GAP_HALF, run + T)
+			if seg_end > cursor:
+				_add_wall(level, east_west, s * (h + T * 0.5),
+					(cursor + seg_end) * 0.5, seg_end - cursor, H, T)
+			cursor = at + _GAP_HALF
+		# corridor pocket: rails along the causeway, ring around the pad
+		for at in gaps:
+			var pad_c := s * (h + _PAD_REACH)
+			var pad_near := s * (h + _PAD_REACH - _PAD_HALF)
+			var pad_far := s * (h + _PAD_REACH + _PAD_HALF)
+			for u_sign in [-1.0, 1.0]:
+				# causeway rail
+				_add_wall_uw(level, east_west, at + u_sign * (_GAP_HALF + T * 0.5),
+					(s * h + pad_near) * 0.5, T, absf(pad_near - s * h) + T, H)
+				# pad side wall
+				_add_wall_uw(level, east_west, at + u_sign * (_PAD_HALF + T * 0.5),
+					pad_c, T, _PAD_SIZE + T * 2.0, H)
+				# shoulder closing the L-corner at the pad's near edge
+				var mid := (_GAP_HALF + _PAD_HALF) * 0.5
+				_add_wall_uw(level, east_west, at + u_sign * mid,
+					pad_near - s * T * 0.5, _PAD_HALF - _GAP_HALF + T, T, H)
+			# far wall
+			_add_wall_uw(level, east_west, at, pad_far + s * T * 0.5,
+				_PAD_SIZE + T * 2.0, T, H)
+
+## Wall box along a side run: u = coordinate along the run, w = fixed edge.
+func _add_wall(level: Node, east_west: bool, w: float, u_center: float,
+		u_len: float, height: float, thickness: float) -> void:
+	_add_wall_uw(level, east_west, u_center, w, u_len, thickness, height)
+
+## Wall box in run/out coordinates: east_west means the run axis is Z.
+func _add_wall_uw(level: Node, east_west: bool, u: float, w: float,
+		u_len: float, w_len: float, height: float) -> void:
+	var body := StaticBody3D.new()
+	body.collision_layer = 1
+	body.collision_mask  = 0
+	var shape_node := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(w_len, height, u_len) if east_west else Vector3(u_len, height, w_len)
+	shape_node.shape = shape
+	shape_node.position = Vector3(w, height * 0.5, u) if east_west else Vector3(u, height * 0.5, w)
+	body.add_child(shape_node)
+	level.add_child(body)
 
 ## Feed the terrain height map to the player's AStarGrid2D so click-to-walk
 ## can route around cliffs and void. Levels that regenerate terrain later
@@ -262,22 +316,52 @@ func _setup_platform() -> void:
 	var surf := gm.get_surface_override_material(0)
 	if surf is StandardMaterial3D:
 		albedo = (surf as StandardMaterial3D).albedo_color
-	var mat := _Platform.grid_material(albedo, Color(0.62, 0.66, 1.0))
+	var style := _Platform.style_for(plane_id)
+	var mat := _Platform.grid_material(albedo, style["color"], style["strength"])
 	gm.mesh = _Platform.build_platform(box.size.x, box.size.z, hash(plane_id))
 	gm.material_override = mat
 
 	# Portals get their own pads beyond the edge, joined by causeway prisms.
+	# Walkable mode snaps each pad to the dominant axis, moves the portal
+	# onto it, and records a corridor so _setup_bounds opens the wall there.
 	var ground := get_node("Level/Ground")
+	var hx: float = box.size.x * 0.5
+	var hz: float = box.size.z * 0.5
 	var idx := 0
 	for child in get_node("Level").get_children():
 		if not (child is Node3D) or child.get("target_plane") == null:
 			continue
 		var p: Vector3 = (child as Node3D).position
-		var outward := Vector3(p.x, 0.0, p.z).normalized()
-		var pad_center := p + outward * 7.0
-		ground.add_child(_Platform.pad(pad_center, 7.0, hash(plane_id) + idx, mat))
-		ground.add_child(_Platform.causeway(p + outward * 0.5, pad_center, mat))
+		if platform_walkable_pads:
+			var east_west := absf(p.x) >= absf(p.z)
+			var s := signf(p.x) if east_west else signf(p.z)
+			var h := hx if east_west else hz
+			var at := clampf(p.z if east_west else p.x,
+				-(h - 6.0), h - 6.0)
+			var pad_w := s * (h + _PAD_REACH)
+			var pad_center := Vector3(pad_w, 0, at) if east_west else Vector3(at, 0, pad_w)
+			var edge := Vector3(s * h, 0, at) if east_west else Vector3(at, 0, s * h)
+			ground.add_child(_Platform.pad(pad_center, _PAD_SIZE, hash(plane_id) + idx, mat, true))
+			ground.add_child(_Platform.causeway(edge - (edge - pad_center).normalized() * 0.5, pad_center, mat))
+			(child as Node3D).position = Vector3(pad_center.x, p.y, pad_center.z)
+			_pad_corridors.append({
+				"side": ("east" if s > 0 else "west") if east_west else ("south" if s > 0 else "north"),
+				"at": at,
+			})
+		else:
+			var outward := Vector3(p.x, 0.0, p.z).normalized()
+			var pad_center := p + outward * 7.0
+			ground.add_child(_Platform.pad(pad_center, 7.0, hash(plane_id) + idx, mat))
+			ground.add_child(_Platform.causeway(p + outward * 0.5, pad_center, mat))
 		idx += 1
+
+## Walkable-pad geometry (metres): corridor half-width, causeway length,
+## pad footprint, and how far the pad centre sits beyond the wall.
+const _GAP_HALF := 1.6
+const _CAUSEWAY_LEN := 5.0
+const _PAD_SIZE := 7.0
+const _PAD_HALF := 3.5
+const _PAD_REACH := 7.5   # CAUSEWAY_LEN + PAD_HALF - 1.0 overlap
 
 func _setup_atmosphere() -> void:
 	var ground := get_node_or_null("Level/Ground/GroundMesh") as MeshInstance3D

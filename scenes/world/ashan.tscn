@@ -42,6 +42,7 @@ albedo_color = Color(0.32, 0.42, 0.24, 1)
 
 [node name="Ashan" type="Node3D"]
 script = ExtResource("1_level")
+platform_terrain = true
 plane_id = "ashan"
 debug_party_level = 15
 

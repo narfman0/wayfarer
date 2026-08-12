@@ -80,7 +80,9 @@ func _check_bounds(plane_id: String, level: Node3D) -> void:
 		for sub in child.get_children():
 			if sub is CollisionShape3D and (sub as CollisionShape3D).shape is BoxShape3D:
 				east_wall_x = maxf(east_wall_x, (sub as CollisionShape3D).position.x)
-	_check(east_wall_x > 0.0 and absf(east_wall_x - hx) < 2.0,
+	# Walkable portal pads push rail walls up to ~13 m past the edge.
+	var wall_tolerance := 13.5 if level.get("platform_walkable_pads") == true else 2.0
+	_check(east_wall_x > 0.0 and absf(east_wall_x - hx) < wall_tolerance,
 		"%s: boundary walls hug the arena (wall %.1f vs half-width %.1f)" %
 			[plane_id, east_wall_x, hx])
 	_check(AudioManager._ambient_name != "" and AudioManager._ambient_current.playing,

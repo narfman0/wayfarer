@@ -28,7 +28,18 @@ Two terrain styles coexist:
   click-to-move routes on `AStarGrid2D` (`player_controller.gd`).
   (Tamori trialed the grid and was reverted upstream to a flat 80×80 m
   slab.)
-- **Flat arenas** (the other 14 scenes): BoxMesh slab over an
+- **Platform fragments** (all 14 non-dungeon scenes,
+  `platform_terrain` flag): `platform_terrain.gd` replaces the flat
+  BoxMesh slab at load with a generated plane fragment — chamfered,
+  noise-bitten edges (inward-only), craggy skirt into the void, and a
+  faint world-space grid on top (2 m spacing = the TB movement tile;
+  per-plane tint/strength). Portals get eroded pads beyond the edge
+  joined by rectangular-prism causeways; on `platform_walkable_pads`
+  scenes (reach, between) the portals sit ON their pads and the
+  boundary walls open rail-guarded corridors to them. Top face stays
+  flat at y=0 — pathfinding/bounds/arenas untouched; deterministic per
+  plane_id; EditorPreview shows the fragment in the editor.
+- **Legacy layout underneath**: BoxMesh slab over an
   infinite `WorldBoundaryShape3D`, 36–56 m per side. Invisible boundary
   walls are generated at load, sized from the ground collider or the
   GroundMesh AABB (`level_base._setup_bounds`).

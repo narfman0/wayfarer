@@ -62,6 +62,7 @@ emission_energy_multiplier = 3.0
 [node name="Reach" type="Node3D"]
 script = ExtResource("1_level")
 platform_terrain = true
+platform_walkable_pads = true
 plane_id = "reach"
 debug_party_level = 5
 

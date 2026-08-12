@@ -41,6 +41,7 @@ albedo_color = Color(0.09, 0.18, 0.3, 1)
 
 [node name="VerathSeawall" type="Node3D"]
 script = ExtResource("1_level")
+platform_terrain = true
 plane_id = "verath_seawall"
 debug_party_level = 12
 

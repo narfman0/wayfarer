@@ -58,6 +58,7 @@ emission_energy_multiplier = 3.0
 
 [node name="AnchorTear" type="Node3D"]
 script = ExtResource("1_level")
+platform_terrain = true
 plane_id = "tamori_anchor"
 debug_party_level = 5
 

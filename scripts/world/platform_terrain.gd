@@ -13,9 +13,30 @@
 class_name PlatformTerrain
 extends RefCounted
 
+## Per-plane grid identity: line colour + strength (whisper on warm daylight
+## planes, assertive where the Veil is thick). Aliases mirror Atmosphere.
+const GRID_STYLE := {
+	"tamori":      {"color": Color(0.9, 0.85, 0.68), "strength": 0.03},
+	"reach":       {"color": Color(0.6, 0.66, 1.0),  "strength": 0.07},
+	"kaveth":      {"color": Color(0.65, 0.45, 1.0), "strength": 0.09},
+	"verath":      {"color": Color(0.55, 0.75, 0.85),"strength": 0.05},
+	"between":     {"color": Color(0.75, 0.72, 0.95),"strength": 0.10},
+	"ashan":       {"color": Color(1.0, 0.8, 0.55),  "strength": 0.035},
+	"convergence": {"color": Color(0.85, 0.5, 1.0),  "strength": 0.10},
+}
+const _ALIASES := {
+	"tamori_road": "tamori", "tamori_fields": "tamori", "tamori_anchor": "tamori",
+	"reach_rig": "reach", "kaveth_vault": "kaveth", "verath_seawall": "verath",
+	"convergence_approach": "convergence",
+}
+
+static func style_for(plane_id: String) -> Dictionary:
+	var key: String = _ALIASES.get(plane_id, plane_id)
+	return GRID_STYLE.get(key, {"color": Color(0.62, 0.66, 1.0), "strength": 0.06})
+
 const SKIRT_DEPTH := 3.0
 const EDGE_SEG := 3.0        # metres per boundary segment
-const BITE_MAX := 2.6        # deepest inward erosion
+const BITE_MAX := 1.8        # deepest inward erosion
 const CHAMFER := 4.0         # corner cut size
 
 const _GRID_SHADER := "
@@ -50,7 +71,7 @@ void fragment() {
 
 ## Build the eroded platform mesh for a w×d footprint (centered on origin).
 ## Erosion is inward-only so the walkable bounds never exceed the visual edge.
-static func build_platform(w: float, d: float, seed_val: int) -> ArrayMesh:
+static func build_platform(w: float, d: float, seed_val: int, bite_max := BITE_MAX) -> ArrayMesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_val
 	var hw := w * 0.5
@@ -72,7 +93,7 @@ static func build_platform(w: float, d: float, seed_val: int) -> ArrayMesh:
 			var p: Vector2 = a.lerp(b, float(s) / segs)
 			# bite inward: pull toward center by noise amount (never outward)
 			var toward := -p.normalized()
-			var bite := rng.randf_range(0.0, BITE_MAX)
+			var bite := rng.randf_range(0.0, bite_max)
 			# keep some segments clean so it reads cut, not crumbled
 			if rng.randf() < 0.35:
 				bite = 0.0
@@ -147,14 +168,16 @@ static func causeway(from_pos: Vector3, to_pos: Vector3, mat: Material) -> MeshI
 	var mi := MeshInstance3D.new()
 	mi.mesh = box
 	mi.material_override = mat
-	mi.position = (from_pos + to_pos) * 0.5 + Vector3(0, -0.42, 0)
+	mi.position = (from_pos + to_pos) * 0.5 + Vector3(0, -0.35, 0)  # top flush with feet
 	mi.rotation.y = atan2(-dir.x, -dir.z)
 	return mi
 
-## A small eroded pad (for portals) floating at `center`.
-static func pad(center: Vector3, size: float, seed_val: int, mat: Material) -> MeshInstance3D:
+## A small eroded pad (for portals) floating at `center`. Walkable pads
+## erode gently so the invisible rails never overhang a bite.
+static func pad(center: Vector3, size: float, seed_val: int, mat: Material,
+		walkable := false) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
-	mi.mesh = build_platform(size, size, seed_val)
+	mi.mesh = build_platform(size, size, seed_val, 0.7 if walkable else BITE_MAX)
 	mi.material_override = mat
 	mi.position = center
 	return mi

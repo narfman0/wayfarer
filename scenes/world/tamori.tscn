@@ -79,6 +79,7 @@ radius = 0.35
 
 [node name="Tamori" type="Node3D"]
 script = ExtResource("1_tamori")
+platform_terrain = true
 skip_opening_dialogue = true
 
 [node name="Environment" type="WorldEnvironment" parent="."]

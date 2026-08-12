@@ -53,6 +53,7 @@ emission_energy_multiplier = 4.0
 
 [node name="Convergence" type="Node3D"]
 script = ExtResource("1_level")
+platform_terrain = true
 plane_id = "convergence"
 debug_party_level = 16
 
