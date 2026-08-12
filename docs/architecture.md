@@ -132,10 +132,18 @@ Three-point rig per plane (tuned 2-split sun shadows / cool fill / rim
 opposite the camera). SSAO + SSIL on every env (~+1.2 ms on a 5090 at
 1080p). Impacts and spell apexes emit transient light
 (`Juice.flash_light`); telegraphs cast intensifying warning light.
+Volumetric fog verified working under the ortho camera: whisper base
+haze everywhere + authored per-plane fog ("volumetric" spec), and every
+veil tear grows a FogVolume aura its light scatters through (+0.1–0.2
+ms). Tilt-shift DOF via CameraAttributesPractical (dialogue pulls
+focus); portal transit runs a chromatic-split shader over the fade.
 **SDFGI evaluated and rejected**: +1.4 ms GPU +270 MB VRAM for near-zero
 visible gain on flat low-poly arenas — SSAO/SSIL carries the contact
-shading. Perf measured by `perf_gallery` (RenderingServer viewport
-timings; wall FPS under Xvfb is meaningless — X11 present caps ~16).
+shading. Quality tiers low/med/high (`graphics.gd`, pause-menu cycle,
+user://settings.cfg) scale MSAA/SSAO/SSIL/volumetrics/DOF/shadow res.
+Perf measured by `perf_gallery` (RenderingServer viewport timings; wall
+FPS under Xvfb is meaningless — X11 present caps ~16); `PERF_CHECK=1`
+fails on >20% GPU regression vs the committed 5090 baseline.
 
 **Procedural identity (dormant by default)**: `scenery.gd` biome
 recipes and the `EditorPreview` node still exist but

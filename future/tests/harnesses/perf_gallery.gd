@@ -55,8 +55,42 @@ func _run() -> void:
 
 	_write_csv(rows, adapter)
 	_print_markdown(rows)
+	var ok := _check_regression(rows, adapter)
 	print("PERF GALLERY DONE")
-	get_tree().quit(0)
+	get_tree().quit(0 if ok else 1)
+
+## Guardrail: with PERF_CHECK=1 in the environment, compare total GPU time
+## against the committed baseline and fail on >20% regression. Only
+## meaningful on the machine the baseline was recorded on — other adapters
+## skip with a note (lavapipe/software runs are relative proxies only).
+const BASELINE_PATH := "res://future/tests/perf_baseline_rtx5090.csv"
+const REGRESSION_TOLERANCE := 1.2
+
+func _check_regression(rows: Array[Dictionary], adapter: String) -> bool:
+	if OS.get_environment("PERF_CHECK") != "1":
+		return true
+	if not adapter.contains("RTX 5090"):
+		print("PERF CHECK SKIPPED: baseline is RTX 5090, this is ", adapter)
+		return true
+	var f := FileAccess.open(BASELINE_PATH, FileAccess.READ)
+	if f == null:
+		print("PERF CHECK SKIPPED: no baseline at ", BASELINE_PATH)
+		return true
+	var baseline_total := 0.0
+	while not f.eof_reached():
+		var line := f.get_line()
+		if line.begins_with("#") or line.begins_with("plane") or line.is_empty():
+			continue
+		baseline_total += float(line.split(",")[1])
+	f.close()
+	var total := 0.0
+	for r in rows:
+		total += r["gpu_ms"]
+	var verdict := total <= baseline_total * REGRESSION_TOLERANCE
+	print("PERF CHECK: %.2f ms total vs %.2f ms baseline (limit %.2f) — %s" % [
+		total, baseline_total, baseline_total * REGRESSION_TOLERANCE,
+		"PASS" if verdict else "FAIL"])
+	return verdict
 
 func _write_csv(rows: Array[Dictionary], adapter: String) -> void:
 	var f := FileAccess.open(CSV_PATH, FileAccess.WRITE)

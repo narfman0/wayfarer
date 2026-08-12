@@ -246,6 +246,16 @@ func _setup_atmosphere() -> void:
 	var ground := get_node_or_null("Level/Ground/GroundMesh") as MeshInstance3D
 	var sun := get_node_or_null("Sun") as DirectionalLight3D
 	_Atmosphere.apply(self, plane_id, sun, ground)
+	apply_graphics_tier()
+
+## Scale the lighting stack to the persisted quality tier. Public so the
+## pause menu can re-apply live when the player cycles the setting.
+func apply_graphics_tier() -> void:
+	var env: Environment = null
+	for n in find_children("*", "WorldEnvironment", true, false):
+		env = (n as WorldEnvironment).environment
+		break
+	Graphics.apply(get_viewport(), env, _cam_attrs)
 
 # Animators are attached by each body's own controller in _ready()
 # (PlayerController, CompanionFollow, EnemyController, NPC), which picks a more
