@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://tamori_road"]
+[gd_scene load_steps=26 format=3 uid="uid://tamori_road"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
@@ -17,6 +17,12 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Round_02.gltf" id="e_tree"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Thin_03.gltf" id="e_thin"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Rock_04.gltf" id="e_rock"]
+
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Prop_Torii_Gate_01.gltf" id="s_torii"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Stone_Lantern_01.gltf" id="s_lantern"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Veh_Cart_Food_01.gltf" id="s_cartf"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Prop_Banner_01.gltf" id="s_banner"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Env_Bamboo_Group_01.gltf" id="s_bamboo"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -229,3 +235,31 @@ anchor_bottom = 1.0
 [node name="EditorPreview" type="Node3D" parent="."]
 script = ExtResource("99_preview")
 plane_id = "tamori_road"
+
+[node name="ToriiWest" parent="Level/Props" instance=ExtResource("s_torii")]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, -21, 0, 0)
+
+[node name="RoadLantern1" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -14, 0, -2.5)
+
+[node name="RoadLantern2" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -6, 0, 2.5)
+
+[node name="RoadLantern3" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 4, 0, -2.5)
+
+[node name="RestLantern" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 1.5, 0, 8)
+
+[node name="WreckedCart" parent="Level/Props" instance=ExtResource("s_cartf")]
+transform = Transform3D(-0.6428, 0, 0.766, 0, 1, 0, -0.766, 0, -0.6428, 18, 0, 3)
+
+[node name="CampBanner" parent="Level/Props" instance=ExtResource("s_banner")]
+transform = Transform3D(0.9848, 0, 0.1736, 0, 1, 0, -0.1736, 0, 0.9848, 11.5, 0, 9.5)
+
+[node name="BambooN1" parent="Level/Props" instance=ExtResource("s_bamboo")]
+transform = Transform3D(0.9397, 0, 0.342, 0, 1, 0, -0.342, 0, 0.9397, -10, 0, -10)
+
+[node name="BambooN2" parent="Level/Props" instance=ExtResource("s_bamboo")]
+transform = Transform3D(-0.2588, 0, 0.9659, 0, 1, 0, -0.9659, 0, -0.2588, 8, 0, -10)
+

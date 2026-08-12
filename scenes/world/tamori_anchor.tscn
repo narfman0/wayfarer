@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://tamori_anchor"]
+[gd_scene load_steps=29 format=3 uid="uid://tamori_anchor"]
 
 [ext_resource type="Script" path="res://scripts/world/anchor_tear.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
@@ -15,6 +15,12 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Sorcerer.gltf" id="c_boss"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Dead_04.gltf" id="e_dead"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Rock_Cliff_03.gltf" id="e_cliff"]
+
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Bld_Shrine_02.gltf" id="s_shrine2"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Prop_Torii_Gate_01.gltf" id="s_torii"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Stone_Lantern_01.gltf" id="s_lantern"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Statue_Lion_01.gltf" id="s_lion"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Prop_Banner_01.gltf" id="s_banner"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -232,3 +238,28 @@ anchor_bottom = 1.0
 [node name="EditorPreview" type="Node3D" parent="."]
 script = ExtResource("99_preview")
 plane_id = "tamori_anchor"
+
+[node name="RuinShrine" parent="Level/Props" instance=ExtResource("s_shrine2")]
+transform = Transform3D(-1, 0, 1.225e-16, 0, 1, 0, -1.225e-16, 0, -1, 1, 0, -16)
+
+[node name="ToriiEntry" parent="Level/Props" instance=ExtResource("s_torii")]
+transform = Transform3D(-0.1736, 0, 0.9848, 0, 1, 0, -0.9848, 0, -0.1736, -11, 0, 7)
+
+[node name="TearLionL" parent="Level/Props" instance=ExtResource("s_lion")]
+transform = Transform3D(-0.9848, 0, 0.1736, 0, 1, 0, -0.1736, 0, -0.9848, -3, 0, -12)
+
+[node name="TearLionR" parent="Level/Props" instance=ExtResource("s_lion")]
+transform = Transform3D(-0.9848, 0, -0.1736, 0, 1, 0, 0.1736, 0, -0.9848, 3, 0, -12)
+
+[node name="EdgeLantern1" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -6, 0, 4)
+
+[node name="EdgeLantern2" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 6, 0, 3)
+
+[node name="EdgeLantern3" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 9, 0, -2)
+
+[node name="WarBanner" parent="Level/Props" instance=ExtResource("s_banner")]
+transform = Transform3D(0.866, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866, 12, 0, 5)
+

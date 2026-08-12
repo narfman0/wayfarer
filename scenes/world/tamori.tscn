@@ -1,4 +1,4 @@
-[gd_scene load_steps=50 format=3 uid="uid://tamori"]
+[gd_scene load_steps=63 format=3 uid="uid://tamori"]
 
 [ext_resource type="Script" path="res://scripts/world/tamori.gd" id="1_tamori"]
 [ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
@@ -40,6 +40,19 @@
 [ext_resource type="Script" path="res://scripts/world/portal.gd" id="6_portal"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Female_Peasant_02.gltf" id="c_npc_f"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Characters_SourceFiles_v3/Source_Files/Characters/SK_Character_Male_Sorcerer.gltf" id="c_npc_m2"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Bld_Shrine_01.gltf" id="s_shrine"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Bld_Pagola_01.gltf" id="s_pagoda"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Prop_Torii_Gate_01.gltf" id="s_torii"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Env_Bamboo_Tree_01.gltf" id="s_cherry"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Env_Bamboo_Tree_03.gltf" id="s_cherry2"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Tree_Round_02.gltf" id="s_maple"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Veh_Cart_01.gltf" id="s_cart"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Prop_Banner_01.gltf" id="s_banner"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Bld_Fence_Bamboo_01.gltf" id="s_fenceb"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Stone_Lantern_01.gltf" id="s_lantern"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Statue_Lion_01.gltf" id="s_lion"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Env_Bamboo_Group_01.gltf" id="s_bamboo"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Env_RicePlant_01.gltf" id="s_rice"]
 [ext_resource type="Environment" path="res://resources/env_village.tres" id="env_shared"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
@@ -239,6 +252,90 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 18.5, 0, -8.5)
 
 [node name="DeadTree" parent="Level/Props" instance=ExtResource("e_dead")]
 transform = Transform3D(0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, 0.7071, -18.5, 0, -7)
+
+[node name="VillageShrine" parent="Level/Props" instance=ExtResource("s_shrine")]
+transform = Transform3D(-1, 0, 1.225e-16, 0, 1, 0, -1.225e-16, 0, -1, 2, 0.0, -15)
+
+[node name="ShrineLionL" parent="Level/Props" instance=ExtResource("s_lion")]
+transform = Transform3D(-1, 0, 1.225e-16, 0, 1, 0, -1.225e-16, 0, -1, 0.2, 0.0, -12.4)
+
+[node name="ShrineLionR" parent="Level/Props" instance=ExtResource("s_lion")]
+transform = Transform3D(-1, 0, 1.225e-16, 0, 1, 0, -1.225e-16, 0, -1, 3.8, 0.0, -12.4)
+
+[node name="Pagoda" parent="Level/Props" instance=ExtResource("s_pagoda")]
+transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, -3, 0.0, -28)
+
+[node name="ToriiEast" parent="Level/Props" instance=ExtResource("s_torii")]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, 32, 0.0, 2)
+
+[node name="PathLantern1" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 4.6, 0.0, 7.4)
+
+[node name="PathLantern2" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -0.8, 0.0, 2.4)
+
+[node name="PathLantern3" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -3.4, 0.0, -1.4)
+
+[node name="RiftLanternL" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -10.2, 0.0, 5.8)
+
+[node name="RiftLanternR" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -5.8, 0.0, 5.8)
+
+[node name="Cherry1" parent="Level/Props" instance=ExtResource("s_cherry")]
+transform = Transform3D(0.766, 0, 0.6428, 0, 1, 0, -0.6428, 0, 0.766, -14, 0.0, -19)
+
+[node name="Cherry2" parent="Level/Props" instance=ExtResource("s_cherry2")]
+transform = Transform3D(0.342, 0, -0.9397, 0, 1, 0, 0.9397, 0, 0.342, 16, 0.0, -17)
+
+[node name="Cherry3" parent="Level/Props" instance=ExtResource("s_cherry")]
+transform = Transform3D(-0.9397, 0, 0.342, 0, 1, 0, -0.342, 0, -0.9397, 23, 0.0, 7)
+
+[node name="BambooWest" parent="Level/Props" instance=ExtResource("s_cherry")]
+transform = Transform3D(0.866, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866, -21, 0, -3)
+
+[node name="Maple1" parent="Level/Props" instance=ExtResource("s_maple")]
+transform = Transform3D(0.9397, 0, -0.342, 0, 1, 0, 0.342, 0, 0.9397, -23, 0.0, 10)
+
+[node name="BambooRoadN" parent="Level/Props" instance=ExtResource("s_bamboo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 27, 0.0, -3)
+
+[node name="BambooRoadS" parent="Level/Props" instance=ExtResource("s_bamboo")]
+transform = Transform3D(0.2588, 0, 0.9659, 0, 1, 0, -0.9659, 0, 0.2588, 28, 0.0, 7)
+
+[node name="MarketCart" parent="Level/Props" instance=ExtResource("s_cart")]
+transform = Transform3D(0.5736, 0, -0.8192, 0, 1, 0, 0.8192, 0, 0.5736, 8.6, 0.0, -2.6)
+
+[node name="BannerWest" parent="Level/Props" instance=ExtResource("s_banner")]
+transform = Transform3D(0.9848, 0, 0.1736, 0, 1, 0, -0.1736, 0, 0.9848, -12.6, 0.0, -8.4)
+
+[node name="BannerEast" parent="Level/Props" instance=ExtResource("s_banner")]
+transform = Transform3D(0.9659, 0, -0.2588, 0, 1, 0, 0.2588, 0, 0.9659, 13.4, 0.0, -7.8)
+
+[node name="RicePlot1" parent="Level/Props" instance=ExtResource("s_rice")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -25, 0.0, 14)
+
+[node name="RicePlot2" parent="Level/Props" instance=ExtResource("s_rice")]
+transform = Transform3D(0.866, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866, -23, 0.0, 15.2)
+
+[node name="RicePlot3" parent="Level/Props" instance=ExtResource("s_rice")]
+transform = Transform3D(0.9397, 0, -0.342, 0, 1, 0, 0.342, 0, 0.9397, -25.5, 0.0, 16.8)
+
+[node name="RicePlot4" parent="Level/Props" instance=ExtResource("s_rice")]
+transform = Transform3D(0.5736, 0, 0.8192, 0, 1, 0, -0.8192, 0, 0.5736, -23.5, 0.0, 18)
+
+[node name="RiceFence1" parent="Level/Props" instance=ExtResource("s_fenceb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -24, 0.0, 12.2)
+
+[node name="RiceFence2" parent="Level/Props" instance=ExtResource("s_fenceb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -21.5, 0.0, 12.2)
+
+[node name="RiceFence3" parent="Level/Props" instance=ExtResource("s_fenceb")]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, -19.8, 0.0, 14.4)
+
+[node name="RiceFence4" parent="Level/Props" instance=ExtResource("s_fenceb")]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, -19.8, 0.0, 17)
 
 [node name="WellKeeper" type="Node3D" parent="Level"]
 transform = Transform3D(0.259, 0, -0.966, 0, 1, 0, 0.966, 0, 0.259, -7.2, 0, -1.8)

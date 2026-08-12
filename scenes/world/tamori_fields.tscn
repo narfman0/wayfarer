@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://tamori_fields"]
+[gd_scene load_steps=29 format=3 uid="uid://tamori_fields"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
@@ -19,6 +19,12 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Rock_04.gltf" id="e_rock"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Ground_Logs_01.gltf" id="e_log"]
 [ext_resource type="Environment" path="res://resources/env_fields.tres" id="env_shared"]
+
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Env_RicePlant_01.gltf" id="s_rice"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Bld_Fence_Bamboo_01.gltf" id="s_fenceb"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_Empire_SourceFiles_v1/SourceFiles/FBX/SamuraiEmpire/SM_Veh_Cart_01.gltf" id="s_cart"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Stone_Lantern_01.gltf" id="s_lantern"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Samurai_SourceFiles_v2/SourceFiles/FBX/SM_Env_Bamboo_Group_01.gltf" id="s_bamboo"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -273,3 +279,46 @@ anchor_bottom = 1.0
 [node name="EditorPreview" type="Node3D" parent="."]
 script = ExtResource("99_preview")
 plane_id = "tamori_fields"
+
+[node name="Rice1" parent="Level/Props" instance=ExtResource("s_rice")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -9, 0, 10.5)
+
+[node name="Rice2" parent="Level/Props" instance=ExtResource("s_rice")]
+transform = Transform3D(0.766, 0, 0.6428, 0, 1, 0, -0.6428, 0, 0.766, -6.5, 0, 11.5)
+
+[node name="Rice3" parent="Level/Props" instance=ExtResource("s_rice")]
+transform = Transform3D(0.1736, 0, 0.9848, 0, 1, 0, -0.9848, 0, 0.1736, 1.5, 0, 13.5)
+
+[node name="Rice4" parent="Level/Props" instance=ExtResource("s_rice")]
+transform = Transform3D(-0.5, 0, 0.866, 0, 1, 0, -0.866, 0, -0.5, 4.5, 0, 14.5)
+
+[node name="Rice5" parent="Level/Props" instance=ExtResource("s_rice")]
+transform = Transform3D(-0.9397, 0, 0.342, 0, 1, 0, -0.342, 0, -0.9397, -11, 0, 13)
+
+[node name="Rice6" parent="Level/Props" instance=ExtResource("s_rice")]
+transform = Transform3D(-0.9397, 0, -0.342, 0, 1, 0, 0.342, 0, -0.9397, 6, 0, 16.5)
+
+[node name="FieldFence1" parent="Level/Props" instance=ExtResource("s_fenceb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -12, 0, 9)
+
+[node name="FieldFence2" parent="Level/Props" instance=ExtResource("s_fenceb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -9.5, 0, 9)
+
+[node name="FieldFence3" parent="Level/Props" instance=ExtResource("s_fenceb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -7, 0, 9)
+
+[node name="FieldFence4" parent="Level/Props" instance=ExtResource("s_fenceb")]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, 8.2, 0, 13)
+
+[node name="FarmCart" parent="Level/Props" instance=ExtResource("s_cart")]
+transform = Transform3D(0.866, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866, -10, 0, 7)
+
+[node name="FieldLantern" parent="Level/Props" instance=ExtResource("s_lantern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -11.5, 0, 3)
+
+[node name="BambooSW" parent="Level/Props" instance=ExtResource("s_bamboo")]
+transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, -18, 0, 16)
+
+[node name="BambooSE" parent="Level/Props" instance=ExtResource("s_bamboo")]
+transform = Transform3D(-0.866, 0, 0.5, 0, 1, 0, -0.5, 0, -0.866, 17, 0, 15)
+

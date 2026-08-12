@@ -9,6 +9,10 @@ Post-process cooked gltf files under assets/meshes/:
   2. Out-of-bounds texture indices → clamped to the images array length.
      Some materials reference image index N when only N-1 images exist;
      Godot falls back to a default error material.
+  3. Stray emissiveFactor without an emissiveTexture → removed.
+     Synty "custom shader" materials (Samurai packs et al) translate to a
+     Principled BSDF with full-white emission; the export then washes the
+     whole prop out to pure white regardless of its base texture.
 
 Run: python3 tools/patch_gltf_materials.py
 Idempotent: skips files already patched. Deletes stale .gltf.import sidecars
@@ -21,6 +25,25 @@ import sys
 
 ROOT = pathlib.Path(__file__).parent.parent / "assets" / "meshes"
 ALPHA_CUTOFF = 0.5
+
+
+def _texture_has_alpha(gltf_path: pathlib.Path, g: dict, tex_index: int) -> bool:
+    """True if the PNG behind texture[tex_index] carries an alpha channel
+    (IHDR color type 4 or 6). Non-PNG or unresolvable → False."""
+    try:
+        img_index = g["textures"][tex_index]["source"]
+        uri = g["images"][img_index].get("uri", "")
+    except (KeyError, IndexError):
+        return False
+    if not uri or uri.startswith("data:") or not uri.lower().endswith(".png"):
+        return False
+    img_path = (gltf_path.parent / uri).resolve()
+    try:
+        with open(img_path, "rb") as fh:
+            head = fh.read(26)
+        return len(head) == 26 and head[25] in (4, 6)
+    except OSError:
+        return False
 
 
 def patch_file(path: pathlib.Path) -> bool:
@@ -42,6 +65,18 @@ def patch_file(path: pathlib.Path) -> bool:
         if bct is not None and bct.get("index", 0) > max_idx:
             bct["index"] = max_idx
             changed = True
+
+        if "emissiveFactor" in mat and "emissiveTexture" not in mat:
+            del mat["emissiveFactor"]
+            changed = True
+
+        # Foliage cards: a base texture WITH an alpha channel on an opaque
+        # material renders as solid rectangles. Alpha-test it.
+        if bct is not None and "alphaMode" not in mat:
+            if _texture_has_alpha(path, g, bct.get("index", 0)):
+                mat["alphaMode"] = "MASK"
+                mat.setdefault("alphaCutoff", ALPHA_CUTOFF)
+                changed = True
 
     if not changed:
         return False
