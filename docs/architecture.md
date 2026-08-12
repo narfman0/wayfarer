@@ -124,6 +124,19 @@ death screen with Try Again / Main Menu.
 `combat_hud` (TB controls, reaction modal) + HUD toasts, gold readout,
 pending-build-choice hint.
 
+**Lighting** (the AAA pass): Forward+ renderer pinned with 4× MSAA +
+debanding (`project.godot [rendering]`). AgX tonemap + unified glow +
+per-plane grade (contrast/saturation), ambient, rim light, and nebula
+sky tint — all data-driven from `atmosphere.gd` PLANES + `env_*.tres`.
+Three-point rig per plane (tuned 2-split sun shadows / cool fill / rim
+opposite the camera). SSAO + SSIL on every env (~+1.2 ms on a 5090 at
+1080p). Impacts and spell apexes emit transient light
+(`Juice.flash_light`); telegraphs cast intensifying warning light.
+**SDFGI evaluated and rejected**: +1.4 ms GPU +270 MB VRAM for near-zero
+visible gain on flat low-poly arenas — SSAO/SSIL carries the contact
+shading. Perf measured by `perf_gallery` (RenderingServer viewport
+timings; wall FPS under Xvfb is meaningless — X11 present caps ~16).
+
 **Procedural identity (dormant by default)**: `scenery.gd` biome
 recipes and the `EditorPreview` node still exist but
 `generate_scenery` now defaults to **false** — manual placement is the
