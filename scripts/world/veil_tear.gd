@@ -66,6 +66,19 @@ func _ready() -> void:
 	light.omni_range = ring_radius * 4.0
 	add_child(light)
 
+	# Localized veil-mist: a FogVolume the tear's light scatters through.
+	# Renders wherever the plane's volumetric fog is on (all planes carry at
+	# least a whisper of base haze for exactly this).
+	var fog := FogVolume.new()
+	var reach := minf(ring_radius * 3.0, 4.5)
+	fog.size = Vector3(reach, minf(ring_radius * 2.0, 3.0), reach)
+	var fmat := FogMaterial.new()
+	fmat.density = 0.35 * intensity  # a breath of haze, not a blob
+	fmat.albedo = Color(color.r, color.g, color.b)
+	fmat.emission = Color(color.r * 0.06, color.g * 0.06, color.b * 0.06)
+	fog.material = fmat
+	add_child(fog)
+
 	if hum and not Engine.is_editor_hint():
 		var stream := load("res://assets/audio/veil_hum.wav")
 		if stream is AudioStreamWAV:

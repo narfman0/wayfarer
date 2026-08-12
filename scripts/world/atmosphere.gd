@@ -34,34 +34,34 @@ const PLANES := {
 		"particles": {"color": Color(0.8, 0.7, 0.95, 0.8), "amount": 26, "rise": 0.15,
 			"drift": 0.2, "size": 0.03, "glow": 2.0}},
 	# The Reach: flat overcast glare over scarred grassland; grey ash drifts.
-	"reach": {"sky_tint": Color(0.35, 0.35, 0.30), "sun_rot": Vector3(-58.0, 20.0, 0.0),
+	"reach": {"volumetric": {"density": 0.004, "albedo": Color(0.55, 0.53, 0.48)}, "sky_tint": Color(0.35, 0.35, 0.30), "sun_rot": Vector3(-58.0, 20.0, 0.0),
 		"sun_color": Color(0.88, 0.9, 0.88), "sun_energy": 0.85,
 		"particles": {"color": Color(0.6, 0.58, 0.52, 0.7), "amount": 34, "rise": -0.08,
 			"drift": 0.45, "size": 0.035, "glow": 0.6}},
 	# Old Kaveth: night. A low blue moon; the Veil's violet motes rise off the
 	# ruins — the plane is lit by what broke it.
-	"kaveth": {"sky_tint": Color(0.40, 0.20, 0.85), "ambient": Color(0.22, 0.20, 0.40), "ambient_energy": 0.5, "sun_rot": Vector3(-28.0, -120.0, 0.0),
+	"kaveth": {"volumetric": {"density": 0.008, "albedo": Color(0.45, 0.42, 0.75)}, "sky_tint": Color(0.40, 0.20, 0.85), "ambient": Color(0.22, 0.20, 0.40), "ambient_energy": 0.5, "sun_rot": Vector3(-28.0, -120.0, 0.0),
 		"sun_color": Color(0.5, 0.55, 0.95), "sun_energy": 0.3,
 		"particles": {"color": Color(0.65, 0.4, 1.0, 0.9), "amount": 40, "rise": 0.25,
 			"drift": 0.15, "size": 0.035, "glow": 2.5}},
 	# Verath: overcast sea-glare, salt haze hanging in the air.
-	"verath": {"sky_tint": Color(0.25, 0.45, 0.55), "sun_rot": Vector3(-50.0, -30.0, 0.0),
+	"verath": {"volumetric": {"density": 0.005, "albedo": Color(0.72, 0.78, 0.82)}, "sky_tint": Color(0.25, 0.45, 0.55), "sun_rot": Vector3(-50.0, -30.0, 0.0),
 		"sun_color": Color(0.85, 0.9, 0.95), "sun_energy": 0.95,
 		"particles": {"color": Color(0.85, 0.9, 0.92, 0.5), "amount": 30, "rise": 0.05,
 			"drift": 0.6, "size": 0.05, "glow": 0.5}},
 	# The Between: directionless — sun nearly vertical so shadows die, pale
 	# motes falling upward.
-	"between": {"sky_tint": Color(0.55, 0.50, 0.70), "ambient": Color(0.42, 0.40, 0.52), "ambient_energy": 0.7, "sun_rot": Vector3(-85.0, 0.0, 0.0),
+	"between": {"volumetric": {"density": 0.008, "albedo": Color(0.62, 0.58, 0.72)}, "sky_tint": Color(0.55, 0.50, 0.70), "ambient": Color(0.42, 0.40, 0.52), "ambient_energy": 0.7, "sun_rot": Vector3(-85.0, 0.0, 0.0),
 		"sun_color": Color(0.75, 0.7, 0.9), "sun_energy": 0.3,
 		"particles": {"color": Color(0.75, 0.7, 0.9, 0.7), "amount": 36, "rise": 0.3,
 			"drift": 0.1, "size": 0.04, "glow": 1.5}},
 	# Ashan: golden hour, forever — low warm sun, long shadows, gold pollen.
-	"ashan": {"rim_color": Color(1.0, 0.75, 0.45), "sky_tint": Color(0.80, 0.55, 0.30), "ambient": Color(0.48, 0.36, 0.22), "ambient_energy": 0.8, "sun_rot": Vector3(-14.0, -70.0, 0.0),
+	"ashan": {"volumetric": {"density": 0.004, "albedo": Color(0.9, 0.75, 0.5)}, "rim_color": Color(1.0, 0.75, 0.45), "sky_tint": Color(0.80, 0.55, 0.30), "ambient": Color(0.48, 0.36, 0.22), "ambient_energy": 0.8, "sun_rot": Vector3(-14.0, -70.0, 0.0),
 		"sun_color": Color(1.0, 0.72, 0.42), "sun_energy": 1.35,
 		"particles": {"color": Color(1.0, 0.85, 0.5, 0.8), "amount": 34, "rise": -0.06,
 			"drift": 0.25, "size": 0.035, "glow": 1.6}},
 	# The Convergence: harsh violet — the Veil under strain, sparks climbing.
-	"convergence": {"rim_color": Color(0.85, 0.45, 1.0), "sky_tint": Color(0.75, 0.25, 0.90), "ambient": Color(0.36, 0.24, 0.46), "ambient_energy": 0.6, "sun_rot": Vector3(-55.0, 150.0, 0.0),
+	"convergence": {"volumetric": {"density": 0.006, "albedo": Color(0.6, 0.4, 0.75)}, "rim_color": Color(0.85, 0.45, 1.0), "sky_tint": Color(0.75, 0.25, 0.90), "ambient": Color(0.36, 0.24, 0.46), "ambient_energy": 0.6, "sun_rot": Vector3(-55.0, 150.0, 0.0),
 		"sun_color": Color(0.8, 0.5, 1.0), "sun_energy": 0.75,
 		"particles": {"color": Color(0.85, 0.45, 1.0, 0.9), "amount": 44, "rise": 0.5,
 			"drift": 0.3, "size": 0.03, "glow": 3.0}},
@@ -172,7 +172,8 @@ static func apply(level: Node3D, plane_id: String, sun: DirectionalLight3D,
 
 	_apply_void_sky(level, spec.get("sky_tint", Color(0.45, 0.25, 0.75)),
 		spec.get("ambient", Color(0.30, 0.28, 0.42)),
-		spec.get("ambient_energy", 0.55))
+		spec.get("ambient_energy", 0.55),
+		spec.get("volumetric", {}))
 	_add_rim_light(level, spec.get("rim_color", Color(0.55, 0.55, 0.80)))
 
 	if sun != null:
@@ -205,7 +206,8 @@ static func apply(level: Node3D, plane_id: String, sun: DirectionalLight3D,
 ## from a fixed soft colour (not the sky) so the near-black void doesn't crush
 ## island lighting.
 static func _apply_void_sky(level: Node3D, sky_tint: Color = Color(0.45, 0.25, 0.75),
-		ambient: Color = Color(0.30, 0.28, 0.42), ambient_energy: float = 0.55) -> void:
+		ambient: Color = Color(0.30, 0.28, 0.42), ambient_energy: float = 0.55,
+		volumetric: Dictionary = {}) -> void:
 	var we: WorldEnvironment = null
 	for n in level.find_children("*", "WorldEnvironment", true, false):
 		we = n
@@ -229,7 +231,15 @@ static func _apply_void_sky(level: Node3D, sky_tint: Color = Color(0.45, 0.25, 0
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.fog_enabled = false
-	env.volumetric_fog_enabled = false
+	# Volumetric fog is per-plane opt-in ("volumetric" spec key): light-height
+	# mist that sun/omni lights actually scatter through. Trial under the
+	# ortho camera — Godot froxels fit the camera frustum, so verify per use.
+	env.volumetric_fog_enabled = true
+	env.volumetric_fog_density = volumetric.get("density", 0.002)
+	env.volumetric_fog_albedo = volumetric.get("albedo", Color(0.65, 0.65, 0.75))
+	env.volumetric_fog_length = 110.0  # cover the ortho view depth
+	env.volumetric_fog_ambient_inject = volumetric.get("ambient_inject", 0.25)
+	env.volumetric_fog_anisotropy = 0.5
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color  = ambient  # per-plane; default cool violet-dark
 	env.ambient_light_energy = ambient_energy
