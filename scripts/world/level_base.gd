@@ -172,6 +172,9 @@ func _on_level_ready() -> void:
 ## 1.8 m, so a tree only blocks at its trunk while its canopy — and any box
 ## drawn around it — would otherwise wall off the ground around it.
 const _PROP_LAYER := 1 << 3  # value 8; unused by ground(1)/enemies(2)/companion(4)
+## Boundary walls and pad rails: blocks bodies, invisible to click rays
+## (CLICK_MASK = ground|enemies) — a 10 m wall must never eat an attack click.
+const _BARRIER_LAYER := 1 << 4  # value 16
 
 func _setup_prop_collision() -> void:
 	var props := get_node_or_null("Level/Props")
@@ -186,6 +189,8 @@ func _setup_prop_collision() -> void:
 			body.collision_layer = _PROP_LAYER
 			body.collision_mask = 0
 	_player.collision_mask |= _PROP_LAYER
+	_player.collision_mask |= _BARRIER_LAYER
+	_companion.collision_mask |= _BARRIER_LAYER
 
 ## The StaticBody3D that create_trimesh_collision() just parented under `mi`
 ## (Synty prop meshes carry no collision of their own, so it's the only one).
@@ -273,7 +278,7 @@ func _add_wall(level: Node, east_west: bool, w: float, u_center: float,
 func _add_wall_uw(level: Node, east_west: bool, u: float, w: float,
 		u_len: float, w_len: float, height: float) -> void:
 	var body := StaticBody3D.new()
-	body.collision_layer = 1
+	body.collision_layer = _BARRIER_LAYER
 	body.collision_mask  = 0
 	var shape_node := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
@@ -590,6 +595,7 @@ func register_enemy(ec) -> void:
 	if ec.character != null:
 		return
 	ec.character = _Factory.make_enemy(ec.enemy_type)
+	ec.collision_mask |= _BARRIER_LAYER
 	ec.died.connect(_on_enemy_died.bind(ec))
 	if ec.is_boss:
 		ec.phase_changed.connect(_on_boss_phase.bind(ec))
