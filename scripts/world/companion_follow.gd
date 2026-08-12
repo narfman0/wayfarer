@@ -12,6 +12,7 @@ const MELEE_DIST  := 1.5
 const _Dice = preload("res://addons/srd/dice.gd")
 const _DamageNumber = preload("res://scripts/world/damage_number.gd")
 const _CharAnim = preload("res://scripts/world/character_animator.gd")
+const _Vfx = preload("res://scripts/combat/vfx.gd")
 
 @export var follow_target: CharacterBody3D
 
@@ -95,6 +96,7 @@ func _cast_healing_word(caster, target) -> void:
 	target.stats.current_hp = mini(target.stats.max_hp, target.stats.current_hp + heal)
 	# `target` is a character sheet (Resource) — read position off the body.
 	var pos: Vector3 = follow_target.global_position if follow_target != null else global_position
+	_Vfx.heal_aura(get_tree().current_scene, pos)
 	_DamageNumber.spawn(get_tree().current_scene, pos + Vector3(0, 1.5, 0),
 		"+%d HW" % heal, Color(0.4, 1.0, 0.6))
 	print("[Spell] Liris: Healing Word — %s +%d HP" % [target.display_name, heal])

@@ -21,6 +21,7 @@ const _ArmorData      = preload("res://addons/srd/resources/armor_data.gd")
 const _Telegraph      = preload("res://scripts/combat/telegraph.gd")
 const _Projectile     = preload("res://scripts/combat/projectile.gd")
 const _Juice          = preload("res://scripts/combat/juice.gd")
+const _Vfx            = preload("res://scripts/combat/vfx.gd")
 
 enum State { PATROL, CHASE, ATTACK, RETURN }
 
@@ -317,6 +318,8 @@ func _fire_attack() -> void:
 		return
 	_CharAnim.oneshot(self, "attack", MELEE_CLIP_SPEED, 0.8)
 	_MeleeAttacker.lunge(self, _target.global_position)
+	_Vfx.slash_arc(get_tree().current_scene, global_position,
+		_target.global_position, Color(1.0, 0.55, 0.45))
 	AudioManager.play_sfx("swing", -3.0)
 	var tgt := _target
 	get_tree().create_timer(MELEE_WINDUP).timeout.connect(_land_melee.bind(tgt))
@@ -584,6 +587,7 @@ func receive_damage(amount: int, from: Vector3 = Vector3.INF) -> void:
 ## send-off and frees the body.
 func _die() -> void:
 	_dead = true
+	_Vfx.death_dissolve(get_tree().current_scene, global_position)
 	_slam_winding = false
 	_end_cast()
 	remove_from_group("enemies")

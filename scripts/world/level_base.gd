@@ -15,6 +15,7 @@ const _Experience    = preload("res://addons/srd/systems/experience.gd")
 const _Progression   = preload("res://scripts/characters/character_progression.gd")
 const _CharAnim      = preload("res://scripts/world/character_animator.gd")
 const _Juice         = preload("res://scripts/combat/juice.gd")
+const _Vfx           = preload("res://scripts/combat/vfx.gd")
 const _Platform      = preload("res://scripts/world/platform_terrain.gd")
 
 ## Seconds from cast gesture start to the effect landing (the gesture's
@@ -690,6 +691,7 @@ func _use_heavy_strike() -> void:
 		return
 	c.heavy_strike_primed = true
 	AudioManager.play_sfx("telegraph", -6.0)
+	_Vfx.buff_flare(self, _player.global_position, Color(1.0, 0.6, 0.25))
 	_DamageNumber.spawn(self, _player.global_position + Vector3(0, 2.0, 0),
 		"HEAVY STRIKE", Color(1.0, 0.6, 0.25))
 	print("[Combat] Heavy Strike primed")
@@ -704,6 +706,7 @@ func _use_second_wind() -> void:
 	c.second_wind_used = true
 	var heal: int = _Dice.roll(10) + c.stats.level
 	c.stats.current_hp = mini(c.stats.max_hp, c.stats.current_hp + heal)
+	_Vfx.heal_aura(self, _player.global_position)
 	_DamageNumber.spawn(self, _player.global_position, "+%d" % heal, Color(0.4, 1.0, 0.5))
 	print("[Combat] Second Wind: +%d HP" % heal)
 
@@ -728,6 +731,7 @@ func _use_action_surge() -> void:
 	var base: float = _Progression.base_rate_scale(c)
 	_attacker.rate_scale = base * 0.5
 	AudioManager.play_sfx("crit", 0.0)
+	_Vfx.buff_flare(self, _player.global_position, Color(1.0, 0.8, 0.2))
 	_DamageNumber.spawn(self, _player.global_position + Vector3(0, 2.0, 0),
 		"ACTION SURGE!", Color(1.0, 0.8, 0.2))
 	print("[Combat] Action Surge: attack speed doubled for %.0fs" % _ACTION_SURGE_SECS)
@@ -790,6 +794,7 @@ func _use_healing_word() -> void:
 	c.healing_word_charges -= 1
 	var heal: int = maxi(1, _Dice.roll(4) + c.stats.ability_modifier(4))  # 4 = WIS
 	sarro.stats.current_hp = mini(sarro.stats.max_hp, sarro.stats.current_hp + heal)
+	_Vfx.heal_aura(self, _player.global_position)
 	_DamageNumber.spawn(self, _player.global_position + Vector3(0, 1.5, 0),
 		"+%d HW" % heal, Color(0.4, 1.0, 0.5))
 	print("[Spell] Liris: Healing Word — Sarro +%d HP" % heal)
@@ -846,18 +851,25 @@ func _cast_spell(spell, caster = null) -> void:
 		var dmg: int = 0
 		for _i in spell.damage_count:
 			dmg += _Dice.roll(spell.damage_dice)
-		# Point, then the bolt lands at the gesture's apex. Deliberately
-		# slower than a sword wind-up — spells read as weighty.
+		# Point at the apex, then a bolt FLIES to the target and damage lands
+		# on arrival. Deliberately weightier than a sword wind-up.
 		_CharAnim.oneshot(caster_body, "cast_bolt", 1.4, 0.8)
 		get_tree().create_timer(CAST_APEX).timeout.connect(func() -> void:
 			if tgt == null or not is_instance_valid(tgt) or tgt.character == null \
 					or tgt.character.stats.current_hp <= 0:
 				return  # target fell during the cast — the bolt fizzles
-			tgt.receive_damage(dmg)
-			_DamageNumber.hit(self, tgt.global_position, dmg, false)
-			_DamageNumber.spawn(self, tgt.global_position + Vector3(0, 2.0, 0),
-				spell.spell_name, Color(0.7, 0.7, 1.0))
-			print("[Spell] %s → %s: %d dmg" % [spell.spell_name, tgt.name, dmg]))
+			var from: Vector3 = caster_body.global_position if is_instance_valid(caster_body) \
+				else _player.global_position
+			_Vfx.spell_bolt(self, from, tgt.global_position, Color(0.7, 0.65, 1.0),
+				func() -> void:
+					if tgt == null or not is_instance_valid(tgt) or tgt.character == null \
+							or tgt.character.stats.current_hp <= 0:
+						return
+					tgt.receive_damage(dmg)
+					_DamageNumber.hit(self, tgt.global_position, dmg, false)
+					_DamageNumber.spawn(self, tgt.global_position + Vector3(0, 2.0, 0),
+						spell.spell_name, Color(0.7, 0.7, 1.0))
+					print("[Spell] %s → %s: %d dmg" % [spell.spell_name, tgt.name, dmg])))
 
 	# Heal spell — restores the caster
 	elif spell.heal_dice > 0:
@@ -871,6 +883,7 @@ func _cast_spell(spell, caster = null) -> void:
 			var at: Vector3 = caster_body.global_position if is_instance_valid(caster_body) \
 				else _player.global_position
 			_Juice.flash_light(self, at, Color(0.45, 1.0, 0.55), 2.0, 0.4)
+			_Vfx.heal_aura(self, at)
 			_DamageNumber.spawn(self, at + Vector3(0, 1.5, 0),
 				"+%d %s" % [heal, spell.spell_name], Color(0.4, 1.0, 0.5))
 			print("[Spell] %s: +%d HP to %s" % [spell.spell_name, heal, c.display_name]))
@@ -882,6 +895,7 @@ func _cast_spell(spell, caster = null) -> void:
 			var at: Vector3 = caster_body.global_position if is_instance_valid(caster_body) \
 				else _player.global_position
 			_Juice.flash_light(self, at, Color(0.75, 0.6, 1.0), 2.0, 0.4)
+			_Vfx.buff_flare(self, at, Color(0.75, 0.6, 1.0))
 			_DamageNumber.spawn(self, at + Vector3(0, 2.0, 0),
 				spell.spell_name, Color(0.85, 0.75, 1.0))
 			print("[Spell] %s cast" % spell.spell_name))

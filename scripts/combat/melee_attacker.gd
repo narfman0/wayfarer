@@ -11,6 +11,7 @@ const _DamageNumber   = preload("res://scripts/world/damage_number.gd")
 const _Juice          = preload("res://scripts/combat/juice.gd")
 const _Progression    = preload("res://scripts/characters/character_progression.gd")
 const _CharAnim       = preload("res://scripts/world/character_animator.gd")
+const _Vfx            = preload("res://scripts/combat/vfx.gd")
 
 const MELEE_RANGE  := 1.6   # metres
 const ATTACK_RATE  := 1.0   # seconds between attacks
@@ -120,6 +121,9 @@ func _do_attack() -> void:
 	var clip: String = "attack_heavy" if (crit or heavy) else "attack"
 	_CharAnim.oneshot(owner_body, clip, CLIP_SPEED[clip], RELEASE_FRAC)
 	lunge(owner_body, _target.global_position)
+	_Vfx.slash_arc(owner_body.get_tree().current_scene, owner_body.global_position,
+		_target.global_position,
+		Color(1.0, 0.7, 0.3) if heavy else Color(1.0, 0.95, 0.8), crit or heavy)
 	AudioManager.play_sfx("swing")
 
 	var dmg := 0
