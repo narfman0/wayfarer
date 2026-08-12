@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://convergence"]
+[gd_scene load_steps=34 format=3 uid="uid://convergence"]
 
 [ext_resource type="Script" path="res://scripts/world/convergence.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
@@ -20,6 +20,14 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Item_Crystal_03.gltf" id="p_crystal3"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Castle_DestroyedWall_RubblePile_01.gltf" id="p_rubble"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Rock_Cliff_03.gltf" id="p_cliff"]
+
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Detail_Machine_01.gltf" id="f_machine"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Detail_Tank_01.gltf" id="f_tank1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Detail_Tank_02.gltf" id="f_tank2"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_ControlPanel_01.gltf" id="f_panel1"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_ControlPanel_02.gltf" id="f_panel2"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Antenna_01.gltf" id="f_ant"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Scifi_Space_SourceFiles_v2/SourceFiles/FBX/SM_Prop_Oxygen_Tank_Large.gltf" id="f_oxy"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -199,3 +207,25 @@ anchor_bottom = 1.0
 [node name="EditorPreview" type="Node3D" parent="."]
 script = ExtResource("99_preview")
 plane_id = "convergence"
+
+[node name="StitchEngine" parent="Level/Props" instance=ExtResource("f_machine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 0, 0, -23.5)
+
+[node name="EngineTank1" parent="Level/Props" instance=ExtResource("f_tank1")]
+transform = Transform3D(0.866, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866, -6, 0, -22.5)
+
+[node name="EngineTank2" parent="Level/Props" instance=ExtResource("f_tank2")]
+transform = Transform3D(0.7071, 0, -0.7071, 0, 1, 0, 0.7071, 0, 0.7071, 6, 0, -22.5)
+
+[node name="EnginePanel1" parent="Level/Props" instance=ExtResource("f_panel1")]
+transform = Transform3D(-0.9397, 0, 0.342, 0, 1, 0, -0.342, 0, -0.9397, -3, 0, -21)
+
+[node name="EnginePanel2" parent="Level/Props" instance=ExtResource("f_panel2")]
+transform = Transform3D(-0.9397, 0, -0.342, 0, 1, 0, 0.342, 0, -0.9397, 3, 0, -21)
+
+[node name="EngineAntenna" parent="Level/Props" instance=ExtResource("f_ant")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 10, 0, -21)
+
+[node name="EngineOxy" parent="Level/Props" instance=ExtResource("f_oxy")]
+transform = Transform3D(0.342, 0, 0.9397, 0, 1, 0, -0.9397, 0, 0.342, -10, 0, -20.5)
+

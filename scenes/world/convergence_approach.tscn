@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://convergence_approach"]
+[gd_scene load_steps=24 format=3 uid="uid://convergence_approach"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
@@ -16,6 +16,12 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Bld_Tent_Round_01.gltf" id="p_tent1"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Banner_01.gltf" id="p_banner"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Item_Crystal_01.gltf" id="p_crystal1"]
+
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Battle_Banner_01.gltf" id="c_bbanner"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Brazier_01.gltf" id="c_brazier"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Scroll_Pile_01.gltf" id="c_scroll"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_AncientEgypt_SourceFiles_v2/SourceFiles/FBX/Props/SM_Prop_Scroll_Open_01.gltf" id="c_sopen"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Spike_Fortification_01.gltf" id="c_spike"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -277,3 +283,25 @@ anchor_bottom = 1.0
 [node name="EditorPreview" type="Node3D" parent="."]
 script = ExtResource("99_preview")
 plane_id = "convergence_approach"
+
+[node name="DoctrineBanner1" parent="Level/Props" instance=ExtResource("c_bbanner")]
+transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, -8, 0, -4)
+
+[node name="DoctrineBanner2" parent="Level/Props" instance=ExtResource("c_bbanner")]
+transform = Transform3D(0.766, 0, -0.6428, 0, 1, 0, 0.6428, 0, 0.766, 10, 0, -4)
+
+[node name="RitualBrazier1" parent="Level/Props" instance=ExtResource("c_brazier")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, -3, 0, -10)
+
+[node name="RitualBrazier2" parent="Level/Props" instance=ExtResource("c_brazier")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 4, 0, -12)
+
+[node name="DoctrineScrolls1" parent="Level/Props" instance=ExtResource("c_scroll")]
+transform = Transform3D(0.1736, 0, 0.9848, 0, 1, 0, -0.9848, 0, 0.1736, -11, 0, 6)
+
+[node name="DoctrineScrolls2" parent="Level/Props" instance=ExtResource("c_sopen")]
+transform = Transform3D(0.866, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866, 6, 0, 4)
+
+[node name="CampSpikes" parent="Level/Props" instance=ExtResource("c_spike")]
+transform = Transform3D(0.5736, 0, 0.8192, 0, 1, 0, -0.8192, 0, 0.5736, 14, 0, 2)
+

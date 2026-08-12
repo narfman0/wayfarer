@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://ashan"]
+[gd_scene load_steps=31 format=3 uid="uid://ashan"]
 
 [ext_resource type="Script" path="res://scripts/world/level_base.gd" id="1_level"]
 [ext_resource type="Script" path="res://scripts/world/editor_preview.gd" id="99_preview"]
@@ -21,6 +21,12 @@
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_NatureBiomes_MeadowForest_SourceFiles_v2/Meadow_Source_Files/FBX/SM_Prop_Meadow_Fence_Gate_01.gltf" id="p_gate"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_NatureBiomes_MeadowForest_SourceFiles_v2/Meadow_Source_Files/FBX/SM_Env_Lillies_03.gltf" id="p_lillies"]
 [ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_NatureBiomes_MeadowForest_SourceFiles_v2/Meadow_Source_Files/FBX/SM_Prop_Camp_Fireplace_01.gltf" id="p_fire"]
+
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Well_01.gltf" id="a_well"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Hay_Cart_01.gltf" id="a_cart"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Market_Stall_01.gltf" id="a_stall"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Prop_Street_Lamp_01.gltf" id="a_lamp"]
+[ext_resource type="PackedScene" path="res://assets/meshes/POLYGON_Fantasy_Kingdom_SourceFiles_v5/Source_Files/FBX/SM_Env_Bush_Flowers_02.gltf" id="a_flowers"]
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -226,3 +232,28 @@ anchor_bottom = 1.0
 [node name="EditorPreview" type="Node3D" parent="."]
 script = ExtResource("99_preview")
 plane_id = "ashan"
+
+[node name="VillageWell" parent="Level/Props" instance=ExtResource("a_well")]
+transform = Transform3D(0.9397, 0, 0.342, 0, 1, 0, -0.342, 0, 0.9397, -2, 0, 6)
+
+[node name="HayCart" parent="Level/Props" instance=ExtResource("a_cart")]
+transform = Transform3D(0.6428, 0, -0.766, 0, 1, 0, 0.766, 0, 0.6428, 12, 0, 4)
+
+[node name="EveningStall" parent="Level/Props" instance=ExtResource("a_stall")]
+transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, -12, 0, -10)
+
+[node name="LampSquare" parent="Level/Props" instance=ExtResource("a_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 1, 0, 1)
+
+[node name="LampNorth" parent="Level/Props" instance=ExtResource("a_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 10, 0, -8)
+
+[node name="Flowers1" parent="Level/Props" instance=ExtResource("a_flowers")]
+transform = Transform3D(0.866, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866, -4, 0, 8.5)
+
+[node name="Flowers2" parent="Level/Props" instance=ExtResource("a_flowers")]
+transform = Transform3D(0.342, 0, -0.9397, 0, 1, 0, 0.9397, 0, 0.342, 7, 0, 5.5)
+
+[node name="Flowers3" parent="Level/Props" instance=ExtResource("a_flowers")]
+transform = Transform3D(-0.766, 0, 0.6428, 0, 1, 0, -0.6428, 0, -0.766, -8, 0, -3)
+
