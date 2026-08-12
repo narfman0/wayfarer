@@ -62,8 +62,8 @@ gates on story flags as before.
 **Autoloads**: `SceneManager` (registry, fades, portal staging) ·
 `GameState` (party, XP/level-ups, flags, conviction, **gold +
 inventory**, save/load; SAVE_VERSION 5) · `AudioManager` (SFX pool +
-per-plane ambient crossfade) · `CombatManager` (encounter state,
-initiative, TB turn engine, reactions) · `UITheme` (Cinzel/Crimson
+per-plane ambient crossfade) · `CombatManager` (encounter
+membership + combat-end detection) · `UITheme` (Cinzel/Crimson
 fantasy theme) · `DialogueManager` (addon).
 
 **Combat** — real-time over one SRD core: the archetype FSM in
@@ -124,9 +124,9 @@ ranged weapon exists yet).
 death screen with Try Again / Main Menu.
 
 **UI**: `party_panel` (BG3-style portrait cards, click to select) +
-`skill_bar` (64 px icon slots from `ability_registry`, tooltips) +
-`combat_hud` (TB controls, reaction modal) + HUD toasts, gold readout,
-pending-build-choice hint.
+`skill_bar` (64 px icon slots from `ability_registry`, tooltips — the
+combat action bar) + HUD toasts, gold readout, pending-build-choice
+hint.
 
 **Lighting** (the AAA pass): Forward+ renderer pinned with 4× MSAA +
 debanding (`project.godot [rendering]`). AgX tonemap + unified glow +
