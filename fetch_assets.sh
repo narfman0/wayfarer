@@ -106,6 +106,18 @@ if m:
     for suffix in re.findall(r'_ANIM_ROOT\s*\+\s*"([^"]+)"', src):
         referenced.add(root + suffix)
 
+# 4) dir-const + bare-filename pattern (dungeon_run's prop lists): any .gd
+#    that defines a res://assets/meshes/... dir const gets its quoted
+#    *.gltf/*.glb basenames resolved against every such const in the file.
+for f in glob.glob("scripts/**/*.gd", recursive=True):
+    txt = open(f, encoding="utf-8", errors="ignore").read()
+    dirs = re.findall(r':=\s*"res://assets/meshes/([^"]+/)"', txt)
+    if not dirs:
+        continue
+    for name in re.findall(r'"([A-Za-z0-9_]+\.(?:gltf|glb))"', txt):
+        for d in dirs:
+            referenced.add("assets/meshes/" + d + name)
+
 # Resolve the dependency closure: each glTF pulls its .bin + texture images.
 # .glb is self-contained. Fetch a glTF (small) to read its deps if absent.
 closure = set()
