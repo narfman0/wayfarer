@@ -1,8 +1,9 @@
 ## Visual gallery: loads every plane, lets it render a moment, then saves a
 ## screenshot per plane to res://.screenshots/ (inside the project — the
 ## flatpak sandbox can't write anywhere else). Needs a display; run under
-## Xvfb with the GL compatibility renderer:
-##   xvfb-run -a godot --rendering-driver opengl3 \
+## Xvfb with the Forward+ renderer — the Compatibility renderer silently
+## drops SSAO/SSIL/SDFGI/volumetrics, so opengl3 screenshots lie:
+##   xvfb-run -a godot --rendering-driver vulkan \
 ##       res://future/tests/harnesses/plane_gallery.tscn
 extends Node
 

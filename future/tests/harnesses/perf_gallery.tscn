@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://perfgallery"]
+
+[ext_resource type="Script" path="res://future/tests/harnesses/perf_gallery.gd" id="1_perf"]
+
+[node name="PerfGallery" type="Node"]
+script = ExtResource("1_perf")

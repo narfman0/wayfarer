@@ -1,7 +1,7 @@
 ## Visual gallery for the progression UI: screenshots every creation-wizard
 ## step and the rest-point level-up screen to res://.screenshots/ui_*.png.
 ## Needs a display:
-##   xvfb-run -a godot --rendering-driver opengl3 \
+##   xvfb-run -a godot --rendering-driver vulkan \
 ##       res://future/tests/harnesses/ui_gallery.tscn
 extends Node
 

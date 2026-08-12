@@ -46,7 +46,7 @@ Headless smoke suites live in `future/tests/harnesses/` — each prints
 godot --headless res://future/tests/harnesses/systems_smoke.tscn   # or any suite
 ```
 
-Visual review: `xvfb-run -a godot --rendering-driver opengl3 res://future/tests/harnesses/plane_gallery.tscn` screenshots every plane to `.screenshots/`.
+Visual review: `xvfb-run -a godot --rendering-driver vulkan res://future/tests/harnesses/plane_gallery.tscn` screenshots every plane to `.screenshots/` (Forward+ — the Compatibility renderer drops SSAO/GI/volumetrics from screenshots). `perf_gallery.tscn` (same invocation) measures per-plane GPU/CPU render cost to `.screenshots/perf.csv`.
 
 ## Quick Summary
 
