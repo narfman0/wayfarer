@@ -73,6 +73,13 @@ func _set_veil_strength(v: float) -> void:
 	_veil.visible = v > 0.001
 	(_veil.material as ShaderMaterial).set_shader_parameter("strength", v)
 
+## One-shot chromatic-split pulse — the Veil flexing without a transit.
+## Boss phase transitions and overstitch feedback lean on this.
+func veil_pulse(strength := 0.65, secs := 0.9) -> void:
+	var tween := create_tween()
+	tween.tween_method(_set_veil_strength, 0.0, strength, secs * 0.3)
+	tween.tween_method(_set_veil_strength, strength, 0.0, secs * 0.7)
+
 func level_scene_for(plane_id: String) -> String:
 	return LEVELS.get(plane_id, LEVELS["tamori"])
 

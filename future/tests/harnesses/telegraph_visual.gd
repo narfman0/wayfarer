@@ -29,6 +29,10 @@ func _ready() -> void:
 	_Telegraph.show_line(self, Vector3(-1, 0, 1), Vector3(0, 0, -1), 8.0, 1.5, 3.0)
 	_Telegraph.show_cone(self, Vector3(3, 0, 2), Vector3(1, 0, -1), 6.0, 60.0, 3.0)
 	_Telegraph.show_donut(self, Vector3(8, 0, -4), 1.5, 3.5, 3.0)
+	# The tint grammar: cyan soak, green hold, violet channel.
+	_Telegraph.show_circle(self, Vector3(-10, 0, 4), 2.0, 3.0, _Telegraph.TINT_SOAK)
+	_Telegraph.show_circle(self, Vector3(-14, 0, -2), 2.0, 3.0, _Telegraph.TINT_HOLD)
+	_Telegraph.show_circle(self, Vector3(12, 0, 2), 2.6, 3.0, _Telegraph.TINT_VEIL)
 
 	await get_tree().create_timer(1.5).timeout
 	await _shot("res://future/tests/harnesses/telegraph_midfill.png")

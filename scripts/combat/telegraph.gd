@@ -20,6 +20,20 @@ const _COLOR_BASE := Color(1.0, 0.42, 0.12, 0.25)
 const _COLOR_FILL := Color(1.0, 0.30, 0.08, 0.5)
 const _Y_LIFT := 0.06  # above the ground plane so it never z-fights
 
+## Semantic tints for the optional `tint` constructor arg — a color grammar
+## for the correct RESPONSE, kept consistent across every fight:
+##   orange (default) — get out of the shape; footwork is the answer
+##   SOAK   (cyan)    — someone must STAND here when it fires
+##   HOLD   (green)   — stand here to claim it / healing lands here
+##   VEIL   (violet)  — channel projection: footwork won't help, stop the
+##                      cast (interrupt, kill the caster, break the rig)
+const TINT_SOAK := Color(0.30, 0.85, 1.0)
+const TINT_HOLD := Color(0.40, 1.0, 0.60)
+const TINT_VEIL := Color(0.72, 0.40, 1.0)
+
+var _color_base := _COLOR_BASE
+var _color_fill := _COLOR_FILL
+
 var shape: Shape = Shape.CIRCLE
 var duration: float = 1.2
 ## CIRCLE: {radius}  LINE: {length, width}  CONE: {radius, angle_deg}
@@ -34,30 +48,34 @@ var _fill_pivot: Node3D
 # static methods — same Godot 4.7 limitation noted in character_factory.gd.)
 
 static func show_circle(parent: Node, origin: Vector3, radius: float,
-		secs: float):
-	return _spawn(parent, Shape.CIRCLE, origin, {"radius": radius}, secs, Vector3.FORWARD)
+		secs: float, tint := Color(0, 0, 0, 0)):
+	return _spawn(parent, Shape.CIRCLE, origin, {"radius": radius}, secs,
+		Vector3.FORWARD, tint)
 
 static func show_line(parent: Node, origin: Vector3, direction: Vector3,
-		length: float, width: float, secs: float):
+		length: float, width: float, secs: float, tint := Color(0, 0, 0, 0)):
 	return _spawn(parent, Shape.LINE, origin,
-		{"length": length, "width": width}, secs, direction)
+		{"length": length, "width": width}, secs, direction, tint)
 
 static func show_cone(parent: Node, origin: Vector3, direction: Vector3,
-		radius: float, angle_deg: float, secs: float):
+		radius: float, angle_deg: float, secs: float, tint := Color(0, 0, 0, 0)):
 	return _spawn(parent, Shape.CONE, origin,
-		{"radius": radius, "angle_deg": angle_deg}, secs, direction)
+		{"radius": radius, "angle_deg": angle_deg}, secs, direction, tint)
 
 static func show_donut(parent: Node, origin: Vector3, inner: float,
-		outer: float, secs: float):
+		outer: float, secs: float, tint := Color(0, 0, 0, 0)):
 	return _spawn(parent, Shape.DONUT, origin,
-		{"inner": inner, "outer": outer}, secs, Vector3.FORWARD)
+		{"inner": inner, "outer": outer}, secs, Vector3.FORWARD, tint)
 
 static func _spawn(parent: Node, s: Shape, origin: Vector3, p: Dictionary,
-		secs: float, direction: Vector3):
+		secs: float, direction: Vector3, tint := Color(0, 0, 0, 0)):
 	var t = load("res://scripts/combat/telegraph.gd").new()
 	t.shape = s
 	t.params = p
 	t.duration = maxf(0.1, secs)
+	if tint.a > 0.0:
+		t._color_base = Color(tint.r, tint.g, tint.b, _COLOR_BASE.a)
+		t._color_fill = Color(tint.r, tint.g, tint.b, _COLOR_FILL.a)
 	parent.add_child(t)
 	t.global_position = origin + Vector3(0, _Y_LIFT, 0)
 	direction.y = 0.0
@@ -93,17 +111,17 @@ func contains(world_point: Vector3) -> bool:
 
 func _ready() -> void:
 	AudioManager.play_sfx("telegraph")
-	var base := _make_mesh_instance(_flat_material(_COLOR_BASE))
+	var base := _make_mesh_instance(_flat_material(_color_base))
 	add_child(base)
 	_fill_pivot = Node3D.new()
 	add_child(_fill_pivot)
-	var fill := _make_mesh_instance(_flat_material(_COLOR_FILL))
+	var fill := _make_mesh_instance(_flat_material(_color_fill))
 	_fill_pivot.add_child(fill)
 
 	# The warning casts real light that intensifies toward the impact — the
 	# ground-projection read bosses will lean on. Shadowless, freed with us.
 	var warn_light := OmniLight3D.new()
-	warn_light.light_color = Color(_COLOR_FILL.r, _COLOR_FILL.g, _COLOR_FILL.b)
+	warn_light.light_color = Color(_color_fill.r, _color_fill.g, _color_fill.b)
 	warn_light.light_energy = 0.4
 	warn_light.omni_range = _light_range()
 	warn_light.omni_attenuation = 1.2

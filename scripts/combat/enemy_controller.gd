@@ -45,10 +45,15 @@ const SLAM_RATE   := 7.0   # cooldown between slams
 ## Basic-swing wind-up: the readable beat between the blade going up and
 ## damage landing. Deliberately ~3× the player's (contact-frame asymmetry:
 ## player attacks feel snappy, enemy attacks are reactable). Stepping out of
-## reach dodges the blow; a stagger during the wind-up interrupts it. This
-## window is also where boss ability/impact-area projection will hook in.
+## reach dodges the blow; a stagger during the wind-up interrupts it.
 const MELEE_WINDUP := 0.5
 const MELEE_CLIP_SPEED := 0.8   # slows the 0.87s light clip so contact ≈ wind-up
+
+# Boss swings project their impact arc during the wind-up: a cone telegraph
+# aimed where the blade will land, and stepping OUT of the cone (not just out
+# of reach) dodges it — sidestepping a boss reads the same as sidestepping
+# its slams. The cone matches the whiff range (MELEE_DIST * 1.8).
+const BOSS_SWING_ARC_DEG := 80.0
 
 const _PHASE_INVULN := 1.8  # seconds of invulnerability during phase transition
 
@@ -137,6 +142,7 @@ var _cast_label: String = ""
 var _cast_left: float = 0.0
 var _cast_total: float = 0.0
 var _cast_bar: Label3D = null
+var _cast_ring: Node3D = null   # ground projection of the channel, if any
 var _stun_left: float = 0.0
 var _root_left: float = 0.0   # grappled: can't move, can still swing
 
@@ -395,19 +401,39 @@ func _fire_attack() -> void:
 		_target.global_position, Color(1.0, 0.55, 0.45))
 	AudioManager.play_sfx("swing", -3.0)
 	var tgt := _target
-	get_tree().create_timer(MELEE_WINDUP).timeout.connect(_land_melee.bind(tgt))
+	# Boss swings project the impact cone; the aim is frozen at wind-up start
+	# so the shape the player sees is exactly the shape that resolves.
+	var aim := Vector3.ZERO
+	if is_boss:
+		aim = tgt.global_position - global_position
+		aim.y = 0.0
+		if aim.length_squared() < 0.001:
+			aim = -global_transform.basis.z
+		aim = aim.normalized()
+		_Telegraph.show_cone(get_tree().current_scene, global_position, aim,
+			MELEE_DIST * 1.8, BOSS_SWING_ARC_DEG, MELEE_WINDUP)
+	get_tree().create_timer(MELEE_WINDUP).timeout.connect(
+		_land_melee.bind(tgt, aim))
 
 ## Contact frame of a basic swing. Interrupted by death or a stagger during
 ## the wind-up; whiffs (honestly, with a MISS) if the target stepped out of
-## reach — that's the dodge.
-func _land_melee(tgt: CharacterBody3D) -> void:
+## reach — that's the dodge. Boss swings also whiff when the target stepped
+## OUT OF THE PROJECTED CONE (aimed along `aim`), so the telegraph is honest.
+func _land_melee(tgt: CharacterBody3D, aim := Vector3.ZERO) -> void:
 	if _dead or character == null or _stun_left > 0.0:
 		return
 	if tgt == null or not is_instance_valid(tgt):
 		return
-	if global_position.distance_to(tgt.global_position) > MELEE_DIST * 1.8:
+	var to_tgt := tgt.global_position - global_position
+	to_tgt.y = 0.0
+	if to_tgt.length() > MELEE_DIST * 1.8:
 		_DamageNumber.miss(get_tree().current_scene, tgt.global_position)
 		print("[Combat] %s's swing whiffs — target moved" % character.display_name)
+		return
+	if aim != Vector3.ZERO and to_tgt.length() > 0.001 \
+			and rad_to_deg(aim.angle_to(to_tgt.normalized())) > BOSS_SWING_ARC_DEG * 0.5:
+		_DamageNumber.miss(get_tree().current_scene, tgt.global_position)
+		print("[Combat] %s's swing whiffs — target sidestepped the arc" % character.display_name)
 		return
 	_resolve_attack_on(tgt)
 
@@ -517,7 +543,9 @@ func _do_chase_support(delta: float) -> void:
 	_support_timer -= delta
 	if _support_timer <= 0.0 and not is_casting() and _invuln_timer <= 0.0:
 		_support_timer = SUPPORT_PERIOD
-		start_cast("Mending Litany", SUPPORT_CAST)
+		# Project the heal radius: every enemy inside the green ring when the
+		# litany completes gets mended — kite them out of it or interrupt.
+		start_cast("Mending Litany", SUPPORT_CAST, SUPPORT_RANGE, _Telegraph.TINT_HOLD)
 		if not cast_finished.is_connected(_on_support_cast):
 			cast_finished.connect(_on_support_cast)
 
@@ -586,17 +614,26 @@ func _on_slam_fired(t) -> void:
 ## `secs`, `cast_finished` fires — unless Shield Bash lands first, in which
 ## case `cast_interrupted` fires and the enemy eats a stun (the punish
 ## window). One cast at a time.
-func start_cast(label: String, secs: float) -> void:
+##
+## `ring_radius` > 0 projects the ability's impact area on the ground for the
+## whole channel — a telegraph circle centered on the caster that fills as
+## the cast completes, tinted to the ability (Telegraph.TINT_*). It reads
+## from anywhere in the arena and dies with the cast, interrupted or not.
+func start_cast(label: String, secs: float, ring_radius := 0.0,
+		ring_tint := Color(0, 0, 0, 0)) -> void:
 	if _dead or _cast_left > 0.0:
 		return
 	_cast_label = label
 	_cast_total = maxf(0.1, secs)
 	_cast_left = _cast_total
-	_cast_bar = Label3D.new()
-	_cast_bar.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	if ring_radius > 0.0:
+		_cast_ring = _Telegraph.show_circle(get_tree().current_scene,
+			global_position, ring_radius, _cast_total, ring_tint)
+	# ScreenPrompt: crisp screen-space text, so the channel reads from across
+	# the arena instead of minifying into 3D mush at distance.
+	_cast_bar = preload("res://scripts/ui/screen_prompt.gd").new()
 	_cast_bar.position = Vector3(0, 2.6, 0)
-	_cast_bar.font_size = 40
-	_cast_bar.pixel_size = 0.004
+	_cast_bar.font_size = 54
 	_cast_bar.modulate = Color(1.0, 0.75, 0.3)
 	add_child(_cast_bar)
 	# Prayer-loop channel under the cast bar; a mid-cast hit react (stun /
@@ -651,6 +688,11 @@ func _end_cast() -> void:
 	if _cast_bar != null:
 		_cast_bar.queue_free()
 		_cast_bar = null
+	# On a completed cast the ring fires and frees itself; on an interrupt it
+	# is still mid-fill and must be torn down here.
+	if _cast_ring != null and is_instance_valid(_cast_ring):
+		_cast_ring.queue_free()
+	_cast_ring = null
 
 # ── Damage intake / death ─────────────────────────────────────────────────────
 
@@ -717,8 +759,25 @@ func _enter_phase(phase: int) -> void:
 	character.stats.constitution = mini(30, character.stats.constitution + 2)
 	_DamageNumber.spawn(get_tree().current_scene, global_position + Vector3(0, 2, 0),
 		"Phase %d!" % phase, Color(1.0, 0.4, 0.15))
+	_phase_drama(phase)
 	phase_changed.emit(phase)
 	print("[Boss] %s — phase %d!" % [character.display_name, phase])
+
+## The arena reacts to the transition: the Veil flexes across the screen, the
+## boss flares violet, the camera kicks, and the plane's light dims for a
+## breath — readable from anywhere, escalating with the phase.
+func _phase_drama(phase: int) -> void:
+	SceneManager.veil_pulse(0.5 + 0.25 * phase, 0.9)
+	_Juice.shake(get_viewport().get_camera_3d(), 0.18 + 0.08 * phase, 0.45)
+	_Juice.flash_light(get_tree().current_scene, global_position + Vector3(0, 1.2, 0),
+		_Telegraph.TINT_VEIL, 5.0, 0.8)
+	_Vfx.buff_flare(get_tree().current_scene, global_position, _Telegraph.TINT_VEIL)
+	var sun := get_tree().current_scene.get_node_or_null("Sun") as DirectionalLight3D
+	if sun != null:
+		var base := sun.light_energy
+		var tween := create_tween()
+		tween.tween_property(sun, "light_energy", base * 0.35, 0.25)
+		tween.tween_property(sun, "light_energy", base, 1.4)
 
 # ── Loot ─────────────────────────────────────────────────────────────────────
 

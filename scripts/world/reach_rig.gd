@@ -131,7 +131,8 @@ func _fire_siphon_zones() -> void:
 		var ang := _rng.randf_range(0.0, TAU)
 		var r := _rng.randf_range(3.0, 8.0)
 		var pos: Vector3 = _engine.global_position + Vector3(cos(ang) * r, 0.0, sin(ang) * r)
-		var t = _Telegraph.show_circle(self, pos, _SOAK_RADIUS, 2.6)
+		# Cyan = soak: someone must be standing inside when it fires.
+		var t = _Telegraph.show_circle(self, pos, _SOAK_RADIUS, 2.6, _Telegraph.TINT_SOAK)
 		t.fired.connect(_on_siphon_fired.bind(t))
 	if _hud != null:
 		_hud.show_toast_text("⚠ Siphon zones — someone must stand in each!")

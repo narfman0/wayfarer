@@ -106,7 +106,7 @@ func _rift_step() -> void:
 func _fire_planar_echo() -> void:
 	match _echo_idx % 3:
 		0:
-			_cael.start_cast("Echo: Anchor Surge", 4.0)
+			_cael.start_cast("Echo: Anchor Surge", 4.0, 2.6, _Telegraph.TINT_VEIL)
 			if _hud != null:
 				_hud.show_toast_text("⚠ Echo: Anchor Surge — interrupt with [5]!")
 		1:
@@ -142,7 +142,8 @@ func _fire_collapse_point() -> void:
 	var ang := _rng.randf_range(0.0, TAU)
 	var r := _rng.randf_range(4.0, 11.0)
 	var pos := Vector3(cos(ang) * r, 0.0, sin(ang) * r)
-	var t = _Telegraph.show_circle(self, pos, 2.5, 3.0)
+	# Green = claim the ground: stand inside when it fires or lose the floor.
+	var t = _Telegraph.show_circle(self, pos, 2.5, 3.0, _Telegraph.TINT_HOLD)
 	t.fired.connect(_on_collapse_fired.bind(t))
 	if _hud != null:
 		_hud.show_toast_text("⚠ Collapse Point — stand in it to hold the floor!")

@@ -32,6 +32,7 @@ const _SHARD_COUNT := 3
 const _SHARD_GAP := 0.6         # seconds between sequential shards
 const _COMPLETION_CAST := 30.0  # phase-3 rig channel
 const _ENGAGE_DIST := 13.0
+const _COMPLETION_RADIUS := 15.0  # the detonation is arena-wide; project it so
 
 var _boss: EnemyController
 var _rig: VeilRig
@@ -41,6 +42,7 @@ var _phase := 0
 var _surge_timer := _SURGE_FIRST
 var _shards_timer := 6.0
 var _shard_angle := 0.0
+var _channel_tel: Node3D = null  # violet projection of the active rig channel
 
 func _on_level_ready() -> void:
 	super._on_level_ready()
@@ -77,6 +79,10 @@ func _tick_surge(delta: float) -> void:
 		return
 	_surge_timer = _SURGE_PERIOD
 	_boss.start_cast("Anchor Surge", _SURGE_CAST)
+	# Violet ring on the RIG (the impact point, not the caster): the repair
+	# lands there when the fill closes — the grammar for "stop the cast".
+	_set_channel_tel(_Telegraph.show_circle(self, _rig.global_position, 2.6,
+		_SURGE_CAST, _Telegraph.TINT_VEIL))
 	if _hud != null:
 		_hud.show_toast_text("⚠ Anchor Surge — interrupt with [5] Shield Bash!")
 
@@ -143,6 +149,16 @@ func _start_completion_channel() -> void:
 	if _fight_over:
 		return
 	_boss.start_cast("Completing the Anchor", _COMPLETION_CAST)
+	# The detonation hits the whole arena — project the whole arena. Watching
+	# a 15 m violet fill creep outward for 30 s IS the enrage timer.
+	_set_channel_tel(_Telegraph.show_circle(self, _rig.global_position,
+		_COMPLETION_RADIUS, _COMPLETION_CAST, _Telegraph.TINT_VEIL))
+
+## One rig-channel projection at a time; stale ones die with their cast.
+func _set_channel_tel(t: Node3D) -> void:
+	if _channel_tel != null and is_instance_valid(_channel_tel):
+		_channel_tel.queue_free()
+	_channel_tel = t
 
 func _on_boss_cast_finished(label: String) -> void:
 	if label == "Anchor Surge":
@@ -153,6 +169,7 @@ func _on_boss_cast_finished(label: String) -> void:
 		_start_completion_channel.call_deferred()
 
 func _on_boss_cast_interrupted(label: String) -> void:
+	_set_channel_tel(null)  # the projection dies with the cast
 	AudioManager.play_sfx("crit", 1.0)
 	if label == "Completing the Anchor":
 		# punished, but she goes right back to it once the stun ends
