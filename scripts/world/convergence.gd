@@ -19,7 +19,6 @@ class_name ConvergenceScene
 extends WayfarerLevel
 
 const _Telegraph = preload("res://scripts/combat/telegraph.gd")
-const _Juice     = preload("res://scripts/combat/juice.gd")
 
 const _BOLT_PERIOD := 7.0
 const _RIFT_PERIOD := 14.0

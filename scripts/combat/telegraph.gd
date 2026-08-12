@@ -100,6 +100,19 @@ func _ready() -> void:
 	var fill := _make_mesh_instance(_flat_material(_COLOR_FILL))
 	_fill_pivot.add_child(fill)
 
+	# The warning casts real light that intensifies toward the impact — the
+	# ground-projection read bosses will lean on. Shadowless, freed with us.
+	var warn_light := OmniLight3D.new()
+	warn_light.light_color = Color(_COLOR_FILL.r, _COLOR_FILL.g, _COLOR_FILL.b)
+	warn_light.light_energy = 0.4
+	warn_light.omni_range = _light_range()
+	warn_light.omni_attenuation = 1.2
+	warn_light.shadow_enabled = false
+	warn_light.position = _light_center() + Vector3(0, 0.8, 0)
+	add_child(warn_light)
+	var lt := create_tween()
+	lt.tween_property(warn_light, "light_energy", 1.8, duration)
+
 	# The fill sweeps outward and lands exactly on the base at fire time —
 	# classic "leave before it fills" read. Donuts pulse instead (scaling a
 	# torus would change both radii).
@@ -119,6 +132,25 @@ func _fire() -> void:
 	var flash := create_tween()
 	flash.tween_property(self, "scale", Vector3(1.06, 1.0, 1.06), 0.08)
 	flash.tween_callback(queue_free)
+
+## Light reach scaled to the warned area so big slams glow bigger.
+func _light_range() -> float:
+	match shape:
+		Shape.CIRCLE:
+			return float(params["radius"]) * 2.2
+		Shape.DONUT:
+			return float(params["outer"]) * 2.2
+		Shape.LINE:
+			return float(params["length"]) * 0.9
+		Shape.CONE:
+			return float(params["radius"]) * 1.8
+	return 5.0
+
+## LINE extends along -Z; center the glow on the strip, not the caster.
+func _light_center() -> Vector3:
+	if shape == Shape.LINE:
+		return Vector3(0, 0, -float(params["length"]) * 0.5)
+	return Vector3.ZERO
 
 func _make_mesh_instance(mat: Material) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()

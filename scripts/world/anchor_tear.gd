@@ -22,7 +22,6 @@ class_name AnchorTearScene
 extends WayfarerLevel
 
 const _Telegraph = preload("res://scripts/combat/telegraph.gd")
-const _Juice     = preload("res://scripts/combat/juice.gd")
 
 const _SURGE_PERIOD := 26.0
 const _SURGE_FIRST := 12.0

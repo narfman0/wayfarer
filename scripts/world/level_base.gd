@@ -14,6 +14,7 @@ const _Dice          = preload("res://addons/srd/dice.gd")
 const _Experience    = preload("res://addons/srd/systems/experience.gd")
 const _Progression   = preload("res://scripts/characters/character_progression.gd")
 const _CharAnim      = preload("res://scripts/world/character_animator.gd")
+const _Juice         = preload("res://scripts/combat/juice.gd")
 
 ## Seconds from cast gesture start to the effect landing (the gesture's
 ## apex). Spells read deliberately weightier than sword wind-ups.
@@ -741,6 +742,7 @@ func _cast_spell(spell, caster = null) -> void:
 			c.stats.current_hp = mini(c.stats.max_hp, c.stats.current_hp + heal)
 			var at: Vector3 = caster_body.global_position if is_instance_valid(caster_body) \
 				else _player.global_position
+			_Juice.flash_light(self, at, Color(0.45, 1.0, 0.55), 2.0, 0.4)
 			_DamageNumber.spawn(self, at + Vector3(0, 1.5, 0),
 				"+%d %s" % [heal, spell.spell_name], Color(0.4, 1.0, 0.5))
 			print("[Spell] %s: +%d HP to %s" % [spell.spell_name, heal, c.display_name]))
@@ -751,6 +753,7 @@ func _cast_spell(spell, caster = null) -> void:
 		get_tree().create_timer(CAST_APEX).timeout.connect(func() -> void:
 			var at: Vector3 = caster_body.global_position if is_instance_valid(caster_body) \
 				else _player.global_position
+			_Juice.flash_light(self, at, Color(0.75, 0.6, 1.0), 2.0, 0.4)
 			_DamageNumber.spawn(self, at + Vector3(0, 2.0, 0),
 				spell.spell_name, Color(0.85, 0.75, 1.0))
 			print("[Spell] %s cast" % spell.spell_name))

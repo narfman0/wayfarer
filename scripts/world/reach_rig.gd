@@ -16,7 +16,6 @@ class_name ExtractorRigScene
 extends WayfarerLevel
 
 const _Telegraph = preload("res://scripts/combat/telegraph.gd")
-const _Juice     = preload("res://scripts/combat/juice.gd")
 
 const _BEAM_PERIODS := [12.0, 9.5, 7.5]  # by boss phase
 const _BEAM_STEPS := 5

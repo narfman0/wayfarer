@@ -34,11 +34,30 @@ static func shake(camera: Camera3D, strength := 0.12, secs := 0.16) -> void:
 	tween.tween_property(camera, "h_offset", 0.0, secs / (steps * 2.0))
 	tween.tween_property(camera, "v_offset", 0.0, secs / (steps * 2.0))
 
+## Transient shadowless point light — impacts and spell apexes emit light.
+## Dozens can run per fight; each frees itself after the fade.
+static func flash_light(scene: Node, pos: Vector3, color := Color(1.0, 0.8, 0.5),
+		energy := 2.4, secs := 0.25) -> void:
+	if scene == null or not scene.is_inside_tree():
+		return
+	var l := OmniLight3D.new()
+	l.light_color = Color(color.r, color.g, color.b)
+	l.light_energy = energy
+	l.omni_range = 4.5
+	l.omni_attenuation = 1.4
+	l.shadow_enabled = false
+	scene.add_child(l)
+	l.global_position = pos + Vector3(0, 1.2, 0)
+	var tw := l.create_tween()
+	tw.tween_property(l, "light_energy", 0.0, secs).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(l.queue_free)
+
 ## One-shot spark burst at a hit point.
 static func impact_burst(scene: Node, pos: Vector3,
 		color := Color(1.0, 0.75, 0.4)) -> void:
 	if scene == null or not scene.is_inside_tree():
 		return
+	flash_light(scene, pos, color)
 	var p := CPUParticles3D.new()
 	p.one_shot = true
 	p.amount = 10

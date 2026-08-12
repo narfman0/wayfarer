@@ -23,7 +23,7 @@ const _DEFAULT := {
 ## particle field is the plane's signature dust.
 const PLANES := {
 	# Tamori: late morning at home — warm sun, drifting pollen.
-	"tamori": {"sky_tint": Color(0.45, 0.30, 0.75), "sun_rot": Vector3(-55.0, 40.0, 0.0), "sun_energy": 1.2},
+	"tamori": {"rim_color": Color(0.85, 0.80, 0.65), "sky_tint": Color(0.45, 0.30, 0.75), "sun_rot": Vector3(-55.0, 40.0, 0.0), "sun_energy": 1.2},
 	"tamori_road": {"sun_rot": Vector3(-50.0, 45.0, 0.0), "sun_energy": 1.15},
 	# The frontier planes push the sun lower and the light dustier as Act 1
 	# walks toward the anchor.
@@ -56,12 +56,12 @@ const PLANES := {
 		"particles": {"color": Color(0.75, 0.7, 0.9, 0.7), "amount": 36, "rise": 0.3,
 			"drift": 0.1, "size": 0.04, "glow": 1.5}},
 	# Ashan: golden hour, forever — low warm sun, long shadows, gold pollen.
-	"ashan": {"sky_tint": Color(0.80, 0.55, 0.30), "ambient": Color(0.48, 0.36, 0.22), "ambient_energy": 0.8, "sun_rot": Vector3(-14.0, -70.0, 0.0),
+	"ashan": {"rim_color": Color(1.0, 0.75, 0.45), "sky_tint": Color(0.80, 0.55, 0.30), "ambient": Color(0.48, 0.36, 0.22), "ambient_energy": 0.8, "sun_rot": Vector3(-14.0, -70.0, 0.0),
 		"sun_color": Color(1.0, 0.72, 0.42), "sun_energy": 1.35,
 		"particles": {"color": Color(1.0, 0.85, 0.5, 0.8), "amount": 34, "rise": -0.06,
 			"drift": 0.25, "size": 0.035, "glow": 1.6}},
 	# The Convergence: harsh violet — the Veil under strain, sparks climbing.
-	"convergence": {"sky_tint": Color(0.75, 0.25, 0.90), "ambient": Color(0.36, 0.24, 0.46), "ambient_energy": 0.6, "sun_rot": Vector3(-55.0, 150.0, 0.0),
+	"convergence": {"rim_color": Color(0.85, 0.45, 1.0), "sky_tint": Color(0.75, 0.25, 0.90), "ambient": Color(0.36, 0.24, 0.46), "ambient_energy": 0.6, "sun_rot": Vector3(-55.0, 150.0, 0.0),
 		"sun_color": Color(0.8, 0.5, 1.0), "sun_energy": 0.75,
 		"particles": {"color": Color(0.85, 0.45, 1.0, 0.9), "amount": 44, "rise": 0.5,
 			"drift": 0.3, "size": 0.03, "glow": 3.0}},
@@ -173,6 +173,7 @@ static func apply(level: Node3D, plane_id: String, sun: DirectionalLight3D,
 	_apply_void_sky(level, spec.get("sky_tint", Color(0.45, 0.25, 0.75)),
 		spec.get("ambient", Color(0.30, 0.28, 0.42)),
 		spec.get("ambient_energy", 0.55))
+	_add_rim_light(level, spec.get("rim_color", Color(0.55, 0.55, 0.80)))
 
 	if sun != null:
 		sun.rotation_degrees = spec["sun_rot"]
@@ -181,6 +182,14 @@ static func apply(level: Node3D, plane_id: String, sun: DirectionalLight3D,
 		# (Was 55% under ACES; AgX rolls highlights off gently enough to
 		# afford brighter keys without clipping.)
 		sun.light_energy = spec["sun_energy"] * 0.75
+		# Shadow tuning for the locked ortho view: the camera sits 30 m out
+		# over arenas ≤80 m, so a tight max distance buys crisp cascades
+		# cheaply. Blended splits hide the cascade seam on flat ground.
+		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+		sun.directional_shadow_max_distance = 85.0
+		sun.directional_shadow_blend_splits = true
+		sun.shadow_bias = 0.03
+		sun.shadow_normal_bias = 1.6
 
 	var hx := 20.0
 	var hz := 20.0
@@ -237,6 +246,19 @@ static func _add_fill_light(level: Node3D) -> void:
 	fill.shadow_enabled = false
 	fill.rotation_degrees = Vector3(40.0, -145.0, 0.0)  # low angle, opposite sun
 	level.add_child(fill)
+
+## Third point of the rig: a low back-light from behind the scene relative to
+## the locked camera (yaw 45°), so characters and props get a bright edge that
+## separates them from the ground — the BG3/Diablo silhouette pop.
+static func _add_rim_light(level: Node3D, color: Color) -> void:
+	var rim := DirectionalLight3D.new()
+	rim.name = "RimLight"
+	rim.light_color = color
+	rim.light_energy = 0.5
+	rim.specular = 1.0
+	rim.shadow_enabled = false
+	rim.rotation_degrees = Vector3(-18.0, 225.0, 0.0)  # low, opposite the camera
+	level.add_child(rim)
 
 static func _make_field(p: Dictionary, hx: float, hz: float) -> CPUParticles3D:
 	var field := CPUParticles3D.new()
