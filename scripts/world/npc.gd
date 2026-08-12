@@ -36,7 +36,7 @@ func _ready() -> void:
 	if skin != null and not Engine.is_editor_hint():
 		_Animator.attach(skin, null, "femn" if feminine else "masc")
 
-	_prompt = Label3D.new()
+	_prompt = preload("res://scripts/ui/screen_prompt.gd").new()
 	_prompt.text = "[F] Talk to %s" % npc_display_name
 	_prompt.position = Vector3(0, 2.2, 0)
 	_prompt.billboard = BaseMaterial3D.BILLBOARD_ENABLED

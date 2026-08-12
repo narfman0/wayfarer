@@ -50,7 +50,7 @@ func _ready() -> void:
 
 	_build_mesh()
 
-	_label             = Label3D.new()
+	_label             = preload("res://scripts/ui/screen_prompt.gd").new()
 	_label.text        = "[F] Search Bag"
 	_label.position    = Vector3(0, 1.0, 0)
 	_label.billboard   = BaseMaterial3D.BILLBOARD_ENABLED

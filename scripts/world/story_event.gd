@@ -32,7 +32,7 @@ func _ready() -> void:
 	_ring.material_override = mat
 	add_child(_ring)
 
-	_prompt = Label3D.new()
+	_prompt = preload("res://scripts/ui/screen_prompt.gd").new()
 	_prompt.position = Vector3(0, 2.4, 0)
 	_prompt.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_prompt.font_size = 44

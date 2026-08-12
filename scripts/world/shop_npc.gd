@@ -23,7 +23,7 @@ func _ready() -> void:
 	add_child(shape)
 
 	# Floating prompt label
-	_label = Label3D.new()
+	_label = preload("res://scripts/ui/screen_prompt.gd").new()
 	_label.text      = "[F] Shop  (%s)" % npc_name
 	_label.position  = Vector3(0, 2.4, 0)
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED

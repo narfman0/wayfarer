@@ -23,7 +23,7 @@ func _ready() -> void:
 	tear.position.y = 0.9
 	add_child(tear)
 
-	_prompt = Label3D.new()
+	_prompt = preload("res://scripts/ui/screen_prompt.gd").new()
 	_prompt.position = Vector3(0, 2.2, 0)
 	_prompt.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_prompt.font_size = 44

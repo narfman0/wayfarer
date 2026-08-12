@@ -62,7 +62,7 @@ func _ready() -> void:
 	light.position.y = 0.5
 	add_child(light)
 
-	var prompt := Label3D.new()
+	var prompt := preload("res://scripts/ui/screen_prompt.gd").new()
 	prompt.text = "[Walk over to equip]"
 	prompt.position = Vector3(0, 1.3, 0)
 	prompt.billboard = BaseMaterial3D.BILLBOARD_ENABLED
