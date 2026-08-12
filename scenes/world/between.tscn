@@ -39,6 +39,7 @@ roughness = 0.6
 
 [node name="Between" type="Node3D"]
 script = ExtResource("1_level")
+platform_terrain = true
 plane_id = "between"
 debug_party_level = 13
 

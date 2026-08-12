@@ -15,6 +15,7 @@ const _Experience    = preload("res://addons/srd/systems/experience.gd")
 const _Progression   = preload("res://scripts/characters/character_progression.gd")
 const _CharAnim      = preload("res://scripts/world/character_animator.gd")
 const _Juice         = preload("res://scripts/combat/juice.gd")
+const _Platform      = preload("res://scripts/world/platform_terrain.gd")
 
 ## Seconds from cast gesture start to the effect landing (the gesture's
 ## apex). Spells read deliberately weightier than sword wind-ups.
@@ -37,6 +38,10 @@ const CAST_APEX := 0.4
 ## bushes, rocks). Off by default — place props manually in each scene instead.
 ## Set true to re-enable the procedural pass for a specific plane.
 @export var generate_scenery: bool = false
+## Replace the flat rectangular ground slab with an eroded plane-fragment
+## platform (faint tactical grid on top, portal pads on causeways beyond
+## the edge). Top stays flat at y=0 — gameplay untouched.
+@export var platform_terrain: bool = false
 
 ## True when this run spawned its own debug party — autosave is skipped so an
 ## isolated test never overwrites the real save slot.
@@ -103,7 +108,8 @@ func _ready() -> void:
 	_setup_combat()
 	_setup_enemies()
 	_setup_prop_collision()
-	_setup_bounds()
+	_setup_platform()
+	_setup_bounds()  # after platform swap so walls hug the eroded silhouette
 	_setup_pathfinding()
 	_apply_loaded_state()
 	_setup_scenery()  # after _apply_loaded_state so avoid-points use final positions
@@ -241,6 +247,37 @@ func _setup_scenery() -> void:
 	var ground := get_node_or_null("Level/Ground/GroundMesh") as MeshInstance3D
 	_Scenery.generate(level, ground, _Scenery.avoid_points_for(self),
 		_Scenery.clear_centers_for(self), plane_id)
+
+## Swap the BoxMesh slab for the eroded platform + pads + causeways.
+## Runs before _setup_bounds so the walls follow the new silhouette
+## (erosion is inward-only, so players never walk past the visual edge).
+func _setup_platform() -> void:
+	if not platform_terrain:
+		return
+	var gm := get_node_or_null("Level/Ground/GroundMesh") as MeshInstance3D
+	if gm == null or not (gm.mesh is BoxMesh):
+		return
+	var box: BoxMesh = gm.mesh
+	var albedo := Color(0.3, 0.3, 0.32)
+	var surf := gm.get_surface_override_material(0)
+	if surf is StandardMaterial3D:
+		albedo = (surf as StandardMaterial3D).albedo_color
+	var mat := _Platform.grid_material(albedo, Color(0.62, 0.66, 1.0))
+	gm.mesh = _Platform.build_platform(box.size.x, box.size.z, hash(plane_id))
+	gm.material_override = mat
+
+	# Portals get their own pads beyond the edge, joined by causeway prisms.
+	var ground := get_node("Level/Ground")
+	var idx := 0
+	for child in get_node("Level").get_children():
+		if not (child is Node3D) or child.get("target_plane") == null:
+			continue
+		var p: Vector3 = (child as Node3D).position
+		var outward := Vector3(p.x, 0.0, p.z).normalized()
+		var pad_center := p + outward * 7.0
+		ground.add_child(_Platform.pad(pad_center, 7.0, hash(plane_id) + idx, mat))
+		ground.add_child(_Platform.causeway(p + outward * 0.5, pad_center, mat))
+		idx += 1
 
 func _setup_atmosphere() -> void:
 	var ground := get_node_or_null("Level/Ground/GroundMesh") as MeshInstance3D
