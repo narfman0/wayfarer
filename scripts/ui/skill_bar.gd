@@ -33,10 +33,32 @@ func build_for(char) -> void:
 		c.queue_free()
 	_slots.clear()
 	_abilities = _AbilityRegistry.abilities_for(char)
+	var prev_group := ""
 	for i in _abilities.size():
+		# thin rule between groups: class kit | maneuvers | spells
+		var group: String = String(_abilities[i].get("group", ""))
+		if i > 0 and group != prev_group:
+			add_child(_make_separator())
+		prev_group = group
 		var slot: Button = _make_slot(_abilities[i])
 		add_child(slot)
 		_slots.append(slot)
+
+func _make_separator() -> Control:
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(10, 64)
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var rule := ColorRect.new()
+	rule.color = Color(0.65, 0.55, 0.35, 0.5)
+	rule.anchor_left = 0.5
+	rule.anchor_right = 0.5
+	rule.anchor_top = 0.15
+	rule.anchor_bottom = 0.85
+	rule.offset_left = -1
+	rule.offset_right = 1
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(rule)
+	return holder
 
 func _make_slot(ability: Dictionary) -> Button:
 	var btn := Button.new()
@@ -78,6 +100,50 @@ func _make_slot(ability: Dictionary) -> Button:
 	state.offset_bottom = -2
 	state.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(state)
+
+	# Cooldown drain: a dark overlay that covers the remaining fraction from
+	# the top and shrinks as the cooldown ticks — classic fill-drain read.
+	var cd_fill := ColorRect.new()
+	cd_fill.name = "CdFill"
+	cd_fill.color = Color(0.05, 0.05, 0.08, 0.72)
+	cd_fill.anchor_left = 0.0
+	cd_fill.anchor_right = 1.0
+	cd_fill.anchor_top = 0.0
+	cd_fill.anchor_bottom = 0.0
+	cd_fill.visible = false
+	cd_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(cd_fill)
+
+	var cd_text := Label.new()
+	cd_text.name = "CdText"
+	cd_text.add_theme_font_size_override("font_size", 20)
+	cd_text.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
+	cd_text.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	cd_text.add_theme_constant_override("outline_size", 4)
+	cd_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cd_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	cd_text.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cd_text.visible = false
+	cd_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(cd_text)
+
+	# Charge/slot badge, bottom-right (healing word charges, spell slots).
+	var count := Label.new()
+	count.name = "Count"
+	count.add_theme_font_size_override("font_size", 13)
+	count.add_theme_color_override("font_color", Color(1.0, 0.9, 0.55))
+	count.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	count.add_theme_constant_override("outline_size", 3)
+	count.anchor_left = 1.0
+	count.anchor_right = 1.0
+	count.anchor_top = 1.0
+	count.anchor_bottom = 1.0
+	count.offset_left = -18
+	count.offset_top = -20
+	count.offset_bottom = -4
+	count.visible = false
+	count.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(count)
 
 	var ab_ref: Dictionary = ability
 	btn.pressed.connect(func():
@@ -124,10 +190,49 @@ func _process(_delta: float) -> void:
 		var is_ready: bool = true
 		if ready_cb.is_valid():
 			is_ready = bool(ready_cb.call())
-		slot.modulate = Color(1, 1, 1, 1) if is_ready else Color(0.4, 0.4, 0.4, 1.0)
+
+		# active cooldown → drain overlay + countdown instead of "spent"
+		var cd_left := 0.0
+		var cd_frac := 0.0
+		var cd_cb: Callable = ability.get("cooldown", Callable())
+		if cd_cb.is_valid():
+			var cd: Array = cd_cb.call()
+			cd_left = float(cd[0])
+			cd_frac = clampf(cd_left / maxf(0.001, float(cd[1])), 0.0, 1.0)
+
+		var cd_fill: ColorRect = slot.get_node_or_null("CdFill") as ColorRect
+		var cd_text: Label = slot.get_node_or_null("CdText") as Label
+		var on_cooldown := cd_left > 0.05
+		if cd_fill != null:
+			cd_fill.visible = on_cooldown
+			cd_fill.anchor_bottom = cd_frac
+		if cd_text != null:
+			cd_text.visible = on_cooldown
+			cd_text.text = ("%.1f" % cd_left) if cd_left < 3.0 else str(ceili(cd_left))
+
+		var count_lbl: Label = slot.get_node_or_null("Count") as Label
+		if count_lbl != null:
+			var count_cb: Callable = ability.get("count", Callable())
+			if count_cb.is_valid():
+				var n := int(count_cb.call())
+				count_lbl.visible = true
+				count_lbl.text = str(n)
+				count_lbl.add_theme_color_override("font_color",
+					Color(1.0, 0.9, 0.55) if n > 0 else Color(0.9, 0.35, 0.3))
+			else:
+				count_lbl.visible = false
+
+		# cooldowns keep their color under the drain; only spent-until-rest
+		# (or out-of-slots) resources gray out
+		if on_cooldown:
+			slot.modulate = Color(0.85, 0.85, 0.85, 1.0)
+		else:
+			slot.modulate = Color(1, 1, 1, 1) if is_ready else Color(0.4, 0.4, 0.4, 1.0)
 		var state_lbl: Label = slot.get_node_or_null("State") as Label
 		if state_lbl != null:
-			state_lbl.text = "" if is_ready else "spent"
+			var show_spent := not is_ready and not on_cooldown \
+				and not (ability.get("count", Callable()) as Callable).is_valid()
+			state_lbl.text = String(ability.get("not_ready_label", "spent")) if show_spent else ""
 
 func _exit_tree() -> void:
 	if _tooltip != null and is_instance_valid(_tooltip):

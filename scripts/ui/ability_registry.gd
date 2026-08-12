@@ -1,7 +1,22 @@
 ## Central lookup: given a WayfarerCharacter, returns a list of ability dicts
 ## that describe the icon-bar slots (name, tooltip, ready/activate callables).
+##
+## Optional entry keys the skill bar renders:
+##   group    — "kit" | "maneuver" | "spell"; the bar draws separators between
+##   cooldown — Callable -> [seconds_left, total]; drives the drain overlay +
+##              countdown (0 left = ready)
+##   count    — Callable -> int; a charge/slot badge (healing word charges,
+##              spell slots of the entry's level)
 class_name AbilityRegistry
 extends RefCounted
+
+const _Maneuvers = preload("res://scripts/combat/maneuvers.gd")
+
+# Cooldown totals mirrored from the combat sites (melee_attacker sets 8.0,
+# level_base _SHIELD_BASH_CD / _SURGE_MASTERY_CD + _ACTION_SURGE_SECS).
+const _HEAVY_STRIKE_CD := 8.0
+const _SHIELD_BASH_CD := 8.0
+const _FREEBLADE_SURGE_CD := 14.0
 
 ## The class behind a sheet ("soldier" / "ghost" / "warden" / "psion").
 static func class_key_for(char) -> String:
@@ -57,6 +72,7 @@ static func abilities_for(char) -> Array[Dictionary]:
 static func _second_wind(char) -> Dictionary:
 	return {
 		"id": "second_wind",
+		"group": "kit",
 		"name": "Second Wind",
 		"description": "Self-heal drawing on your reserves. Recovers on short rest.",
 		"cost": "instant",
@@ -71,6 +87,9 @@ static func _second_wind(char) -> Dictionary:
 static func _heavy_strike(char) -> Dictionary:
 	return {
 		"id": "heavy_strike",
+		"group": "kit",
+		"cooldown": func() -> Array: return [char.heavy_strike_cd, _HEAVY_STRIKE_CD],
+		"not_ready_label": "primed",
 		"name": "Heavy Strike",
 		"description": "Prime your next swing: +2d6 damage and a stagger. Short cooldown.",
 		"cost": "free",
@@ -86,6 +105,8 @@ static func _heavy_strike(char) -> Dictionary:
 static func _shield_bash(char) -> Dictionary:
 	return {
 		"id": "shield_bash",
+		"group": "kit",
+		"cooldown": func() -> Array: return [char.shield_bash_cd, _SHIELD_BASH_CD],
 		"name": "Shield Bash",
 		"description": "Slam your shield into the target. Damages and knocks prone. Short cooldown.",
 		"cost": "combat",
@@ -101,8 +122,9 @@ static func _action_surge(char) -> Dictionary:
 	var freeblade: bool = char.subclass_key == "freeblade"
 	var desc: String = "Take an additional action this turn. "
 	desc += "Freeblade: short cooldown." if freeblade else "Recovers on short rest."
-	return {
+	var entry := {
 		"id": "action_surge",
+		"group": "kit",
 		"name": "Action Surge",
 		"description": desc,
 		"cost": "free",
@@ -116,10 +138,16 @@ static func _action_surge(char) -> Dictionary:
 			return not char.action_surge_used,
 		"activate": _trigger_action("ability_6"),
 	}
+	if freeblade:  # cooldown ability for Freeblades, a rest resource otherwise
+		entry["cooldown"] = func() -> Array:
+			return [char.action_surge_cd, _FREEBLADE_SURGE_CD]
+	return entry
 
 static func _shove(char) -> Dictionary:
 	return {
 		"id": "shove",
+		"group": "maneuver",
+		"cooldown": func() -> Array: return [char.shove_cd, _Maneuvers.SHOVE_CD],
 		"name": "Shove",
 		"description": "Contested STR: knock the target away from you. Edges are fair game.",
 		"cost": "melee range",
@@ -134,6 +162,8 @@ static func _shove(char) -> Dictionary:
 static func _grapple(char) -> Dictionary:
 	return {
 		"id": "grapple",
+		"group": "maneuver",
+		"cooldown": func() -> Array: return [char.grapple_cd, _Maneuvers.GRAPPLE_CD],
 		"name": "Grapple",
 		"description": "Contested STR: hold the target in place. They get one escape attempt; attacks against a held target have advantage.",
 		"cost": "melee range",
@@ -167,6 +197,8 @@ static func _class_flavor(char) -> Dictionary:
 			color = Color(0.8, 0.55, 1.0)
 	return {
 		"id": "class_flavor",
+		"group": "maneuver",
+		"cooldown": func() -> Array: return [char.flavor_cd, _Maneuvers.FLAVOR_CD],
 		"name": name,
 		"description": desc,
 		"cost": "class",
@@ -183,6 +215,7 @@ static func _class_flavor(char) -> Dictionary:
 static func _guiding_bolt(char) -> Dictionary:
 	return {
 		"id": "guiding_bolt",
+		"group": "kit",
 		"name": "Guiding Bolt",
 		"description": "Radiant lance that grants advantage to the next attack against the target.",
 		"cost": "combat",
@@ -197,6 +230,8 @@ static func _guiding_bolt(char) -> Dictionary:
 static func _healing_word(char) -> Dictionary:
 	return {
 		"id": "healing_word",
+		"group": "kit",
+		"count": func() -> int: return char.healing_word_charges,
 		"name": "Healing Word",
 		"description": "Whispered mercy — restore an ally at range.",
 		"cost": "instant",
@@ -211,6 +246,7 @@ static func _healing_word(char) -> Dictionary:
 static func _channel_divinity(char) -> Dictionary:
 	return {
 		"id": "channel_divinity",
+		"group": "kit",
 		"name": "Channel Divinity",
 		"description": "Invoke divine power — Sacred Flame damage or Turn Undead. Recovers on short rest.",
 		"cost": "combat",
@@ -228,8 +264,9 @@ static func _spell_entry(char, sp, index: int) -> Dictionary:
 	var cost: String = "quick cast" if sp.is_bonus_action else "cast"
 	# Spell hotkeys 7 8 9 0 (dispatched by the skill bar, not input actions)
 	var kb: String = "" if index >= 4 else ("0" if index == 3 else str(7 + index))
-	return {
+	var entry := {
 		"id": "spell_%s" % String(sp.spell_name).to_lower().replace(" ", "_"),
+		"group": "spell",
 		"name": String(sp.spell_name),
 		"description": String(sp.description),
 		"cost": cost,
@@ -247,6 +284,12 @@ static func _spell_entry(char, sp, index: int) -> Dictionary:
 			if lvl != null and lvl.has_method("cast_spell"):
 				lvl.cast_spell(sp, char),
 	}
+	if sp.spell_level > 0:  # leveled spells badge their remaining slots
+		entry["count"] = func() -> int:
+			if char.energy_slots == null:
+				return 0
+			return char.energy_slots.slots_remaining_at(sp.spell_level)
+	return entry
 
 static func _spell_damage_text(sp) -> String:
 	if sp.damage_dice > 0:
