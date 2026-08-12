@@ -29,6 +29,7 @@ func _process(delta: float) -> void:
 		if t >= IDENTIFY_SECS:
 			target.set_meta(_META_IDENTIFIED, true)
 
+	var hovered: Node3D = player.get("hovered_enemy") if player != null else null
 	var wanted: Array[Node3D] = []
 	match mode:
 		"top", "beside":
@@ -41,6 +42,10 @@ func _process(delta: float) -> void:
 			if target != null and is_instance_valid(target) and _alive(target) \
 					and not wanted.has(target):
 				wanted.append(target)
+	# hovering any enemy shows its widget in every mode
+	if hovered != null and is_instance_valid(hovered) and _alive(hovered) \
+			and not wanted.has(hovered):
+		wanted.append(hovered)
 
 	# prune stale panels
 	for id in _panels.keys().duplicate():

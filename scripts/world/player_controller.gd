@@ -22,7 +22,13 @@ const CLICK_MASK := 3
 @export var camera_pivot: Node3D
 
 ## Currently targeted enemy node — set by scene when player clicks an enemy.
-var target_enemy: Node3D = null
+var target_enemy: Node3D = null   # sticky selection: survives ground clicks
+var hovered_enemy: Node3D = null  # whatever enemy is under the cursor right now
+
+var _lmb_held := false
+var _hold_timer := 0.0
+var _hover_timer := 0.0
+var _mouse_pos := Vector2.ZERO
 
 var _enabled: bool = true
 var _click_target: Vector3 = Vector3.INF  # INF = no active click destination
@@ -51,6 +57,19 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 
+	# Hold-to-attack / drag-to-move: while LMB is held, keep re-issuing the
+	# click under the cursor — chase a moving enemy, swing whenever in range.
+	if _lmb_held:
+		_hold_timer -= delta
+		if _hold_timer <= 0.0:
+			_hold_timer = 0.14
+			_handle_left_click(_mouse_pos)
+	# Hover: cheap throttled ray so any enemy under the cursor shows info.
+	_hover_timer -= delta
+	if _hover_timer <= 0.0:
+		_hover_timer = 0.1
+		hovered_enemy = _enemy_under_cursor()
+
 	# WASD / stick input takes priority over click-to-move
 	var stick := _read_input()
 	if stick.length_squared() > 0.01:
@@ -69,9 +88,18 @@ func _physics_process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if not _enabled:
 		return
-	if event is InputEventMouseButton and event.pressed:
+	if event is InputEventMouseMotion:
+		_mouse_pos = event.position
+	elif event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			_handle_left_click(event.position)
+			if event.pressed:
+				_lmb_held = true
+				_hold_timer = 0.14
+				_handle_left_click(event.position)
+			else:
+				_lmb_held = false
+		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			target_enemy = null  # explicit deselect
 
 func set_control_enabled(v: bool) -> void:
 	_enabled = v
@@ -187,9 +215,25 @@ func _handle_left_click(screen_pos: Vector2) -> void:
 			_click_target = collider.global_position
 			_waypoints = _plan_path(_click_target)
 		else:
-			target_enemy = null
+			# Sticky selection: a ground click MOVES without deselecting —
+			# right-click (or target death) clears the selection.
 			_click_target = hit["position"]
 			_waypoints = _plan_path(_click_target)
+
+## The enemy under the mouse cursor, or null. Same mask as clicks, so the
+## invisible walls never eat a hover either.
+func _enemy_under_cursor() -> Node3D:
+	var cam := _get_camera()
+	if cam == null:
+		return null
+	var space := get_world_3d().direct_space_state
+	var origin := cam.project_ray_origin(_mouse_pos)
+	var query := PhysicsRayQueryParameters3D.create(origin,
+		origin + cam.project_ray_normal(_mouse_pos) * 200.0, CLICK_MASK, [get_rid()])
+	var hit := space.intersect_ray(query)
+	if hit and hit.get("collider") != null and hit["collider"].is_in_group("enemies"):
+		return hit["collider"]
+	return null
 
 func _get_camera() -> Camera3D:
 	if camera_pivot == null:

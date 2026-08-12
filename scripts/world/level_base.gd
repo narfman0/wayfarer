@@ -65,8 +65,10 @@ var _debug_party := false
 var _hud = null       # HUD
 var _attacker = null  # MeleeAttacker
 var _target_ring: MeshInstance3D = null  # gold ring under the clicked enemy
-var _outlined: Node3D = null                     # enemy carrying the outline overlay
-var _outline_mat: StandardMaterial3D = null      # shared inverted-hull material
+var _outlined: Node3D = null                     # selected enemy carrying the outline
+var _outline_mat: StandardMaterial3D = null      # selection material (gold/red)
+var _hover_outlined: Node3D = null               # hovered enemy (pale outline)
+var _hover_mat: StandardMaterial3D = null
 
 # ── Isometric camera ──────────────────────────────────────────────────────────
 # Locked "game isometric" framing: pivot yawed 45°, camera pitched −30°,
@@ -602,24 +604,42 @@ func register_enemy(ec) -> void:
 	if ec.is_boss:
 		ec.phase_changed.connect(_on_boss_phase.bind(ec))
 
-## Inverted-hull outline: gold while targeted, red when the attack loop is
-## in range and landing — the "who will my attack impact" read.
+## Inverted-hull outlines: selection is gold (red when the attack loop is in
+## range and landing — the "who will my attack impact" read); hovering any
+## other enemy shows a pale outline.
 func _update_target_outline(tgt: Node3D) -> void:
+	if _outline_mat == null:
+		_outline_mat = _make_outline_mat(0.035)
+		_hover_mat = _make_outline_mat(0.025)
+		_hover_mat.albedo_color = Color(0.85, 0.85, 0.9)
 	if _outlined != tgt:
 		if _outlined != null and is_instance_valid(_outlined):
 			_set_skin_overlay(_outlined, null)
 		_outlined = tgt
 		if tgt != null:
-			if _outline_mat == null:
-				_outline_mat = StandardMaterial3D.new()
-				_outline_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-				_outline_mat.cull_mode = BaseMaterial3D.CULL_FRONT
-				_outline_mat.grow = true
-				_outline_mat.grow_amount = 0.035
 			_set_skin_overlay(tgt, _outline_mat)
-	if tgt != null and _outline_mat != null:
+	if tgt != null and is_instance_valid(tgt):
 		var in_range: bool = _attacker != null and _attacker.is_attacking(tgt)
 		_outline_mat.albedo_color = Color(1.0, 0.25, 0.15) if in_range else Color(1.0, 0.82, 0.3)
+	# hover outline (skip when it IS the selection)
+	var hov: Node3D = _player.hovered_enemy
+	if hov == tgt:
+		hov = null
+	if _hover_outlined != hov:
+		if _hover_outlined != null and is_instance_valid(_hover_outlined) \
+				and _hover_outlined != _outlined:
+			_set_skin_overlay(_hover_outlined, null)
+		_hover_outlined = hov
+		if hov != null:
+			_set_skin_overlay(hov, _hover_mat)
+
+func _make_outline_mat(grow: float) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.cull_mode = BaseMaterial3D.CULL_FRONT
+	mat.grow = true
+	mat.grow_amount = grow
+	return mat
 
 func _set_skin_overlay(enemy: Node3D, mat: Material) -> void:
 	var skin := enemy.get_node_or_null("Skin")
