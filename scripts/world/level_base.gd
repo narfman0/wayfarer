@@ -72,6 +72,7 @@ const _CAM_BLEND_SECS      := 0.7
 var _cam_rest_pos: Vector3 = Vector3.ZERO  # resting Camera3D local position
 var _cam_focus: Vector3 = Vector3.ZERO     # extra pivot offset (dialogue framing)
 var _cam_tween: Tween = null
+var _cam_attrs: CameraAttributesPractical = null
 
 # ── Walk-around zoom ──────────────────────────────────────────────────────────
 # Mouse wheel adjusts the orthographic size (clamped) instead of dollying.
@@ -122,6 +123,25 @@ func _setup_isometric_camera() -> void:
 	_camera.position = Vector3(0.0, sin(-_ISO_PITCH) * _ISO_DIST, cos(_ISO_PITCH) * _ISO_DIST)
 	_camera.near = 0.5
 	_camera.far = 150.0
+	# Tilt-shift DOF: focus band around the party (the camera sits _ISO_DIST
+	# from the pivot), gentle blur past and before it — the isometric
+	# "miniature diorama" read. Dialogue tightens it via _set_dof_strength.
+	_cam_attrs = CameraAttributesPractical.new()
+	_cam_attrs.dof_blur_far_enabled = true
+	_cam_attrs.dof_blur_far_distance = _ISO_DIST + 16.0
+	_cam_attrs.dof_blur_far_transition = 14.0
+	_cam_attrs.dof_blur_near_enabled = true
+	_cam_attrs.dof_blur_near_distance = _ISO_DIST - 14.0
+	_cam_attrs.dof_blur_near_transition = 12.0
+	_cam_attrs.dof_blur_amount = 0.05
+	_camera.attributes = _cam_attrs
+
+## Dialogue pulls focus: shallower field while talking, restored after.
+func _set_dof_strength(amount: float) -> void:
+	if _cam_attrs == null:
+		return
+	var tw := create_tween()
+	tw.tween_property(_cam_attrs, "dof_blur_amount", amount, _CAM_BLEND_SECS)
 
 ## Override for level-specific setup (opening dialogue, triggers, ...).
 func _on_level_ready() -> void:
@@ -338,12 +358,14 @@ func _on_dialogue_started(_resource) -> void:
 	if _zoom_tween != null and _zoom_tween.is_valid():
 		_zoom_tween.kill()
 	_blend_camera(_zoom * _CAM_DIALOGUE_ZOOM, _CAM_DIALOGUE_FOCUS)
+	_set_dof_strength(0.14)  # cinematic pull while talking
 
 ## Ease the camera back to the resting gameplay framing (at the zoom the
 ## player had dialed in before the conversation).
 func _on_dialogue_ended(_resource) -> void:
 	_dialogue_active = false
 	_blend_camera(_zoom, Vector3.ZERO)
+	_set_dof_strength(0.05)
 
 func _blend_camera(cam_size: float, focus: Vector3) -> void:
 	if _cam_tween != null and _cam_tween.is_valid():
