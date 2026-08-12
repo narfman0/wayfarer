@@ -750,7 +750,7 @@ func _adjust_zoom(step: float) -> void:
 ## [Q] Heavy Strike — prime the next swing: +2d6 damage and a stagger.
 ## Sarro's baseline level-1 active; the cooldown starts when the swing lands.
 func _use_heavy_strike() -> void:
-	var c = GameState.sarro
+	var c = GameState.sarro  # heavy strike rides the player's own attack loop
 	if c == null or _defeated or c.heavy_strike_primed or c.heavy_strike_cd > 0.0:
 		return
 	c.heavy_strike_primed = true
@@ -759,6 +759,26 @@ func _use_heavy_strike() -> void:
 	_DamageNumber.spawn(self, _player.global_position + Vector3(0, 2.0, 0),
 		"HEAVY STRIKE", Color(1.0, 0.6, 0.25))
 	print("[Combat] Heavy Strike primed")
+
+# ── Class-kit resolution ──────────────────────────────────────────────────────
+
+## Which party sheet owns a class kit right now: the player's sheet wins,
+## else Liris — so a custom Warden PC casts their own bolts and Liris keeps
+## hers when the player is a Soldier.
+func _kit_char(cls: String):
+	var reg = load("res://scripts/ui/ability_registry.gd")
+	if reg.class_key_for(GameState.sarro) == cls:
+		return GameState.sarro
+	if reg.class_key_for(GameState.liris) == cls:
+		return GameState.liris
+	return null
+
+## The body acting for a sheet (gestures, positions, attack loops).
+func _body_for(c) -> Node3D:
+	return _player if c == GameState.sarro else _companion
+
+func _attacker_for(c):
+	return _attacker if c == GameState.sarro else _companion.attacker
 
 # ── Maneuvers (any player character) ─────────────────────────────────────────
 
@@ -861,7 +881,7 @@ func _use_class_flavor() -> void:
 
 ## [1] Second Wind: heal 1d10 + level, once per rest. (Bonus action in TB.)
 func _use_second_wind() -> void:
-	var c = GameState.sarro
+	var c = _kit_char("soldier")
 	if c == null or c.second_wind_used or _defeated:
 		return
 	if c.stats.current_hp >= c.stats.max_hp or c.stats.current_hp <= 0:
@@ -880,7 +900,7 @@ const _ACTION_SURGE_SECS := 6.0
 const _SURGE_MASTERY_CD := 8.0
 
 func _use_action_surge() -> void:
-	var c = GameState.sarro
+	var c = _kit_char("soldier")
 	if c == null or _defeated or c.stats.level < 2:
 		return
 	if c.subclass_key == "freeblade":
@@ -892,15 +912,18 @@ func _use_action_surge() -> void:
 			return
 		c.action_surge_used = true
 	var base: float = _Progression.base_rate_scale(c)
-	_attacker.rate_scale = base * 0.5
+	var atk = _attacker_for(c)
+	var body := _body_for(c)
+	if atk != null:
+		atk.rate_scale = base * 0.5
 	AudioManager.play_sfx("crit", 0.0)
-	_Vfx.buff_flare(self, _player.global_position, Color(1.0, 0.8, 0.2))
-	_DamageNumber.spawn(self, _player.global_position + Vector3(0, 2.0, 0),
+	_Vfx.buff_flare(self, body.global_position, Color(1.0, 0.8, 0.2))
+	_DamageNumber.spawn(self, body.global_position + Vector3(0, 2.0, 0),
 		"ACTION SURGE!", Color(1.0, 0.8, 0.2))
 	print("[Combat] Action Surge: attack speed doubled for %.0fs" % _ACTION_SURGE_SECS)
 	get_tree().create_timer(_ACTION_SURGE_SECS).timeout.connect(func():
-		if _attacker != null and GameState.sarro != null:
-			_attacker.rate_scale = _Progression.base_rate_scale(GameState.sarro))
+		if atk != null and c != null:
+			atk.rate_scale = _Progression.base_rate_scale(c))
 
 ## [5] Shield Bash — Sarro's interrupt (unlocked at level 3). Slam the current
 ## target: cancels a channeled cast (long punish stun) or briefly staggers a
@@ -909,7 +932,7 @@ const _SHIELD_BASH_CD := 8.0
 const _SHIELD_BASH_RANGE := 2.5
 
 func _use_shield_bash() -> void:
-	var c = GameState.sarro
+	var c = _kit_char("soldier")
 	if c == null or c.shield_bash_cd > 0.0 or _defeated or c.stats.level < 3:
 		return
 	var tgt = _player.target_enemy
@@ -934,7 +957,7 @@ func _use_shield_bash() -> void:
 
 ## [2] Guiding Bolt: mark the current target so the next attack hits with advantage. (Action in TB.)
 func _use_guiding_bolt() -> void:
-	var c = GameState.liris
+	var c = _kit_char("warden")
 	if c == null or not c.guiding_bolt_ready or _defeated:
 		return
 	var tgt = _player.target_enemy
@@ -948,7 +971,7 @@ func _use_guiding_bolt() -> void:
 
 ## [3] Healing Word: heal Sarro for 1d4 + WIS mod (short-rest charge). (Bonus action in TB.)
 func _use_healing_word() -> void:
-	var c = GameState.liris
+	var c = _kit_char("warden")
 	var sarro = GameState.sarro
 	if c == null or sarro == null or c.healing_word_charges <= 0 or _defeated:
 		return
@@ -964,17 +987,18 @@ func _use_healing_word() -> void:
 
 ## [4] Channel Divinity — Sacred Flame burst on all enemies within 8 m of Liris. (Action in TB.)
 func _use_channel_divinity() -> void:
-	var c = GameState.liris
+	var c = _kit_char("warden")
 	if c == null or not c.channel_divinity_ready or _defeated:
 		return
 	c.channel_divinity_ready = false
-	_CharAnim.oneshot(_companion, "cast_raise", 1.2, 0.8)  # arms-raised invocation
+	var caster_body := _body_for(c)
+	_CharAnim.oneshot(caster_body, "cast_raise", 1.2, 0.8)  # arms-raised invocation
 	var dc: int = 8 + c.stats.ability_modifier(4) + c.stats.proficiency_bonus()
 	var hit_count := 0
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if not enemy is Node3D or not enemy.has_method("receive_damage"):
 			continue
-		var dist: float = _companion.global_position.distance_to(enemy.global_position)
+		var dist: float = caster_body.global_position.distance_to(enemy.global_position)
 		if dist > 8.0:
 			continue
 		var save_roll: int = _Dice.roll_d20()
@@ -985,7 +1009,7 @@ func _use_channel_divinity() -> void:
 			enemy.receive_damage(dmg)
 			_DamageNumber.hit(self, enemy.global_position, dmg, false)
 			hit_count += 1
-	_DamageNumber.spawn(self, _companion.global_position + Vector3(0, 2.0, 0),
+	_DamageNumber.spawn(self, caster_body.global_position + Vector3(0, 2.0, 0),
 		"Sacred Flame ×%d" % hit_count, Color(0.95, 0.85, 0.3))
 	print("[Spell] Liris: Channel Divinity — %d enemies hit (DC %d)" % [hit_count, dc])
 

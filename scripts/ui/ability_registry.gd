@@ -3,30 +3,42 @@
 class_name AbilityRegistry
 extends RefCounted
 
+## The class behind a sheet ("soldier" / "ghost" / "warden" / "psion").
+static func class_key_for(char) -> String:
+	if char == null or char.class_data == null:
+		return ""
+	return String(char.class_data.class_name_str).to_lower()
+
 static func abilities_for(char) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if char == null:
 		return out
 
-	var name_lc: String = String(char.display_name).to_lower()
-	var is_sarro: bool = name_lc.begins_with("sarro")
-	var is_liris: bool = name_lc.begins_with("liris")
+	# Kits are CLASS-driven — a custom PC of any name gets their class's
+	# abilities, and Liris gets hers because she's a Warden, not because
+	# she's named Liris.
+	match class_key_for(char):
+		"soldier":
+			out.append(_second_wind(char))
+			out.append(_heavy_strike(char))
+			if char.stats != null and char.stats.level >= 3:
+				out.append(_shield_bash(char))
+			if char.stats != null and char.stats.level >= 2:
+				out.append(_action_surge(char))
+		"ghost":
+			out.append(_heavy_strike(char))
+			if char.stats != null and char.stats.level >= 2:
+				out.append(_action_surge(char))
+		"warden":
+			out.append(_guiding_bolt(char))
+			out.append(_healing_word(char))
+			out.append(_channel_divinity(char))
+		"psion":
+			pass  # psion identity is their spell list (entries below)
 
-	if is_sarro:
-		out.append(_second_wind(char))
-		out.append(_heavy_strike(char))
-		if char.stats != null and char.stats.level >= 3:
-			out.append(_shield_bash(char))
-		if char.stats != null and char.stats.level >= 2:
-			out.append(_action_surge(char))
-
-	if is_liris:
-		out.append(_guiding_bolt(char))
-		out.append(_healing_word(char))
-		out.append(_channel_divinity(char))
-
-	# Maneuvers — every player character fights with their hands too.
-	if is_sarro:
+	# Maneuvers — the player-controlled character fights with their hands
+	# too, whatever their class.
+	if char == GameState.sarro:
 		out.append(_shove(char))
 		out.append(_grapple(char))
 		out.append(_class_flavor(char))

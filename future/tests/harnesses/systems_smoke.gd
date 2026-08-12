@@ -74,6 +74,22 @@ func _test_rt_combat() -> void:
 	await get_tree().process_frame
 	_check(not CombatManager.in_combat, "combat ends when all enemies fall")
 
+	# Class-driven kits: rename Liris — her Warden kit must survive.
+	var reg = load("res://scripts/ui/ability_registry.gd")
+	var saved_name: String = GameState.liris.display_name
+	GameState.liris.display_name = "Testchar"
+	var kit_ids: Array = []
+	for a in reg.abilities_for(GameState.liris):
+		kit_ids.append(a["id"])
+	GameState.liris.display_name = saved_name
+	_check("guiding_bolt" in kit_ids and "healing_word" in kit_ids,
+		"warden kit keys off class, not display name")
+	var sarro_ids: Array = []
+	for a in reg.abilities_for(GameState.sarro):
+		sarro_ids.append(a["id"])
+	_check("second_wind" in sarro_ids and "shove" in sarro_ids,
+		"player gets class kit + maneuvers")
+
 	level.queue_free()
 	await get_tree().process_frame
 
