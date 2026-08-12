@@ -320,6 +320,10 @@ func _setup_platform() -> void:
 	var mat := _Platform.grid_material(albedo, style["color"], style["strength"])
 	gm.mesh = _Platform.build_platform(box.size.x, box.size.z, hash(plane_id))
 	gm.material_override = mat
+	# The open double-sided shell would self-shadow its own top face into
+	# uniform darkness; nothing sits below the platform to receive shadows
+	# anyway, so casting is off (props still cast onto the platform).
+	gm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 	# Portals get their own pads beyond the edge, joined by causeway prisms.
 	# Walkable mode snaps each pad to the dominant axis, moves the portal

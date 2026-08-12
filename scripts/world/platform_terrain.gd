@@ -111,7 +111,7 @@ static func build_platform(w: float, d: float, seed_val: int, bite_max := BITE_M
 		var a3 := Vector3(outline[indices[0]].x, 0, outline[indices[0]].y)
 		var b3 := Vector3(outline[indices[1]].x, 0, outline[indices[1]].y)
 		var c3 := Vector3(outline[indices[2]].x, 0, outline[indices[2]].y)
-		if (b3 - a3).cross(c3 - a3).y < 0.0:
+		if (b3 - a3).cross(c3 - a3).y > 0.0:
 			order = [0, 2, 1]
 	for i in range(0, indices.size(), 3):
 		for j in order:
