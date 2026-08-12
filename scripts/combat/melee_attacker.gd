@@ -106,12 +106,18 @@ func _do_attack() -> void:
 		_DamageNumber.spawn(owner_body.get_tree().current_scene,
 			_target.global_position + Vector3(0, 2.2, 0), "Lucky!", Color(0.5, 0.9, 1.0))
 	var crit: bool = d20 >= attacker.crit_threshold
+	# Heavy Strike: the primed swing hits harder, staggers, and swings the
+	# heavy clip regardless of crit. Cooldown starts now.
+	var heavy: bool = character.get("heavy_strike_primed") == true
+	if heavy:
+		character.heavy_strike_primed = false
+		character.heavy_strike_cd = 8.0
 	var target_name: String = _target.name  # capture before damage — a kill nulls _target via stop()
 
 	# Swing now, land at the contact frame. The clip choice needs the roll
 	# (crit → heavy), so rolls resolve up front and only the application —
 	# damage, numbers, sound, stun — waits for the blade.
-	var clip: String = "attack_heavy" if crit else "attack"
+	var clip: String = "attack_heavy" if (crit or heavy) else "attack"
 	_CharAnim.oneshot(owner_body, clip, CLIP_SPEED[clip], RELEASE_FRAC)
 	lunge(owner_body, _target.global_position)
 	AudioManager.play_sfx("swing")
@@ -119,7 +125,10 @@ func _do_attack() -> void:
 	var dmg := 0
 	if hit:
 		dmg = attacker.roll_damage(crit)
+		if heavy:
+			dmg += _Dice.roll(6) + _Dice.roll(6)
 	var ev := {
+		"heavy": heavy,
 		"type": "attack",
 		"attacker": character.display_name,
 		"target": target_name,
@@ -152,8 +161,9 @@ func _land_attack(tgt, ev: Dictionary) -> void:
 			ev["damage"] = dmg
 		_DamageNumber.hit(scene, target_pos, dmg, ev["crit"])
 		tgt.receive_damage(dmg, owner_body.global_position)
-		# Sentinel (feat): every landed hit staggers for a beat.
-		if character != null and _Progression.has_feat(character, "sentinel"):
+		# Sentinel (feat) and Heavy Strike both stagger on hit.
+		if character != null and (_Progression.has_feat(character, "sentinel")
+				or ev.get("heavy", false)):
 			tgt.stun(0.4)
 		AudioManager.play_sfx("crit" if ev["crit"] else "hit")
 		_Juice.hit_stop(owner_body.get_tree(), 0.08 if ev["crit"] else 0.05)

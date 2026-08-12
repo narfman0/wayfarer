@@ -38,31 +38,14 @@ var _astar: AStarGrid2D = null
 var _terrain_map: Array = []              # rows of int heights (0 = void)
 var _waypoints: Array[Vector3] = []       # remaining path corners → click target
 
-# TB combat: position where movement began this click (for distance accounting).
-var _tb_move_start: Vector3 = Vector3.INF
-var _attack_mode: bool = false
-
-# Visual move-range ring shown during TB player turn.
-var _move_ring: MeshInstance3D = null
-
 func _ready() -> void:
 	add_to_group("players")
-	_build_move_ring()
 	var skin := get_node_or_null("Skin")
 	if skin != null:
 		_CharAnim.attach(skin, self, "masc")
 
 func _physics_process(delta: float) -> void:
 	if not _enabled:
-		return
-
-	# In TB mode, block movement when it is not the player's turn.
-	if CombatManager.tb_mode and not CombatManager.is_player_turn():
-		velocity.x = move_toward(velocity.x, 0.0, SPEED * 8.0 * delta)
-		velocity.z = move_toward(velocity.z, 0.0, SPEED * 8.0 * delta)
-		velocity.y -= GRAVITY * delta if not is_on_floor() else 0.0
-		move_and_slide()
-		_update_move_ring()
 		return
 
 	if not is_on_floor():
@@ -82,7 +65,6 @@ func _physics_process(delta: float) -> void:
 		velocity.z = move_toward(velocity.z, 0.0, SPEED * 8.0 * delta)
 
 	move_and_slide()
-	_update_move_ring()
 
 func _input(event: InputEvent) -> void:
 	if not _enabled:
@@ -97,10 +79,6 @@ func set_control_enabled(v: bool) -> void:
 		velocity = Vector3.ZERO
 		_click_target = Vector3.INF
 		_waypoints.clear()
-
-## Called by CombatHUD Attack button to enter click-target-enemy mode.
-func enter_attack_mode() -> void:
-	_attack_mode = true
 
 ## (Re)build the pathfinding grid from a terrain height map (rows of ints).
 ## Call after terrain generation/regeneration — e.g. DungeonRun's map carve.
@@ -168,13 +146,6 @@ func _move_by_input(stick: Vector2, delta: float) -> void:
 func _move_toward_click(delta: float) -> void:
 	# Steer toward the next path waypoint when one exists; the final leg (and
 	# any pathless click) steers straight at the click position itself.
-	# TB: refuse to move if no movement budget left.
-	if CombatManager.tb_mode and CombatManager.is_player_turn():
-		var left: float = CombatManager.movement_left(self)
-		if left <= 0.01:
-			_click_target = Vector3.INF
-			_waypoints.clear()
-			return
 	var waypoint: Vector3 = _waypoints[0] if not _waypoints.is_empty() else _click_target
 	var flat_pos := Vector3(global_position.x, 0.0, global_position.z)
 	var flat_tgt := Vector3(waypoint.x, 0.0, waypoint.z)
@@ -185,11 +156,6 @@ func _move_toward_click(delta: float) -> void:
 		_steer_toward(flat_pos, flat_tgt, delta)
 		return
 	if dist <= ARRIVE_DIST:
-		# TB: account for the distance actually walked.
-		if CombatManager.tb_mode and _tb_move_start != Vector3.INF:
-			var walked: float = _tb_move_start.distance_to(global_position)
-			CombatManager.spend_movement(self, walked)
-			_tb_move_start = Vector3.INF
 		_click_target = Vector3.INF
 		velocity.x = 0.0
 		velocity.z = 0.0
@@ -218,19 +184,10 @@ func _handle_left_click(screen_pos: Vector2) -> void:
 		var collider = hit.get("collider")
 		if collider != null and collider.is_in_group("enemies"):
 			target_enemy = collider
-			if _attack_mode and CombatManager.tb_mode and CombatManager.is_player_turn():
-				# Attack mode: spend action, let existing melee logic resolve.
-				_attack_mode = false
-				if CombatManager.has_action(self):
-					CombatManager.spend_action(self)
 			_click_target = collider.global_position
 			_waypoints = _plan_path(_click_target)
 		else:
-			_attack_mode = false
 			target_enemy = null
-			# TB: record move start for distance tracking.
-			if CombatManager.tb_mode and CombatManager.is_player_turn():
-				_tb_move_start = global_position
 			_click_target = hit["position"]
 			_waypoints = _plan_path(_click_target)
 
@@ -248,33 +205,4 @@ func _camera_flat_basis() -> Basis:
 	var right := Vector3.UP.cross(fwd).normalized()
 	return Basis(right, Vector3.UP, fwd)
 
-func _build_move_ring() -> void:
-	_move_ring = MeshInstance3D.new()
-	_move_ring.name = "MoveRing"
-	var mesh := CylinderMesh.new()
-	mesh.top_radius    = 0.0
-	mesh.bottom_radius = 0.0
-	mesh.height        = 0.04
-	_move_ring.mesh    = mesh
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color         = Color(0.3, 0.7, 1.0, 0.45)
-	mat.transparency         = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode         = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_move_ring.material_override = mat
-	_move_ring.position.y    = 0.05
-	_move_ring.visible       = false
-	add_child(_move_ring)
 
-func _update_move_ring() -> void:
-	if _move_ring == null:
-		return
-	var show := CombatManager.tb_mode and CombatManager.is_player_turn()
-	_move_ring.visible = show
-	if show:
-		var r: float = CombatManager.movement_left(self)
-		if r < 0.05:
-			_move_ring.visible = false
-			return
-		var mesh := _move_ring.mesh as CylinderMesh
-		mesh.top_radius    = r
-		mesh.bottom_radius = r - 0.18

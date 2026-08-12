@@ -6,7 +6,7 @@ Cosmic fantasy RPG. Two companions (Sarro + Liris) trace damage left by well-mea
 
 - **Feel**: sword-and-skill combat over hidden D&D SRD rules; BG3-style UI (portrait party panel, icon skill bar).
 - **Camera**: locked orthographic isometric (yaw 45°, pitch −30°), follows Sarro; wheel zooms ortho size 14–26.
-- **Combat**: real-time by default; **[T] toggles BG3-style turn-based** (initiative, action economy, opportunity attacks). Bosses refuse TB — their fights are timed orchestrations. Enemy archetypes: bruiser / skirmisher / heavy (telegraphed slams) / support (interruptible heals). Sword Combat animation clips on all humanoids.
+- **Combat**: real-time only (turn-based mode was removed 2026-08-12). Contact-frame timing: snappy player wind-ups, readable enemy wind-ups you dodge by moving. Enemy archetypes: bruiser / skirmisher / heavy (telegraphed slams) / support (interruptible heals). The skill bar is the action bar: Sarro 1/5/6/Q (Second Wind, Shield Bash, Action Surge, Heavy Strike), Liris 2/3/4, spells 7-0.
 - **World**: hand-authored scenes (13 flat arenas + Tamori's 80 m floating island) plus a **procedural dungeon** (dungeon_run: rooms carved into a void map, CR-budgeted encounters selected at the rift portal). Procedural scenery exists but is opt-in per scene (`generate_scenery`, default off — manual placement preferred).
 - **Enemy aggro**: proximity sphere → Patrol → Chase → Attack (+ Return/leash) state machine; pack aggro via `pack_id`; ambush triggers. Dynamic spawns MUST go through `level_base.register_enemy()` or they have no character sheet.
 - **Progression**: XP levels 1–20 (kills + story beats). Build choices — fighting style, feats, ASI, subclass at 3 — are spent **at rest points**; species/background/spells picked at creation. Liris is story-driven (conviction arc). Gold/inventory/shops/loot bags exist.
@@ -59,7 +59,7 @@ All rules (combat, conditions, saving throws, spells, feats, AI, etc.) live in `
 The Wayfarer layer:
 - `WayfarerCharacter` — wraps CharacterStats + ClassData + equipment + build choices (feats/subclass/spells)
 - `CharacterProgression` — build-choice registries, pending-choice engine, combat bonuses
-- `CombatManager` — encounter state + the turn-based engine (autoload)
+- `CombatManager` — encounter membership + end detection (autoload)
 
 To update the addon:
 ```bash
@@ -76,7 +76,7 @@ git add vendor/godot-srd-addon && git commit -m "chore: update srd addon"
 
 ## Combat
 
-`CombatManager` (autoload) owns encounter state: real-time by default (6 s rounds only poll for combat end; the archetype AI runs free), turn-based on toggle (initiative queue, per-turn action/bonus/reaction/movement metadata, OA reaction modal). Attack resolution flows through `WayfarerCharacter.make_combatant()` → SRD `Combatant` (build-choice bonuses + crit range stamped there). Spells cast via `level_base.cast_spell(spell, caster)` from the skill bar.
+`CombatManager` (autoload) tracks encounter membership and polls for combat end each 6 s round; the archetype AI runs free in real time. Attack resolution flows through `WayfarerCharacter.make_combatant()` → SRD `Combatant` (build-choice bonuses + crit range stamped there). Spells cast via `level_base.cast_spell(spell, caster)` from the skill bar.
 
 ## Testing
 

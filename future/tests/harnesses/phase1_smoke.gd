@@ -100,10 +100,23 @@ func _test_spellcasting() -> void:
 	_check(liris.stats.current_hp > 20, "heal spell restores the caster")
 	_player.target_enemy = null
 
+	# Heavy Strike: prime, swing, confirm the bonus damage and stagger land.
+	var sarro = GameState.sarro
+	sarro.heavy_strike_primed = false
+	sarro.heavy_strike_cd = 0.0
+	_level._use_heavy_strike()
+	_check(sarro.heavy_strike_primed, "Heavy Strike primes on use")
+	var hs_guard := _level.get_node("Enemies/PenGuard2") as CharacterBody3D
+	var hs_hp: int = hs_guard.character.stats.current_hp
+	_level._attacker.fire_once(hs_guard)
+	await get_tree().create_timer(0.6).timeout
+	_check(not sarro.heavy_strike_primed, "primed swing consumes Heavy Strike")
+	_check(sarro.heavy_strike_cd > 0.0, "Heavy Strike cooldown starts")
+	_player.target_enemy = null
+
 	# Liris's auto Healing Word — regression: passed the character SHEET as
 	# the position source and crashed on Resource.global_position.
 	var companion := _level.get_node("Characters/Liris") as CharacterBody3D
-	var sarro = GameState.sarro
 	var hp_low: int = maxi(1, int(sarro.stats.max_hp * 0.2))
 	sarro.stats.current_hp = hp_low
 	liris.healing_word_charges = maxi(1, liris.healing_word_charges)

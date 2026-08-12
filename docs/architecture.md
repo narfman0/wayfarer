@@ -11,8 +11,7 @@ Where those docs and this one disagree, this one describes the build.
 A playable, start-to-finish 3D RPG in Godot 4.7 with a **locked
 orthographic isometric camera** (45°/−30°): two-character party (a fully
 built player character + Liris, a customizable Warden companion), SRD 5e
-combat that runs **real-time by default with an opt-in BG3-style
-turn-based mode**, fifteen scenes across seven planes plus a procedural
+**real-time combat**, fifteen scenes across seven planes plus a procedural
 dungeon, three telegraph-driven boss fights, a gold/inventory/shop
 economy, and six meaningful story choices threading a conviction score
 into two endings. Art is Synty kits (now including Samurai Empire and
@@ -67,26 +66,20 @@ per-plane ambient crossfade) · `CombatManager` (encounter state,
 initiative, TB turn engine, reactions) · `UITheme` (Cinzel/Crimson
 fantasy theme) · `DialogueManager` (addon).
 
-**Combat** — two layers over one SRD core:
-
-- *Real-time (default)*: the archetype FSM in `enemy_controller.gd` —
-  bruiser / skirmisher (kiting + dodgeable projectiles) / heavy
-  (telegraphed slams) / support (interruptible group heal), plus cast
-  bars + Shield Bash interrupts, pack aggro, spawn-leashing, ambush
-  triggers, boss phases. `telegraph.gd` ground warnings with
-  `contains()` hit-tests; `juice.gd` feel layer.
-- *Turn-based (opt-in, [T] in combat)*: `CombatManager` rolls d20+DEX
-  initiative and runs one combatant at a time with per-turn
-  action/bonus/reaction/movement budgets (node metadata), opportunity
-  attacks via an accept/skip reaction modal, and a movement-range ring.
-  Enemy turns are archetype-aware (skirmishers volley, supports heal
-  the most wounded packmate, heavies fight as melee — telegraph-dodging
-  is inherently real-time). **Bosses refuse TB** (`enter_tb_mode`
-  returns false; latched TB force-exits when a boss joins) because boss
-  fights are timed orchestrations.
-- Player abilities live in `level_base.gd` gated on turn economy in TB;
-  `melee_attacker.gd` resolves rolls through `Combatant` (bonus hooks +
-  crit_threshold from build choices).
+**Combat** — real-time over one SRD core: the archetype FSM in
+`enemy_controller.gd` — bruiser / skirmisher (kiting + dodgeable
+projectiles) / heavy (telegraphed slams) / support (interruptible group
+heal), plus cast bars + Shield Bash interrupts, pack aggro,
+spawn-leashing, ambush triggers, boss phases. Contact-frame attack
+timing (snappy player wind-ups, readable 0.5 s enemy wind-ups — dodge
+by stepping out, interrupt with a stagger). `telegraph.gd` ground
+warnings with `contains()` hit-tests; `juice.gd` feel layer.
+`CombatManager` (autoload) is now just encounter membership + end
+detection. **Turn-based mode was removed** (2026-08-12) — the game
+committed fully to real-time; the skill bar is the combat action bar
+(abilities 1/5/6/Q for Sarro incl. the new Heavy Strike primer, 2/3/4
+for Liris, spells 7–0). `melee_attacker.gd` resolves rolls through
+`Combatant` (bonus hooks + crit_threshold from build choices).
 
 **Build choices** (`character_progression.gd`): creation wizard picks
 class (all four: Soldier, Ghost, Warden, Psion), **species, background**
@@ -210,8 +203,6 @@ atmosphere, bounds-vs-mesh, scenery flag honesty). `plane_gallery` and
 
 ## Known gaps / decided-out
 
-- TB enemy turns don't use telegraphs (real-time-only by design);
-  boss fights are RT-only.
 - The Between rebuild and the Mender-You-Understand dialogue remain
   unbuilt.
 - Dungeon XP (150–600/kill, repeatable) is not reconciled with the act

@@ -14,6 +14,7 @@ static func abilities_for(char) -> Array[Dictionary]:
 
 	if is_sarro:
 		out.append(_second_wind(char))
+		out.append(_heavy_strike(char))
 		if char.stats != null and char.stats.level >= 3:
 			out.append(_shield_bash(char))
 		if char.stats != null and char.stats.level >= 2:
@@ -47,6 +48,21 @@ static func _second_wind(char) -> Dictionary:
 		"keybind": "1",
 		"is_ready": func() -> bool: return not char.second_wind_used,
 		"activate": _trigger_action("ability_1"),
+	}
+
+static func _heavy_strike(char) -> Dictionary:
+	return {
+		"id": "heavy_strike",
+		"name": "Heavy Strike",
+		"description": "Prime your next swing: +2d6 damage and a stagger. Short cooldown.",
+		"cost": "free",
+		"attack_roll": "",
+		"damage": "+2d6 + stagger",
+		"icon_color": Color(0.95, 0.5, 0.2),
+		"keybind": "Q",
+		"is_ready": func() -> bool:
+			return not char.heavy_strike_primed and char.heavy_strike_cd <= 0.0,
+		"activate": _trigger_action("ability_7"),
 	}
 
 static func _shield_bash(char) -> Dictionary:

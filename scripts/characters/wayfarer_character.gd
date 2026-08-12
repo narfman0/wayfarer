@@ -42,6 +42,10 @@ var second_wind_used: bool = false
 
 ## Sarro: Shield Bash cooldown (seconds remaining; ticked by the level).
 var shield_bash_cd: float = 0.0
+## Heavy Strike (session-only): primes the next melee swing for +2d6 and a
+## stagger; short cooldown starts when the primed swing lands.
+var heavy_strike_primed: bool = false
+var heavy_strike_cd: float = 0.0
 
 ## Sarro: Action Surge (level 2) — once per rest; Freeblades instead run it
 ## on a short cooldown (Surge Mastery).

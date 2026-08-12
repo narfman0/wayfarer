@@ -190,13 +190,6 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 
-	# In TB mode, only move when it is explicitly this enemy's turn.
-	if CombatManager.tb_mode and not get_meta("taking_turn", false):
-		velocity.x = move_toward(velocity.x, 0.0, SPEED * 8.0 * delta)
-		velocity.z = move_toward(velocity.z, 0.0, SPEED * 8.0 * delta)
-		move_and_slide()
-		return
-
 	if _invuln_timer > 0.0:
 		_invuln_timer -= delta
 
@@ -232,99 +225,6 @@ func _physics_process(delta: float) -> void:
 
 ## TB turn: move toward player, check OA, attack if in range, then end turn.
 const OA_TRIGGER_RANGE := 2.0  # metres — proximity that grants OA opportunity
-
-func take_turn() -> void:
-	set_meta("taking_turn", true)
-	_target = _acquire_target()
-	if _target == null or _dead:
-		set_meta("taking_turn", false)
-		CombatManager.end_turn()
-		return
-
-	# Record which players are adjacent (could trigger OA if we move away).
-	var oa_candidates: Array = []
-	for p in get_tree().get_nodes_in_group("players"):
-		if global_position.distance_to(p.global_position) <= OA_TRIGGER_RANGE:
-			oa_candidates.append(p)
-
-	# Move up to speed toward the target.
-	var speed_m: float = 9.0
-	if character != null and character.stats != null:
-		speed_m = character.stats.speed / CombatManager.FEET_PER_METRE
-	var to_target := _target.global_position - global_position
-	to_target.y = 0.0
-	var dist := to_target.length()
-	if dist > MELEE_DIST and dist <= speed_m + MELEE_DIST:
-		_state = State.CHASE
-
-	# The RT chase branches auto-fire on their own timers; hold them past
-	# the movement window so a TB turn is one move + ONE deliberate action.
-	_ranged_timer = maxf(_ranged_timer, 1.2)
-	_support_timer = maxf(_support_timer, 1.2)
-	_slam_timer = maxf(_slam_timer, 1.2)
-
-	await get_tree().create_timer(0.9).timeout
-
-	# Opportunity attack: player was adjacent and we moved away.
-	if not _dead:
-		for p in oa_candidates:
-			if global_position.distance_to(p.global_position) > OA_TRIGGER_RANGE:
-				var oa_taken: bool = await CombatManager.request_oa(self, p)
-				if oa_taken:
-					await get_tree().create_timer(0.6).timeout
-				break  # one OA per move
-
-	# Action phase — archetype-aware. Telegraph-dodging is inherently
-	# real-time (off-turn players are frozen), so heavies fight as melee
-	# here; skirmishers volley (an honest attack roll), supports heal.
-	if not _dead and _target != null:
-		await _take_turn_action()
-
-	set_meta("taking_turn", false)
-	if CombatManager.in_combat:
-		CombatManager.end_turn()
-
-func _take_turn_action() -> void:
-	var dist := global_position.distance_to(_target.global_position)
-	match _arch:
-		"skirmisher":
-			if dist <= RANGED_MAX:
-				_fire_projectile()
-				await get_tree().create_timer(0.7).timeout
-				return
-		"support":
-			var patient = _most_wounded_ally()
-			if patient != null:
-				start_cast("Mending Litany", 0.6)  # brief flourish, then heal
-				if not cast_finished.is_connected(_on_support_cast):
-					cast_finished.connect(_on_support_cast)
-				await get_tree().create_timer(0.9).timeout
-				return
-	if dist <= MELEE_DIST * 1.5:
-		_fire_attack()
-		# Hold the turn until the wind-up resolves and the hit lands.
-		await get_tree().create_timer(MELEE_WINDUP + 0.4).timeout
-
-## Living packmate below max HP within litany range, or null.
-func _most_wounded_ally():
-	var best = null
-	var best_frac := 1.0
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if not e is EnemyController or e == self:
-			continue
-		var ec := e as EnemyController
-		if ec.character == null or ec._dead:
-			continue
-		if global_position.distance_to(ec.global_position) > SUPPORT_RANGE:
-			continue
-		var frac: float = float(ec.character.stats.current_hp) / maxf(1.0, ec.character.stats.max_hp)
-		if frac < 1.0 and frac < best_frac:
-			best_frac = frac
-			best = ec
-	return best
-
-func take_rt_action() -> void:
-	pass  # RT mode: _physics_process AI loop handles everything
 
 func _do_patrol(delta: float) -> void:
 	if patrol_points.is_empty():

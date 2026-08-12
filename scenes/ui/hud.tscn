@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://hud"]
+[gd_scene load_steps=2 format=3 uid="uid://hud"]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
-[ext_resource type="Script" path="res://scripts/ui/combat_hud.gd" id="2_combat_hud"]
 
 [node name="HUD" type="Control"]
 anchor_right = 1.0
@@ -46,5 +45,3 @@ custom_minimum_size = Vector2(140, 18)
 max_value = 11.0
 value = 11.0
 
-[node name="CombatHUD" type="CanvasLayer" parent="."]
-script = ExtResource("2_combat_hud")

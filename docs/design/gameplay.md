@@ -3,11 +3,10 @@
 AMENDED 2026-08-11 — as-built deviations (see `docs/architecture.md` for
 the authoritative current state):
 
-- **Pause-and-queue was never built.** Its slot is filled by an opt-in
-  **BG3-style turn-based mode**: [T] toggles TB during combat (initiative
-  d20+DEX, action/bonus/reaction/movement economy, opportunity-attack
-  reaction prompts). Real-time remains the default. Bosses refuse TB —
-  their fights are timed telegraph orchestrations and stay real-time.
+- **Pause-and-queue was never built**, and the BG3-style turn-based
+  mode that briefly filled its slot was **removed on 2026-08-12** — the
+  game is committed to real-time combat with contact-frame timing
+  (snappy player wind-ups; readable, dodgeable enemy wind-ups).
 - **Camera** is orthographic (not perspective): yaw 45°, pitch −30°,
   wheel zooms ortho size 14–26 (not FOV).
 - **Abilities**: keys 1–4 are class abilities; keys 7–0 cast prepared

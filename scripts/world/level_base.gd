@@ -417,6 +417,8 @@ func _process(_delta: float) -> void:
 		GameState.sarro.shield_bash_cd = maxf(0.0, GameState.sarro.shield_bash_cd - _delta)
 	if GameState.sarro != null and GameState.sarro.action_surge_cd > 0.0:
 		GameState.sarro.action_surge_cd = maxf(0.0, GameState.sarro.action_surge_cd - _delta)
+	if GameState.sarro != null and GameState.sarro.heavy_strike_cd > 0.0:
+		GameState.sarro.heavy_strike_cd = maxf(0.0, GameState.sarro.heavy_strike_cd - _delta)
 	if not _defeated and GameState.sarro != null and GameState.sarro.stats.current_hp <= 0:
 		_on_party_defeated()
 
@@ -520,11 +522,6 @@ func _setup_hud() -> void:
 	if hud_scene:
 		_hud = hud_scene.instantiate()
 		_hud_root.add_child(_hud)
-	# Connect spell_requested from CombatHUD (lives as child of HUD CanvasLayer)
-	if _hud != null:
-		var combat_hud = _hud.get_node_or_null("CombatHUD")
-		if combat_hud != null:
-			combat_hud.spell_requested.connect(_cast_spell)
 	_setup_target_ring()
 
 ## The in-world half of targeting feedback: a slowly spinning gold ring at
@@ -571,14 +568,7 @@ func _setup_combat() -> void:
 	liris_attacker.character  = GameState.liris
 	add_child(liris_attacker)
 	_companion.attacker = liris_attacker
-	CombatManager.oa_execute.connect(_on_oa_execute)
 
-func _on_oa_execute(reactor: Node, target: Node) -> void:
-	if _attacker == null or reactor != _player:
-		return
-	if target == null or not target.has_method("receive_damage"):
-		return
-	_attacker.fire_once(target)
 
 func _setup_enemies() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
@@ -670,6 +660,8 @@ func _input(event: InputEvent) -> void:
 		_use_shield_bash()
 	elif event.is_action_pressed("ability_6"):
 		_use_action_surge()
+	elif event.is_action_pressed("ability_7"):
+		_use_heavy_strike()
 	elif event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			_adjust_zoom(-_ZOOM_STEP)
@@ -690,6 +682,18 @@ func _adjust_zoom(step: float) -> void:
 
 # ── Sarro Abilities ───────────────────────────────────────────────────────────
 
+## [Q] Heavy Strike — prime the next swing: +2d6 damage and a stagger.
+## Sarro's baseline level-1 active; the cooldown starts when the swing lands.
+func _use_heavy_strike() -> void:
+	var c = GameState.sarro
+	if c == null or _defeated or c.heavy_strike_primed or c.heavy_strike_cd > 0.0:
+		return
+	c.heavy_strike_primed = true
+	AudioManager.play_sfx("telegraph", -6.0)
+	_DamageNumber.spawn(self, _player.global_position + Vector3(0, 2.0, 0),
+		"HEAVY STRIKE", Color(1.0, 0.6, 0.25))
+	print("[Combat] Heavy Strike primed")
+
 ## [1] Second Wind: heal 1d10 + level, once per rest. (Bonus action in TB.)
 func _use_second_wind() -> void:
 	var c = GameState.sarro
@@ -697,10 +701,6 @@ func _use_second_wind() -> void:
 		return
 	if c.stats.current_hp >= c.stats.max_hp or c.stats.current_hp <= 0:
 		return
-	if CombatManager.tb_mode and CombatManager.is_player_turn():
-		if not CombatManager.has_bonus_action(_player):
-			return
-		CombatManager.spend_bonus_action(_player)
 	c.second_wind_used = true
 	var heal: int = _Dice.roll(10) + c.stats.level
 	c.stats.current_hp = mini(c.stats.max_hp, c.stats.current_hp + heal)
@@ -725,9 +725,6 @@ func _use_action_surge() -> void:
 		if c.action_surge_used:
 			return
 		c.action_surge_used = true
-	# In TB: Action Surge grants an extra action this turn.
-	if CombatManager.tb_mode and CombatManager.is_player_turn():
-		_player.set_meta("turn_action", true)
 	var base: float = _Progression.base_rate_scale(c)
 	_attacker.rate_scale = base * 0.5
 	AudioManager.play_sfx("crit", 0.0)
@@ -753,10 +750,6 @@ func _use_shield_bash() -> void:
 		return
 	if _player.global_position.distance_to(tgt.global_position) > _SHIELD_BASH_RANGE:
 		return
-	if CombatManager.tb_mode and CombatManager.is_player_turn():
-		if not CombatManager.has_action(_player):
-			return
-		CombatManager.spend_action(_player)
 	c.shield_bash_cd = _SHIELD_BASH_CD
 	_MeleeAttacker.lunge(_player, tgt.global_position)
 	AudioManager.play_sfx("hit", 1.0)
@@ -780,10 +773,6 @@ func _use_guiding_bolt() -> void:
 	var tgt = _player.target_enemy
 	if tgt == null or not tgt.has_method("receive_damage"):
 		return
-	if CombatManager.tb_mode and CombatManager.is_player_turn():
-		if not CombatManager.has_action(_player):
-			return
-		CombatManager.spend_action(_player)
 	c.guiding_bolt_ready = false
 	tgt.guiding_bolt_active = true
 	_DamageNumber.spawn(self, tgt.global_position + Vector3(0, 1.5, 0),
@@ -798,10 +787,6 @@ func _use_healing_word() -> void:
 		return
 	if sarro.stats.current_hp <= 0:
 		return
-	if CombatManager.tb_mode and CombatManager.is_player_turn():
-		if not CombatManager.has_bonus_action(_player):
-			return
-		CombatManager.spend_bonus_action(_player)
 	c.healing_word_charges -= 1
 	var heal: int = maxi(1, _Dice.roll(4) + c.stats.ability_modifier(4))  # 4 = WIS
 	sarro.stats.current_hp = mini(sarro.stats.max_hp, sarro.stats.current_hp + heal)
@@ -814,10 +799,6 @@ func _use_channel_divinity() -> void:
 	var c = GameState.liris
 	if c == null or not c.channel_divinity_ready or _defeated:
 		return
-	if CombatManager.tb_mode and CombatManager.is_player_turn():
-		if not CombatManager.has_action(_player):
-			return
-		CombatManager.spend_action(_player)
 	c.channel_divinity_ready = false
 	_CharAnim.oneshot(_companion, "cast_raise", 1.2, 0.8)  # arms-raised invocation
 	var dc: int = 8 + c.stats.ability_modifier(4) + c.stats.proficiency_bonus()
@@ -852,16 +833,6 @@ func _cast_spell(spell, caster = null) -> void:
 	var c = caster if caster != null else GameState.sarro
 	if c == null or _defeated:
 		return
-	if CombatManager.tb_mode and CombatManager.is_player_turn():
-		if spell.is_bonus_action:
-			if not CombatManager.has_bonus_action(_player):
-				return
-			CombatManager.spend_bonus_action(_player)
-		else:
-			if not CombatManager.has_action(_player):
-				return
-			CombatManager.spend_action(_player)
-
 	# The body performing the gesture (spells belong to a sheet, not a node).
 	var caster_body: Node3D = _companion if c == GameState.liris else _player
 
@@ -871,12 +842,6 @@ func _cast_spell(spell, caster = null) -> void:
 		if tgt == null or not tgt.has_method("receive_damage"):
 			_DamageNumber.spawn(self, _player.global_position + Vector3(0, 2, 0),
 				"Select a target first!", Color(1.0, 0.5, 0.3))
-			# Refund action economy if no target
-			if CombatManager.tb_mode:
-				if spell.is_bonus_action:
-					_player.set_meta("turn_bonus", true)
-				else:
-					_player.set_meta("turn_action", true)
 			return
 		var dmg: int = 0
 		for _i in spell.damage_count:

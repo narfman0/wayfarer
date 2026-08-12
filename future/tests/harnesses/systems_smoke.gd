@@ -1,7 +1,7 @@
-## Headless smoke test for the systems added in the BG3-direction pivot:
-## CombatManager (TB entry, initiative, action economy, boss refusal),
-## LootTable determinism + loot bag drops, gold/inventory, and the
-## AStarGrid2D click-path plumbing.
+## Headless smoke test for the pivot systems: real-time CombatManager
+## (aggro entry, membership, combat-end detection), LootTable determinism
+## + loot bag drops, gold/inventory, and the AStarGrid2D click-path
+## plumbing.
 ## Run: godot --headless res://future/tests/harnesses/systems_smoke.tscn
 extends Node
 
@@ -15,8 +15,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	_test_loot_and_gold()
-	await _test_tb_combat()
-	await _test_boss_refuses_tb()
+	await _test_rt_combat()
 	await _test_pathfinding()
 	await _test_dungeon_enemies()
 
@@ -43,9 +42,9 @@ func _test_loot_and_gold() -> void:
 	GameState.add_item({"name": "Healing Draught", "kind": "consumable"})
 	_check(GameState.has_item("Healing Draught"), "inventory stores items")
 
-# ── Turn-based combat ─────────────────────────────────────────────────────────
+# ── Real-time combat ──────────────────────────────────────────────────────────
 
-func _test_tb_combat() -> void:
+func _test_rt_combat() -> void:
 	GameState.sarro = null
 	GameState.liris = null
 	var level: Node3D = (load("res://scenes/world/reach.tscn") as PackedScene).instantiate()
@@ -59,60 +58,20 @@ func _test_tb_combat() -> void:
 	var player: CharacterBody3D = level.get_node("Characters/Sarro")
 	var guard: EnemyController = level.get_node("Enemies/RoadGuard1")
 
-	# aggro starts combat
+	# aggro starts combat and registers members
 	guard.alerted(player)
 	await get_tree().process_frame
 	_check(CombatManager.in_combat, "aggro enters combat")
+	_check(CombatManager._queue.has(guard), "aggroed enemy joins the encounter")
 
-	# TB toggles on for a trash fight; initiative queue populated
-	_check(CombatManager.enter_tb_mode(), "TB mode engages for a normal fight")
-	_check(CombatManager.tb_mode, "tb_mode flag set")
-	_check(CombatManager.current_combatant != null, "initiative queue has a current turn")
-
-	# whoever's turn it is has a full action budget
-	var cc: Node = CombatManager.current_combatant
-	_check(cc.get_meta("turn_action", false) == true, "turn starts with an action")
-	_check(cc.get_meta("turn_bonus", false) == true, "turn starts with a bonus action")
-	_check(float(cc.get_meta("turn_movement", 0.0)) > 0.0, "turn starts with movement budget")
-
-	# a few end_turn cycles advance without error
-	for i in 4:
-		CombatManager.end_turn()
-		await get_tree().create_timer(0.3).timeout
-	_check(CombatManager.in_combat, "turn cycling keeps combat alive")
-
-	CombatManager.exit_tb_mode()
-	CombatManager.exit_combat()
-	level.queue_free()
+	# killing the last enemy ends combat via the RT round poll
+	for e in level.get_node("Enemies").get_children():
+		if e is EnemyController and e.character != null:
+			e.receive_damage(99999)
+	CombatManager._check_combat_end()
 	await get_tree().process_frame
+	_check(not CombatManager.in_combat, "combat ends when all enemies fall")
 
-func _test_boss_refuses_tb() -> void:
-	GameState.sarro = null
-	GameState.liris = null
-	var level: Node3D = (load("res://scenes/world/tamori_anchor.tscn") as PackedScene).instantiate()
-	add_child(level)
-	await get_tree().process_frame
-	await get_tree().process_frame
-	GameState.sarro.stats.max_hp = 900
-	GameState.sarro.stats.current_hp = 900
-	GameState.liris.stats.max_hp = 900
-	GameState.liris.stats.current_hp = 900
-	var player: CharacterBody3D = level.get_node("Characters/Sarro")
-	var boss: EnemyController = level.get_node("Enemies/AnchorWarden")
-
-	boss.alerted(player)
-	await get_tree().process_frame
-	_check(CombatManager.in_combat, "boss aggro enters combat")
-	_check(not CombatManager.enter_tb_mode(), "TB refused while a boss fights")
-	_check(not CombatManager.tb_mode, "still real-time after refusal")
-
-	# TB latched beforehand force-exits when a boss joins
-	CombatManager.exit_combat()
-	CombatManager.tb_mode = true
-	CombatManager.enter_combat([player, boss])
-	_check(not CombatManager.tb_mode, "latched TB force-exits when a boss joins")
-
-	CombatManager.exit_combat()
 	level.queue_free()
 	await get_tree().process_frame
 
